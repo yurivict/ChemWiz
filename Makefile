@@ -7,7 +7,7 @@ CXX?=		clang++80
 CC?=		clang80
 CFLAGS=		-O3 -Wall -I/usr/local/include -DPROGRAM_NAME=\"ChemWiz\"
 CXXFLAGS=	$(CFLAGS) -std=c++17
-LDFLAGS=	-L/usr/local/lib -lm -ldsrpdb -lmujs
+LDFLAGS=	-L/usr/local/lib -ldsrpdb -lmujs
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 
