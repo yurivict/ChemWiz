@@ -263,6 +263,7 @@ static void atomGetNumBonds(js_State *J) {
   js_pushnumber(J, a->bonds.size());
 }
 
+#if defined(USE_DSRPDB)
 static void readPdbFile(js_State *J) {
   AssertNargs(1)
   auto fname = GetArgString(1);
@@ -270,6 +271,7 @@ static void readPdbFile(js_State *J) {
   for (auto pdb : pdbs)
     js_newuserdata(J, TAG_Molecule, pdb, moleculeFinalize);
 }
+#endif
 
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
@@ -427,8 +429,9 @@ void registerFunctions(js_State *J) {
   //
   // Read/Write functions
   //
-
+#if defined(USE_DSRPDB)
   ADD_JS_FUNCTION(readPdbFile, 1)
+#endif
   ADD_JS_FUNCTION(readXyzFile, 1)
   ADD_JS_FUNCTION(writeXyzFile, 2)
 

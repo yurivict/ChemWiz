@@ -6,49 +6,10 @@
 
 #include <iostream>
 #include <string>
-#include <map>
 
 #include <dsrpdb/PDB.h>
 #include <dsrpdb/Model.h>
 #include <dsrpdb/Protein.h>
-
-/// Element
-
-static const char* eltNames[] = {
-  "H", "He",
-  "Li", "Be", "B", "C", "N", "O", "F", "Ne",
-  "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"
-};
-
-class MapEltName : public std::map<std::string,Element> {
-public:
-  MapEltName() {
-    unsigned e = unsigned(H);
-    for (auto n : eltNames)
-      (*this)[n] = Element(e++);
-  }
-};
-
-static MapEltName mapEltName;
-
-std::ostream& operator<<(std::ostream &os, Element e) {
-  os << eltNames[e-1];
-  return os;
-}
-
-std::istream& operator>>(std::istream &is, Element &e) {
-  std::string s;
-  is >> s;
-  e = elementFromString(s);
-  return is;
-}
-
-Element elementFromString(const std::string &s) {
-  auto i = mapEltName.find(s);
-  if (i == mapEltName.end())
-    throw Exception(str(boost::format("Not an element name: %1%") % s));
-  return i->second;
-}
 
 /// Molecule
 
