@@ -23,3 +23,6 @@ $(APP): $(OBJS) $(HEADERS) Makefile
 	$(CXX) -o $(APP) $(OBJS) $(LDFLAGS)
 
 $(OBJS): $(HEADERS) Makefile
+
+clean:
+	rm -f $(OBJS) $(APP)
