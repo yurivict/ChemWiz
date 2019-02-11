@@ -48,14 +48,19 @@ public:
   Vec3               pos;
   std::vector<Atom*> bonds; // all bonds are listed
   void              *obj;
+  static std::set<Atom*> dbgAllocated; // a workaround for this bug: https://github.com/ccxvii/mujs/issues/80
+  static bool dbgIsAllocated(Atom *a) {return dbgAllocated.find(a) != dbgAllocated.end();}
   Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), obj(nullptr) {
     //std::cout << "Atom::Atom " << this << std::endl;
+    dbgAllocated.insert(this);
   }
   Atom(const Atom &other) : molecule(nullptr), elt(other.elt), pos(other.pos), obj(nullptr) { // all but bonds and obj
     //std::cout << "Atom::Atom(copy) " << this << std::endl;
+    dbgAllocated.insert(this);
   }
   ~Atom() {
     //std::cout << "Atom::~Atom " << this << std::endl;
+    dbgAllocated.erase(this);
   }
   Atom transform(const Vec3 &shft, const Vec3 &rot) const {
     return Atom(elt, Mat3::rotate(rot)*pos + shft);
@@ -210,6 +215,7 @@ public:
       atoms.push_back((new Atom(a->transform(shft, rot)))->setMolecule(this));
     detectBonds();
   }
+  unsigned getNumAtoms() const {return atoms.size();}
   void applyMatrix(const Mat3 &m) {
     for (auto a : atoms)
       a->applyMatrix(m);

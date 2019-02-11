@@ -50,6 +50,8 @@ Element elementFromString(const std::string &s) {
 
 /// Atom
 
+std::set<Atom*> Atom::dbgAllocated;
+
 std::ostream& operator<<(std::ostream &os, const Atom &a) {
   auto prnCoord = [](Float c) {
     char buf[10];
@@ -120,12 +122,12 @@ std::array<Atom*,5> Molecule::findAaCterm() { // expects that the molecule has a
 }
 
 std::vector<Atom*> Molecule::findAaLast() {
+  assert(dbgIsAllocated(this));
   auto cterm = findAaCterm();
   auto atomN = cterm[4];
   auto found = std::find(atoms.rbegin(), atoms.rend(), atomN);
   assert(found != atoms.rend());
   std::vector<Atom*> res;
-  //res.insert(res.begin(), atoms.rbegin(), found);
   while (true) {
     res.push_back(*found);
     if (found == atoms.rbegin())

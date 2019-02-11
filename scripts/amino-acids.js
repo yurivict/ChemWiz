@@ -21,7 +21,7 @@ var AminoAcids = {
       if (i == 0) {
         peptideChain = aaMolecule
       } else {
-        moleculeAppendAminoAcid(peptideChain, aaMolecule)
+        peptideChain.appendAminoAcid(aaMolecule)
       }
     })
     return peptideChain
