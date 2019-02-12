@@ -4,6 +4,7 @@
 #include "molecule.h"
 #include "util.h"
 #include "process.h"
+#include <string.h>
 #include <sstream>
 #include <fstream>
 #include <map>
