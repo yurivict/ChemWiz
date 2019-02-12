@@ -299,21 +299,21 @@ static void appendAminoAcid(js_State *J) {
 }
 
 static void findAaCterm(js_State *J) {
-  AssertNargs(1)
+  AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Cterm = m->findAaCterm();
   returnArrayUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnew);
 }
 
 static void findAaNterm(js_State *J) {
-  AssertNargs(1)
+  AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Nterm = m->findAaNterm();
   returnArrayUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnew);
 }
 
 static void findAaLast(js_State *J) {
-  AssertNargs(1)
+  AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto aa = m->findAaLast();
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnew);
