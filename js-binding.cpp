@@ -30,12 +30,13 @@ static const char *TAG_CalcEngine = "CalcEngine";
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec(n)             objToVec(J, n)
 #define GetArgMat(n)             objToMat(J, n)
+#define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 #define ADD_JS_METHOD(cls, method, nargs) \
-  AssertStack(3); \
+  AssertStack(2); \
   js_newcfunction(J, prototype::method, #cls ".prototype." #method, nargs); /*PUSH a function object wrapping a C function pointer*/ \
   js_defproperty(J, -2, #method, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
-  AssertStack(3);
+  AssertStack(2);
 
 #define ADD_JS_CONSTRUCTOR(cls) \
   js_newobject(J); \
@@ -236,6 +237,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Atom)
   js_getglobal(J, TAG_Atom);              // PUSH Object => {-1: Atom}
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
+  StackPopPrevious()
   { // methods
     ADD_JS_METHOD(Atom, dupl, 0)
     ADD_JS_METHOD(Atom, str, 0)
@@ -244,7 +246,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Atom, setPos, 1)
     ADD_JS_METHOD(Atom, getNumBonds, 0)
   }
-  js_pop(J, 3);
+  js_pop(J, 2);
   AssertStack(0);
 }
 
@@ -325,6 +327,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Molecule)
   js_getglobal(J, TAG_Molecule);          // PUSH Object => {-1: Molecule}
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
+  StackPopPrevious()
   { // methods
     ADD_JS_METHOD(Molecule, dupl, 0)
     ADD_JS_METHOD(Molecule, str, 0)
@@ -335,7 +338,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Molecule, findAaNterm, 0)
     ADD_JS_METHOD(Molecule, findAaLast, 0)
   }
-  js_pop(J, 3);
+  js_pop(J, 2);
   AssertStack(0);
 }
 
