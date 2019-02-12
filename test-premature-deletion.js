@@ -1,8 +1,4 @@
-myimport('scripts/amino-acids-and-codons.js')
-myimport('scripts/amino-acids.js')
-
-var formula = "VVVVVV"
-var p = AminoAcids.combine(formula)
+var p = readXyzFile("molecules/Amino_Acids/L-Valine.xyz").appendAminoAcid(readXyzFile("molecules/Amino_Acids/L-Valine.xyz"))
 
 function rotateAtoms(M, atoms) {
   for (var i = 0; i < atoms.length; i++) {
