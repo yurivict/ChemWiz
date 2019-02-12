@@ -296,7 +296,6 @@ static void appendAminoAcid(js_State *J) {
   auto m = GetArg(Molecule, 0);
   Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
   m->appendAsAminoAcidChain(aa);
-  js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
 }
 
 static void findAaCterm(js_State *J) {
