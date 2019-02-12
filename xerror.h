@@ -17,7 +17,7 @@ public:
 
 #define ERROR(msg) throw Exception(msg);
 
-#else
+#else // no exceptions
 
 #include <stdlib.h>
 #include <iostream>
