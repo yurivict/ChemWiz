@@ -1,30 +1,37 @@
-// requires amino-acids-and-codons.js
+// module AminoAcids
 
+var AcidsCodons = require('scripts/amino-acids-and-codons')
 
-var AminoAcids = {
-  xyzPath: "molecules/Amino_Acids/",
-  codeToName: function(code) {
-    return AMINO_ACIDS[code].name
-  },
-  codeToFile: function(code) {
-    return AminoAcids.xyzPath+"L-"+AminoAcids.codeToName(code)+".xyz"
-  },
-  decodePeptide: function(peptide, f) {
-    for (var i = 0; i < peptide.length; i++) {
-      f(i, peptide.charAt(i))
-    }
-  },
-  combine: function(peptide) {
-    var peptideChain;
-    AminoAcids.decodePeptide(peptide, function(i,code) {
-      var aaMolecule = readXyzFile(AminoAcids.codeToFile(code))
-      if (i == 0) {
-        peptideChain = aaMolecule
-      } else {
-        peptideChain.appendAminoAcid(aaMolecule)
-      }
-    })
-    return peptideChain
+var xyzPath = "molecules/Amino_Acids/";
+
+function codeToName(code) {
+  return AcidsCodons.AMINO_ACIDS[code].name
+}
+
+function codeToFile(code) {
+  return xyzPath+"L-"+codeToName(code)+".xyz"
+}
+
+function decodePeptide(peptide, f) {
+  for (var i = 0; i < peptide.length; i++) {
+    f(i, peptide.charAt(i))
   }
 }
 
+function combine(peptide) {
+  var peptideChain;
+  decodePeptide(peptide, function(i,code) {
+    var aaMolecule = readXyzFile(codeToFile(code))
+    if (i == 0) {
+      peptideChain = aaMolecule
+    } else {
+      peptideChain.appendAminoAcid(aaMolecule)
+    }
+  })
+  return peptideChain
+}
+
+exports.codeToName = codeToName
+exports.codeToFile = codeToFile
+exports.decodePeptide = decodePeptide
+exports.combine = combine

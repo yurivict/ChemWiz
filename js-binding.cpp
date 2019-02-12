@@ -365,14 +365,6 @@ static void sleep(js_State *J) {
   ReturnVoid(J);
 }
 
-static void myimport(js_State *J) {
-  AssertNargs(1)
-  auto fname = GetArgString(1);
-  if (js_dofile(J, fname.c_str()))
-    ERROR(str(boost::format("failed to import the JS module '%1%'") % fname));
-  ReturnVoid(J);
-}
-
 static void tmStart(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, Tm::start());
@@ -496,8 +488,66 @@ static void matRotate(js_State *J) {
   ReturnMat(J, Mat3::rotate(GetArgVec(1)));
 }
 
+static const char *require_js =
+  "function require(name) {\n"
+  "  var cache = require.cache;\n"
+  "  if (name in cache) return cache[name];\n"
+  "  var exports = {};\n"
+  "  cache[name] = exports;\n"
+  "  Function('exports', read(name+'.js'))(exports);\n"
+  "  return exports;\n"
+  "}\n"
+  "require.cache = Object.create(null);\n"
+;
+
+static void readfile(js_State *J) {
+  const char *filename = js_tostring(J, 1);
+  FILE *f;
+  char *s;
+  int size, t;
+
+  f = fopen(filename, "rb");
+  if (!f) {
+    js_error(J, "opening file %s failed", filename);
+  }
+  if (fseek(f, 0, SEEK_END) < 0) {
+     js_error(J, "seeking file %s failed", filename);
+  }
+  size = ftell(f);
+  if (size < 0) {
+    fclose(f);
+    js_error(J, "telling file %s failed", filename);
+  }
+  if (fseek(f, 0, SEEK_SET) < 0) {
+    fclose(f);
+    js_error(J, "seeking file %s failed", filename);
+  }
+  s = (char *) malloc(size + 1);
+  if (!s) {
+    fclose(f);
+    js_error(J, "out of memory");
+  }
+  t = fread(s, 1, size, f);
+  if (t != size) {
+    free(s);
+    fclose(f);
+    js_error(J, "reading file %s failed", filename);
+  }
+  fclose(f);
+  s[size] = '\0';
+  js_pushstring(J, s);
+  free(s);
+}
 
 void registerFunctions(js_State *J) {
+
+  //
+  // require() and read() inspired from mujs
+  //
+
+  js_newcfunction(J, readfile, "read", 1);
+  js_setglobal(J, "read");
+  js_dostring(J, require_js);
 
   //
   // init types
@@ -516,7 +566,6 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(sleep, 1)
-  ADD_JS_FUNCTION(myimport, 1)
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
   ADD_JS_FUNCTION(tmWallclock, 0)
