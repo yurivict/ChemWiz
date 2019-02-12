@@ -4,7 +4,7 @@
 #include "molecule.h"
 #include "util.h"
 #include "process.h"
-#include <string.h>
+#include <cstring>
 #include <sstream>
 #include <fstream>
 #include <map>
@@ -43,7 +43,7 @@ static std::vector<std::string> runProcess(unsigned num, const Molecule &m, cons
   { // check if the error tag has been printed
     const char *errorTag = "error:";
     for (auto &line : lines)
-      if (line.size() > strlen(errorTag) && line.substr(0, strlen(errorTag)) == errorTag)
+      if (line.size() > std::strlen(errorTag) && line.substr(0, std::strlen(errorTag)) == errorTag)
         throw Exception(str(boost::format("Erkale process failed: %1%") % line));
   }
 
