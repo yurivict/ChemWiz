@@ -1,6 +1,6 @@
 
 #include "molecule.h"
-#include "Exception.h"
+#include "xerror.h"
 
 #include <boost/format.hpp>
 
@@ -21,7 +21,7 @@ std::vector<Molecule*> Molecule::readPdbFile(const std::string &newFname) {
   dsrpdb::PDB pdb(file, true/*print_errors*/);
 
   if (pdb.number_of_models() == 0)
-    throw Exception(str(boost::format("The PDB file '%1%' doesn't have any molecules in it") % newFname));
+    ERROR(str(boost::format("The PDB file '%1%' doesn't have any molecules in it") % newFname));
 
   auto dsrpdbAtomTypeToOurs = [](auto type) {
     switch (type) {
@@ -30,7 +30,7 @@ std::vector<Molecule*> Molecule::readPdbFile(const std::string &newFname) {
     case dsrpdb::Atom::H: return H;
     case dsrpdb::Atom::O: return O;
     case dsrpdb::Atom::S: return S;
-    default: throw Exception("Unknown atom type in the PDB file");
+    default: ERROR("Unknown atom type in the PDB file");
     }
   };
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common.h"
-#include "Exception.h"
+#include "xerror.h"
 #include "Vec3.h"
 #include "Mat3.h"
 
@@ -75,7 +75,7 @@ public:
     if (elt == O) return 0.63;
     if (elt == N) return 0.66;
     if (elt == S) return 1.04;
-    throw Exception(str(boost::format("atomBondAvgRadius: unknown element %1%") % elt));
+    ERROR(str(boost::format("atomBondAvgRadius: unknown element %1%") % elt));
   }
   static Float atomBondAvgDistance(Element elt1, Element elt2) {
     // based on the same paper of Raji Heyrovska
@@ -176,11 +176,11 @@ public:
     for (auto a : bonds)
       if (a->elt == bondElt) {
         if (res)
-          throw Exception(str(boost::format("filterBonds1: duplicate %1%->%2% bond when only one is expected") % elt % bondElt));
+          ERROR(str(boost::format("filterBonds1: duplicate %1%->%2% bond when only one is expected") % elt % bondElt));
         res = a;
       }
     if (!res)
-      throw Exception(str(boost::format("filterBonds1: no %1%->%2% bond found when one is expected") % elt % bondElt));
+      ERROR(str(boost::format("filterBonds1: no %1%->%2% bond found when one is expected") % elt % bondElt));
     return res;
   }
   void centerAt(const Vec3 &pt) {

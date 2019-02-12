@@ -11,7 +11,7 @@
 #include "Vec3.h"
 #include "Mat3.h"
 #include "molecule.h"
-#include "Exception.h"
+#include "xerror.h"
 #include "common.h"
 #include "js-binding.h"
 #include "util.h"
@@ -70,6 +70,7 @@ static int main_guarded(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+#if defined(USE_EXCEPTIONS)
   try {
     return main_guarded(argc, argv);
   } catch (const Exception &e) {
@@ -79,4 +80,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "error (runtime): " << e.what() << std::endl;
     return 1;
   }
+#else
+  return main_guarded(argc, argv);
+#endif
 }

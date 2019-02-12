@@ -87,13 +87,13 @@ static void returnArrayUserData(js_State *J, const A &arr, const char *tag, void
 static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   std::map<std::string,std::string> mres;
   if (!js_isobject(J, idx))
-    throw Exception("objToMap: not an object");
+    ERROR("objToMap: not an object");
   js_pushiterator(J, idx/*idx*/, 1/*own*/);
   const char *key;
   while ((key = js_nextiterator(J, -1))) {
     js_getproperty(J, idx, key);
     if (!js_isstring(J, -1))
-      throw Exception("objToMap: value isn't a string");
+      ERROR("objToMap: value isn't a string");
     const char *val = js_tostring(J, -1);
     mres[key] = val;
     js_pop(J, 1);
@@ -103,9 +103,9 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
 
 static Vec3 objToVec(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    throw Exception("objToVec: not an array");
+    ERROR("objToVec: not an array");
   if (js_getlength(J, idx) != 3)
-    throw Exception("objToVec: array size isn't 3");
+    ERROR("objToVec: array size isn't 3");
 
   Vec3 v;
 
@@ -120,9 +120,9 @@ static Vec3 objToVec(js_State *J, int idx) {
 
 static Mat3 objToMat(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    throw Exception("objToMat: not an array");
+    ERROR("objToMat: not an array");
   if (js_getlength(J, idx) != 3)
-    throw Exception("objToMat: array size isn't 3");
+    ERROR("objToMat: array size isn't 3");
 
   Mat3 m;
 
@@ -370,7 +370,7 @@ static void myimport(js_State *J) {
   AssertNargs(1)
   auto fname = GetArgString(1);
   if (js_dofile(J, fname.c_str()))
-    throw Exception(str(boost::format("failed to import the JS module '%1%'") % fname));
+    ERROR(str(boost::format("failed to import the JS module '%1%'") % fname));
   ReturnVoid(J);
 }
 

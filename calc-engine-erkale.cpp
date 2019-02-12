@@ -1,6 +1,6 @@
 #include "common.h"
 #include "calculators.h"
-#include "Exception.h"
+#include "xerror.h"
 #include "molecule.h"
 #include "util.h"
 #include "process.h"
@@ -44,7 +44,7 @@ static std::vector<std::string> runProcess(unsigned num, const Molecule &m, cons
     const char *errorTag = "error:";
     for (auto &line : lines)
       if (line.size() > std::strlen(errorTag) && line.substr(0, std::strlen(errorTag)) == errorTag)
-        throw Exception(str(boost::format("Erkale process failed: %1%") % line));
+        ERROR(str(boost::format("Erkale process failed: %1%") % line));
   }
 
   return lines;
@@ -58,7 +58,7 @@ static Params paramsToErkaleParams(const Params &params) {
     else if (p.first == "basis")
       mres["Basis"] = p.second;
     else
-      throw Exception(str(boost::format("Unknown parameter supplied to Erkale engine: %1%") % p.first));
+      ERROR(str(boost::format("Unknown parameter supplied to Erkale engine: %1%") % p.first));
   return mres;
 }
 
@@ -88,15 +88,15 @@ Float Erkale::calcEnergy(const Molecule &m, const Params &params) {
   Float energy = 0.;
   { // checks
     if (res.size() < 5)
-      throw Exception("Erkale::calcEnergy: erkale output is too short");
+      ERROR("Erkale::calcEnergy: erkale output is too short");
     // check signature
     static std::string signature = "RDFT converged";
     if ((*res.rbegin()).compare(0, signature.size(), signature) != 0)
-      throw Exception("Erkale::calcEnergy didn't find the signature in the output");
+      ERROR("Erkale::calcEnergy didn't find the signature in the output");
     // last result line
     auto lineSplit = Util::splitSpaces(*(res.rbegin()+1));
     if (lineSplit.size() < 3)
-      throw Exception("Erkale::calcEnergy didn't find the result line in the output");
+      ERROR("Erkale::calcEnergy didn't find the result line in the output");
     
     energy = std::stod(lineSplit[1]);
   }
@@ -133,7 +133,7 @@ Molecule* Erkale::calcOptimized(const Molecule &m, const Params &params) {
       if (line == "                 Z          x       y       z")
         state = 'M';
       else
-        throw Exception("erkale engine: couldn't find the molecule header in the output");
+        ERROR("erkale engine: couldn't find the molecule header in the output");
       break;
     } case 'M': {
       if (line.empty())
