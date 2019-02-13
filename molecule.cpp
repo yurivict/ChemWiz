@@ -51,8 +51,6 @@ Element elementFromString(const std::string &s) {
 
 /// Atom
 
-std::set<Atom*> Atom::dbgAllocated;
-
 std::ostream& operator<<(std::ostream &os, const Atom &a) {
   auto prnCoord = [](Float c) {
     char buf[10];
@@ -65,11 +63,8 @@ std::ostream& operator<<(std::ostream &os, const Atom &a) {
 
 /// Molecule
 
-std::set<Molecule*> Molecule::dbgAllocated;
-
 Molecule::Molecule(const std::string &newDescr) : descr(newDescr) {
   //std::cout << "Molecule::Molecule(copy) " << this << std::endl;
-  dbgAllocated.insert(this);
 }
 
 Molecule::Molecule(const Molecule &other) : descr(other.descr) {
@@ -77,14 +72,12 @@ Molecule::Molecule(const Molecule &other) : descr(other.descr) {
   for (auto a : other.atoms)
     atoms.push_back((new Atom(*a))->setMolecule(this));
   detectBonds();
-  dbgAllocated.insert(this);
 }
 
 Molecule::~Molecule() {
   //std::cout << "Molecule::~Molecule " << this << std::endl;
   for (auto a : atoms)
     delete a;
-  dbgAllocated.erase(this);
 }
 
 std::array<Atom*,3> Molecule::findAaNterm() { // expects that the molecule has an open N-term in the beginning
@@ -123,7 +116,6 @@ std::array<Atom*,5> Molecule::findAaCterm() { // expects that the molecule has a
 }
 
 std::vector<Atom*> Molecule::findAaLast() {
-  assert(dbgIsAllocated(this));
   auto cterm = findAaCterm();
   auto atomN = cterm[4];
   auto found = std::find(atoms.rbegin(), atoms.rend(), atomN);

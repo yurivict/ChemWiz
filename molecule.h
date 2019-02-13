@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "xerror.h"
+#include "obj.h"
 #include "Vec3.h"
 #include "Mat3.h"
 
@@ -41,26 +42,21 @@ Element elementFromString(const std::string &str);
 
 class Molecule;
 
-class Atom {
+class Atom : public Obj {
 public:
   Molecule          *molecule; // Atom can only belong to one molecule
   Element            elt;
   Vec3               pos;
   std::vector<Atom*> bonds; // all bonds are listed
   void              *obj;
-  static std::set<Atom*> dbgAllocated; // a workaround for this bug: https://github.com/ccxvii/mujs/issues/80
-  static bool dbgIsAllocated(Atom *a) {return dbgAllocated.find(a) != dbgAllocated.end();}
   Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), obj(nullptr) {
     //std::cout << "Atom::Atom " << this << std::endl;
-    dbgAllocated.insert(this);
   }
   Atom(const Atom &other) : molecule(nullptr), elt(other.elt), pos(other.pos), obj(nullptr) { // all but bonds and obj
     //std::cout << "Atom::Atom(copy) " << this << std::endl;
-    dbgAllocated.insert(this);
   }
   ~Atom() {
     //std::cout << "Atom::~Atom " << this << std::endl;
-    dbgAllocated.erase(this);
   }
   Atom transform(const Vec3 &shft, const Vec3 &rot) const {
     return Atom(elt, Mat3::rotate(rot)*pos + shft);
@@ -190,13 +186,11 @@ public:
   friend std::ostream& operator<<(std::ostream &os, const Atom &a);
 }; // Atom
 
-class Molecule {
+class Molecule : public Obj {
 public:
   std::string        id;
   std::string        descr;
   std::vector<Atom*> atoms; // own atoms here
-  static std::set<Molecule*> dbgAllocated; // a workaround for this bug: https://github.com/ccxvii/mujs/issues/80
-  static bool dbgIsAllocated(Molecule *m) {return dbgAllocated.find(m) != dbgAllocated.end();}
   Molecule(const std::string &newDescr);
   Molecule(const Molecule &other);
   ~Molecule();

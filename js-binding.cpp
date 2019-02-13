@@ -14,11 +14,13 @@
 #include "js-binding.h"
 #include "molecule.h"
 #include "calculators.h"
+#include "temp-file.h"
 #include "tm.h"
 
 static const char *TAG_Molecule   = "Molecule";
 static const char *TAG_Atom       = "Atom";
 static const char *TAG_CalcEngine = "CalcEngine";
+static const char *TAG_TempFile   = "TempFile";
 
 #define AssertNargs(n)           assert(js_gettop(J) == n+1);
 #define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
@@ -53,20 +55,14 @@ namespace JsBinding {
 
 static void moleculeFinalize(js_State *J, void *p) {
   Molecule *m = (Molecule*)p;
-  if (Molecule::dbgIsAllocated(m))
-    delete m;
-  else
-    std::cerr << "ERROR bogus molecule in moleculeFinalize: " << m << " (duplicate finalize invocation?)" << std::endl;
+  delete m;
 }
 
 static void atomFinalize(js_State *J, void *p) {
   Atom *a = (Atom*)p;
-  if (Atom::dbgIsAllocated(a)) {
-    // delete only unattached atoms, otherwise they are deteled by their Molecule object
-    if (!a->molecule)
-      delete a;
-  } else
-    std::cerr << "ERROR bogus atom in atomFinalize: " << a << " (duplicate finalize invocation?)" << std::endl;
+  // delete only unattached atoms, otherwise they are deteled by their Molecule object
+  if (!a->molecule)
+    delete a;
 }
 
 static void calcEngineFinalize(js_State *J, void *p) {
@@ -156,6 +152,10 @@ static void ReturnUnsigned(js_State *J, unsigned u) {
   js_pushnumber(J, u);
 }
 
+static void ReturnString(js_State *J, const std::string &s) {
+  js_pushstring(J, s.c_str());
+}
+
 static void ReturnVec(js_State *J, const Vec3 &v) {
   PushVec(J, v);
 }
@@ -200,16 +200,12 @@ static void dupl(js_State *J) {
 static void str(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
-  auto s = str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos);
-  js_pushstring(J, s.c_str());
+  ReturnString(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
 }
 
 static void getElement(js_State *J) {
   AssertNargs(0)
-  auto a = GetArg(Atom, 0);
-  std::stringstream ss;
-  ss << a->elt;
-  js_pushstring(J, ss.str().c_str());
+  ReturnString(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
 }
 
 static void getPos(js_State *J) {
@@ -276,7 +272,7 @@ static void str(js_State *J) {
   auto m = GetArg(Molecule, 0);
   char str[256];
   sprintf(str, "molecule{%p, id=%s}", m, m->id.c_str());
-  js_pushstring(J, str);
+  ReturnString(J, str);
 }
 
 static void numAtoms(js_State *J) {
@@ -342,6 +338,50 @@ static void init(js_State *J) {
 }
 
 } // JsMolecule
+
+namespace JsTempFile {
+
+static void xnew(js_State *J, Molecule *m) {
+  js_getglobal(J, TAG_Molecule);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
+}
+
+static void xnew(js_State *J) {
+  xnew(J, new Molecule("created-in-script"));
+}
+
+namespace prototype {
+
+static void str(js_State *J) {
+  AssertNargs(0)
+  auto f = GetArg(TempFile, 0);
+  ReturnString(J, str(boost::format("temp-file{%1%}") % f->getFname()));
+}
+
+static void fname(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(TempFile, 0)->getFname());
+}
+
+}
+
+static void init(js_State *J) {
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(TempFile)
+  js_getglobal(J, TAG_TempFile);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious()
+  { // methods
+    ADD_JS_METHOD(TempFile, str, 0)
+    ADD_JS_METHOD(TempFile, fname, 0)
+    //ADD_JS_METHOD(TempFile, writeBinary, 1) // to write binary data into the temp file
+  }
+  js_pop(J, 2);
+  AssertStack(0);
+}
+
+} // JsTempFile
 
 //
 // exported functions
@@ -555,6 +595,7 @@ void registerFunctions(js_State *J) {
 
   JsAtom::init(J);
   JsMolecule::init(J);
+  JsTempFile::init(J);
 
 #define ADD_JS_FUNCTION(name, num) \
   js_newcfunction(J, JsBinding::name, #name, num); \
