@@ -343,14 +343,14 @@ static void init(js_State *J) {
 
 namespace JsTempFile {
 
-static void xnew(js_State *J, Molecule *m) {
-  js_getglobal(J, TAG_Molecule);
+static void xnew(js_State *J, TempFile *f) {
+  js_getglobal(J, TAG_TempFile);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_Molecule, m, tempFileFinalize);
+  js_newuserdata(J, TAG_TempFile, f, tempFileFinalize);
 }
 
 static void xnew(js_State *J) {
-  xnew(J, new Molecule("created-in-script"));
+  xnew(J, new TempFile);
 }
 
 namespace prototype {
