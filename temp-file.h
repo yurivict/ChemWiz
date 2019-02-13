@@ -10,7 +10,7 @@
 class TempFile : public Obj {
   std::string      fullPath; // full file name with path
 public:
-  TempFile(const std::string &fileName = "");
+  TempFile(const std::string &fileName = "", const std::string &content = "");
   ~TempFile();
 
   const std::string getFname() const {return fullPath;}

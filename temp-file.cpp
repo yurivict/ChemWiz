@@ -4,13 +4,18 @@
 
 #include <boost/format.hpp>
 
+#include <fstream>
 #include <cstdio>
 
 static std::string dirLocation = "/tmp";    // where these files are created
 static const char *deftFileName = "file";   // serial number of the file
 static unsigned sno = 0;                    // serial number of the file (XXX thread unsafe)
 
-TempFile::TempFile(const std::string &fileName) : fullPath(genName(fileName)) {
+TempFile::TempFile(const std::string &fileName, const std::string &content)
+: fullPath(genName(fileName))
+{
+  if (!content.empty())
+    std::ofstream(fullPath, std::ios::out) << content;
 }
 
 TempFile::~TempFile() {

@@ -357,13 +357,16 @@ static void xnewo(js_State *J, TempFile *f) {
 }
 
 static void xnew(js_State *J) {
-  AssertNargsRange(0,1)
+  AssertNargsRange(0,2)
   switch (GetNArgs()) {
-  case 0:
+  case 0: // ()
     xnewo(J, new TempFile);
     break;
-  case 1:
+  case 1: // (fileName)
     xnewo(J, new TempFile(GetArgString(1)));
+    break;
+  case 2: // (fileName, content)
+    xnewo(J, new TempFile(GetArgString(1), GetArgString(2)));
     break;
   }
 }
