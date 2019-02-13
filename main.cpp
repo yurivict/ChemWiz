@@ -38,7 +38,7 @@ public:
 */
 
 static void printTime(std::time_t tm, const char *when) {
-   std::cout << PROGRAM_NAME << " is " << when << " at " << ctime(&tm); // ctime contains EOL
+  std::cout << "-- " << PROGRAM_NAME << " is " << when << " at " << ctime(&tm); // ctime contains EOL
 }
 
 static int main_guarded(int argc, char* argv[]) {
@@ -51,7 +51,7 @@ static int main_guarded(int argc, char* argv[]) {
   Util::OnExit doPrintTime([](){
     auto tmFinish = Tm::now();
     printTime(tmFinish, "finishing");
-    std::cout << "--ran for " << (tmFinish-Tm::start()) << " second(s) (wallclock)--" << std::endl;
+    std::cout << "-- ran for " << (tmFinish-Tm::start()) << " second(s) (wallclock) --" << std::endl;
   });
 
   // run JavaScript, everything else is done from there
