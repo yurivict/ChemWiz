@@ -23,8 +23,10 @@ static const char *TAG_CalcEngine = "CalcEngine";
 static const char *TAG_TempFile   = "TempFile";
 
 #define AssertNargs(n)           assert(js_gettop(J) == n+1);
+#define AssertNargsRange(n1,n2)  assert(n1+1 <= js_gettop(J) && js_gettop(J) <= n2+1);
 #define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
 #define AssertStack(n)           assert(js_gettop(J) == n);
+#define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
 #define GetNArgs()               (js_gettop(J)-1)
 #define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
 #define GetArgUInt32(n)          js_touint32(J, n)
@@ -40,12 +42,15 @@ static const char *TAG_TempFile   = "TempFile";
   js_defproperty(J, -2, #method, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
   AssertStack(2);
 
-#define ADD_JS_CONSTRUCTOR(cls) \
-  js_newobject(J); \
-  js_setregistry(J, TAG_##cls); \
-  js_getregistry(J, TAG_##cls); \
-  js_newcconstructor(J, Js##cls::xnew, Js##cls::xnew, TAG_##cls, 1/*nargs*/); \
-  js_defproperty(J, -2, TAG_##cls, JS_DONTENUM);
+static void InitObjectRegistry(js_State *J, const char *tag) {
+  js_newobject(J);
+  js_setregistry(J, tag);
+}
+
+#define ADD_JS_CONSTRUCTOR(cls) /*@lev=1, a generic constructor, nargs=0 below doesn't seem to enforce number of args, or differentiate constructors by number of args*/ \
+  js_getregistry(J, TAG_##cls);                                               /*@lev=2*/ \
+  js_newcconstructor(J, Js##cls::xnew, Js##cls::xnew, TAG_##cls, 0/*nargs*/); /*@lev=2*/ \
+  js_defproperty(J, -2, TAG_##cls, JS_DONTENUM);                              /*@lev=1*/
 
 namespace JsBinding {
 
@@ -177,7 +182,7 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 
 namespace JsAtom {
 
-static void xnew(js_State *J, Atom *a) {
+static void xnewo(js_State *J, Atom *a) {
   js_getglobal(J, TAG_Atom);
   js_getproperty(J, -1, "prototype");
   js_rot2(J);
@@ -189,14 +194,14 @@ static void xnew(js_State *J) {
   AssertNargs(2)
   auto elt = GetArgString(1);
   auto pos = GetArgVec(2);
-  xnew(J, new Atom(elementFromString(elt), pos));
+  xnewo(J, new Atom(elementFromString(elt), pos));
 }
 
 namespace prototype {
 
 static void dupl(js_State *J) {
   AssertNargs(0)
-  xnew(J, new Atom(*GetArg(Atom, 0)));
+  xnewo(J, new Atom(*GetArg(Atom, 0)));
 }
 
 static void str(js_State *J) {
@@ -231,6 +236,7 @@ static void getNumBonds(js_State *J) {
 } // prototype
 
 static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_Atom);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Atom)
   js_getglobal(J, TAG_Atom);              // PUSH Object => {-1: Atom}
@@ -252,21 +258,21 @@ static void init(js_State *J) {
 
 namespace JsMolecule {
 
-static void xnew(js_State *J, Molecule *m) {
+static void xnewo(js_State *J, Molecule *m) {
   js_getglobal(J, TAG_Molecule);
   js_getproperty(J, -1, "prototype");
   js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
 }
 
 static void xnew(js_State *J) {
-  xnew(J, new Molecule("created-in-script"));
+  xnewo(J, new Molecule("created-in-script"));
 }
 
 namespace prototype {
 
 static void dupl(js_State *J) {
   AssertNargs(0)
-  xnew(J, new Molecule(*GetArg(Molecule, 0)));
+  xnewo(J, new Molecule(*GetArg(Molecule, 0)));
 }
 
 static void str(js_State *J) {
@@ -286,7 +292,7 @@ static void numAtoms(js_State *J) {
 static void getAtoms(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
-  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnew);
+  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void appendAminoAcid(js_State *J) {
@@ -300,26 +306,27 @@ static void findAaCterm(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Cterm = m->findAaCterm();
-  returnArrayUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnew);
+  returnArrayUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void findAaNterm(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Nterm = m->findAaNterm();
-  returnArrayUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnew);
+  returnArrayUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void findAaLast(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto aa = m->findAaLast();
-  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnew);
+  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 } // prototype
 
 static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_Molecule);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Molecule)
   js_getglobal(J, TAG_Molecule);          // PUSH Object => {-1: Molecule}
@@ -343,14 +350,22 @@ static void init(js_State *J) {
 
 namespace JsTempFile {
 
-static void xnew(js_State *J, TempFile *f) {
+static void xnewo(js_State *J, TempFile *f) {
   js_getglobal(J, TAG_TempFile);
   js_getproperty(J, -1, "prototype");
   js_newuserdata(J, TAG_TempFile, f, tempFileFinalize);
 }
 
 static void xnew(js_State *J) {
-  xnew(J, new TempFile);
+  AssertNargsRange(0,1)
+  switch (GetNArgs()) {
+  case 0:
+    xnewo(J, new TempFile);
+    break;
+  case 1:
+    xnewo(J, new TempFile(GetArgString(1)));
+    break;
+  }
 }
 
 namespace prototype {
@@ -369,6 +384,7 @@ static void fname(js_State *J) {
 }
 
 static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_TempFile);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(TempFile)
   js_getglobal(J, TAG_TempFile);
@@ -433,7 +449,7 @@ static void readPdbFile(js_State *J) {
   auto fname = GetArgString(1);
   auto pdbs = Molecule::readPdbFile(fname);
   for (auto pdb : pdbs)
-    JsMolecule::xnew(J, pdb);
+    JsMolecule::xnewo(J, pdb);
 }
 #endif
 
@@ -442,7 +458,7 @@ static void readXyzFile(js_State *J) {
   auto fname = GetArgString(1);
   auto m = Molecule::readXyzFile(fname);
   //js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
-  JsMolecule::xnew(J, m);
+  JsMolecule::xnewo(J, m);
   //js_newcfunction(J, File_prototype_readByte, "File.prototype.readByte", 0);
   //js_defproperty(J, -2, "readByte", JS_DONTENUM);
 }
@@ -478,7 +494,7 @@ static void calcMoleculeOptimize(js_State *J) {
   auto m = GetArg(Molecule, 1);
   auto ce = GetArg(CalcEngine, 2);
   const Calculators::Params params = GetNArgs() == 3 ? GetArgSSMap(3) : Calculators::Params();
-  JsMolecule::xnew(J, ce->calcOptimized(*m, params));
+  JsMolecule::xnewo(J, ce->calcOptimized(*m, params));
 }
 
 static void vecPlus(js_State *J) {
