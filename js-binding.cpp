@@ -54,20 +54,22 @@ namespace JsBinding {
 //
 
 static void moleculeFinalize(js_State *J, void *p) {
-  Molecule *m = (Molecule*)p;
-  delete m;
+  delete (Molecule*)p;
 }
 
 static void atomFinalize(js_State *J, void *p) {
-  Atom *a = (Atom*)p;
+  auto a = (Atom*)p;
   // delete only unattached atoms, otherwise they are deteled by their Molecule object
   if (!a->molecule)
     delete a;
 }
 
 static void calcEngineFinalize(js_State *J, void *p) {
-  CalcEngine *ce = (CalcEngine*)p;
-  delete ce;
+  delete (CalcEngine*)p;
+}
+
+static void tempFileFinalize(js_State *J, void *p) {
+  delete (TempFile*)p;
 }
 
 template<typename A, typename FnNew>
@@ -344,7 +346,7 @@ namespace JsTempFile {
 static void xnew(js_State *J, Molecule *m) {
   js_getglobal(J, TAG_Molecule);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
+  js_newuserdata(J, TAG_Molecule, m, tempFileFinalize);
 }
 
 static void xnew(js_State *J) {
