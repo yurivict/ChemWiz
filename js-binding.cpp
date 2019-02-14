@@ -550,15 +550,13 @@ static void pi(js_State *J) {
 
 static void system(js_State *J) {
   AssertNargs(1)
-  js_pushnumber(J, M_PI);
   ReturnString(J, Process::exec(GetArgString(1)));
 }
 
 #if defined(USE_DSRPDB)
 static void readPdbFile(js_State *J) {
   AssertNargs(1)
-  auto fname = GetArgString(1);
-  auto pdbs = Molecule::readPdbFile(fname);
+  auto pdbs = Molecule::readPdbFile(GetArgString(1));
   for (auto pdb : pdbs)
     JsMolecule::xnewo(J, pdb);
 }
@@ -566,20 +564,12 @@ static void readPdbFile(js_State *J) {
 
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
-  auto fname = GetArgString(1);
-  auto m = Molecule::readXyzFile(fname);
-  //js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
-  JsMolecule::xnewo(J, m);
-  //js_newcfunction(J, File_prototype_readByte, "File.prototype.readByte", 0);
-  //js_defproperty(J, -2, "readByte", JS_DONTENUM);
+  JsMolecule::xnewo(J, Molecule::readXyzFile(GetArgString(1)));
 }
 
 static void writeXyzFile(js_State *J) {
   AssertNargs(2)
-  auto m = GetArg(Molecule, 1);
-  auto fname = GetArgString(2);
-  std::ofstream file(fname, std::ios::out);
-  file << *m;
+  std::ofstream(GetArgString(2), std::ios::out) << *GetArg(Molecule, 1);
   ReturnVoid(J);
 }
 
