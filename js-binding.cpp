@@ -478,6 +478,12 @@ static void toBinary(js_State *J) {
   JsBinary::xnewo(J, GetArg(TempFile, 0)->toBinary());
 }
 
+static void toPermanent(js_State *J) {
+  AssertNargs(1)
+  GetArg(TempFile, 0)->toPermanent(GetArgString(1));
+  ReturnVoid(J);
+}
+
 }
 
 static void init(js_State *J) {
@@ -491,6 +497,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(TempFile, str, 0)
     ADD_JS_METHOD(TempFile, fname, 0)
     ADD_JS_METHOD(TempFile, toBinary, 0)
+    ADD_JS_METHOD(TempFile, toPermanent, 1)
     //ADD_JS_METHOD(TempFile, writeBinary, 1) // to write binary data into the temp file
   }
   js_pop(J, 2);

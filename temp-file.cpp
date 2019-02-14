@@ -30,6 +30,10 @@ std::vector<uint8_t>* TempFile::toBinary() const {
   return new std::vector<uint8_t>(std::istreambuf_iterator<char>{file}, {});
 }
 
+void TempFile::toPermanent(const std::string &permFileName) const {
+  std::rename(fullPath.c_str(), permFileName.c_str());
+}
+
 /// intenals
 
 std::string TempFile::genName(const std::string &ext) {
