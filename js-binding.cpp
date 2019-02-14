@@ -16,7 +16,12 @@
 #include "calculators.h"
 #include "temp-file.h"
 #include "tm.h"
+#include "process.h"
 
+// types defined locally
+typedef std::vector<uint8_t> Binary;
+
+static const char *TAG_Binary     = "Binary";
 static const char *TAG_Molecule   = "Molecule";
 static const char *TAG_Atom       = "Atom";
 static const char *TAG_CalcEngine = "CalcEngine";
@@ -57,6 +62,10 @@ namespace JsBinding {
 //
 // helper functions
 //
+
+static void binaryFinalize(js_State *J, void *p) {
+  delete (Binary*)p;
+}
 
 static void moleculeFinalize(js_State *J, void *p) {
   delete (Molecule*)p;
@@ -179,6 +188,86 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 //
 // Define object types
 //
+
+namespace JsBinary {
+
+static void xnewo(js_State *J, Binary *b) {
+  js_getglobal(J, TAG_Binary);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_Binary, b, binaryFinalize);
+}
+
+static void xnew(js_State *J) {
+  AssertNargs(1)
+  auto b = new Binary;
+  b->resize(GetArgUInt32(1));
+  xnewo(J, b);
+}
+
+namespace prototype {
+
+static void dupl(js_State *J) {
+  AssertNargs(0)
+  xnewo(J, new Binary(*GetArg(Binary, 0)));
+}
+
+static void size(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Binary, 0)->size());
+}
+
+static void resize(js_State *J) {
+  AssertNargs(1)
+  GetArg(Binary, 0)->resize(GetArgUInt32(1));
+  ReturnVoid(J);
+}
+
+static void append(js_State *J) {
+  AssertNargs(1)
+  auto b = GetArg(Binary, 0);
+  auto b1 = GetArg(Binary, 1);
+  b->insert(b->end(), b1->begin(), b1->end());
+  ReturnVoid(J);
+}
+
+static void concatenate(js_State *J) {
+  AssertNargs(1)
+  auto b = new Binary(*GetArg(Binary, 0));
+  auto b1 = GetArg(Binary, 1);
+  b->insert(b->end(), b1->begin(), b1->end());
+  xnewo(J, b);
+}
+
+static void toFile(js_State *J) {
+  AssertNargs(1)
+  std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
+  auto b = GetArg(Binary, 0);
+  file.write((char*)&(*b)[0], b->size());
+  ReturnVoid(J);
+}
+
+}
+
+static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_Binary);
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(Binary)
+  js_getglobal(J, TAG_Binary);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious()
+  { // methods
+    ADD_JS_METHOD(Binary, dupl, 0)
+    ADD_JS_METHOD(Binary, size, 0)
+    ADD_JS_METHOD(Binary, resize, 1)
+    ADD_JS_METHOD(Binary, append, 1)
+    ADD_JS_METHOD(Binary, concatenate, 1)
+    ADD_JS_METHOD(Binary, toFile, 1)
+  }
+  js_pop(J, 2);
+  AssertStack(0);
+}
+
+} // JsBinary
 
 namespace JsAtom {
 
@@ -384,6 +473,11 @@ static void fname(js_State *J) {
   ReturnString(J, GetArg(TempFile, 0)->getFname());
 }
 
+static void toBinary(js_State *J) {
+  AssertNargs(0)
+  JsBinary::xnewo(J, GetArg(TempFile, 0)->toBinary());
+}
+
 }
 
 static void init(js_State *J) {
@@ -396,6 +490,7 @@ static void init(js_State *J) {
   { // methods
     ADD_JS_METHOD(TempFile, str, 0)
     ADD_JS_METHOD(TempFile, fname, 0)
+    ADD_JS_METHOD(TempFile, toBinary, 0)
     //ADD_JS_METHOD(TempFile, writeBinary, 1) // to write binary data into the temp file
   }
   js_pop(J, 2);
@@ -444,6 +539,12 @@ static void tmWallclock(js_State *J) {
 static void pi(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, M_PI);
+}
+
+static void system(js_State *J) {
+  AssertNargs(1)
+  js_pushnumber(J, M_PI);
+  ReturnString(J, Process::exec(GetArgString(1)));
 }
 
 #if defined(USE_DSRPDB)
@@ -614,6 +715,7 @@ void registerFunctions(js_State *J) {
   // init types
   //
 
+  JsBinary::init(J);
   JsAtom::init(J);
   JsMolecule::init(J);
   JsTempFile::init(J);
@@ -632,6 +734,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(tmNow, 0)
   ADD_JS_FUNCTION(tmWallclock, 0)
   ADD_JS_FUNCTION(pi, 0)
+  ADD_JS_FUNCTION(system, 1)
 
   //
   // Read/Write functions
