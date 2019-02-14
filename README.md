@@ -14,3 +14,7 @@ Program for manipulations with molecules and performing computations with them
 
 All optional library dependencies have corresponding build switches in the form USE_xx.
 
+### Relevant bug reports
+
+* Jmol produces invalid (not entirely valid) PNGs: https://sourceforge.net/p/jmol/bugs/604/
+
