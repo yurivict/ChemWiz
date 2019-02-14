@@ -1,6 +1,18 @@
 // module Jmol: renders molecules through Jmol, using the executable 'jmoldata'
 
-function renderMoleculeToFile(m) {
+var imageFormat = 'PNG'
+var deftImageSz = [800, 600]
+
+function renderMoleculeToFile(m, params) {
+  // image size
+  var szx, szy
+  if (params != undefined && params.szX != undefined && params.szY != undefined) {
+    szx = params.szX
+    szy = params.szY
+  } else {
+    szx = deftImageSz[0]
+    szy = deftImageSz[1]
+  }
   // save molecule as xyz
   var xyz = new TempFile("xyz")
   writeXyzFile(m, xyz.fname())
@@ -8,8 +20,7 @@ function renderMoleculeToFile(m) {
   var output = new TempFile("png")
   var script = new TempFile("jmol-script",
     "load '"+xyz.fname()+"';\n"+
-    "select all;\n"+
-    "write '"+output.fname()+"';\n"
+    "write IMAGE "+szx+" "+szy+" "+imageFormat+" '"+output.fname()+"';\n"
   )
   // run jmoldata command
   system("jmoldata -s "+script.fname())
@@ -17,8 +28,8 @@ function renderMoleculeToFile(m) {
   return output
 }
 
-function renderMoleculeToMemory(m) {
-  return renderMoleculeToFile(m).toBinary()
+function renderMoleculeToMemory(m, params) {
+  return renderMoleculeToFile(m, params).toBinary()
 }
 
 exports.renderMoleculeToFile = renderMoleculeToFile
