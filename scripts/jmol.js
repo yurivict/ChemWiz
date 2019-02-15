@@ -9,9 +9,7 @@ function scriptXyzToPngInstruction(xyzFile, pngFile, sz) {
 }
 
 function runJmoldata(scriptFile) {
-  print("> running jmoldata")
   system("jmoldata -s "+scriptFile.fname())
-  print("< running jmoldata")
 }
 
 function paramsToSz(params) {
