@@ -4,12 +4,15 @@
 
 #include <boost/format.hpp>
 
+#include <iostream>
 #include <vector>
 #include <fstream>
 #include <cstdio>
 #include <iterator>
+#include <stdexcept>
+//#include <experimental/filesystem>
 
-static std::string dirLocation = "/tmp";    // where these files are created
+static std::string dirLocation = "./";      // where these files are created /tmp breaks std::rename below (cross-device error)
 static const char *deftExt = "tmp";         // serial number of the file
 static unsigned sno = 0;                    // serial number of the file (XXX thread unsafe)
 
@@ -31,7 +34,12 @@ std::vector<uint8_t>* TempFile::toBinary() const {
 }
 
 void TempFile::toPermanent(const std::string &permFileName) const {
-  std::rename(fullPath.c_str(), permFileName.c_str());
+  // fails with cross-device error when tmp files are on /tmp
+  if (int err = std::rename(fullPath.c_str(), permFileName.c_str()))
+    throw std::runtime_error("rename() failed!");
+
+  // not available on FreeBSD: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=235749
+  //std::experimental::filesystem::copy(fullPath, permFileName);
 }
 
 /// intenals
