@@ -57,7 +57,7 @@ std::string download(const std::string &host, const std::string &service, const 
     // Receive the HTTP response
     http::read(socket, buffer, res);
 
-    // Write message into
+    // Write message into the output
     content << res;
 
     // Gracefully close the socket
@@ -72,8 +72,7 @@ std::string download(const std::string &host, const std::string &service, const 
 
     // If we get here then the connection is closed gracefully
   } catch (std::exception const& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
-    ERROR("URL download request failed for host=" << host << " service=" << service << " target=" << target)
+    ERROR(e.what() << ": URL download request failed for host=" << host << " service=" << service << " target=" << target)
   }
 
   return content.str();
