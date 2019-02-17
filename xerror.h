@@ -15,13 +15,13 @@ public:
   }
 }; // Exception
 
-#define ERROR(msg) throw Exception(msg);
+#define ERROR(msg...) {std::ostringstream __ss__; __ss__ << msg; throw Exception(__ss__.str());}
 
 #else // no exceptions
 
 #include <stdlib.h>
 #include <iostream>
 
-#define ERROR(msg) {std::cerr << msg << std::endl; exit(1);}
+#define ERROR(msg...) {std::cerr << msg << std::endl; exit(1);}
 
 #endif
