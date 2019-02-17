@@ -374,8 +374,7 @@ static void str(js_State *J) {
 
 static void numAtoms(js_State *J) {
   AssertNargs(0)
-  auto m = (const Molecule*)js_touserdata(J, 0, TAG_Molecule);
-  ReturnUnsigned(J, m->getNumAtoms());
+  ReturnUnsigned(J, GetArg(Molecule, 0)->getNumAtoms());
 }
 
 static void getAtoms(js_State *J) {
@@ -553,15 +552,6 @@ static void system(js_State *J) {
   ReturnString(J, Process::exec(GetArgString(1)));
 }
 
-#if defined(USE_DSRPDB)
-static void readPdbFile(js_State *J) {
-  AssertNargs(1)
-  auto pdbs = Molecule::readPdbFile(GetArgString(1));
-  for (auto pdb : pdbs)
-    JsMolecule::xnewo(J, pdb);
-}
-#endif
-
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
   JsMolecule::xnewo(J, Molecule::readXyzFile(GetArgString(1)));
@@ -572,6 +562,25 @@ static void writeXyzFile(js_State *J) {
   std::ofstream(GetArgString(2), std::ios::out) << *GetArg(Molecule, 1);
   ReturnVoid(J);
 }
+
+#if defined(USE_DSRPDB)
+static void readPdbFile(js_State *J) {
+  AssertNargs(1)
+  auto mols = Molecule::readPdbFile(GetArgString(1));
+  for (auto m : mols)
+    JsMolecule::xnewo(J, m);
+}
+#endif
+
+#if defined(USE_MMTF)
+static void readMmtfFile(js_State *J) {
+  AssertNargs(1)
+  auto mols = Molecule::readMmtfFile(GetArgString(1));
+  for (auto m : mols)
+    JsMolecule::xnewo(J, m);
+}
+#endif
+
 
 //
 // Calc engines
@@ -736,11 +745,14 @@ void registerFunctions(js_State *J) {
   //
   // Read/Write functions
   //
+  ADD_JS_FUNCTION(readXyzFile, 1)
+  ADD_JS_FUNCTION(writeXyzFile, 2)
 #if defined(USE_DSRPDB)
   ADD_JS_FUNCTION(readPdbFile, 1)
 #endif
-  ADD_JS_FUNCTION(readXyzFile, 1)
-  ADD_JS_FUNCTION(writeXyzFile, 2)
+#if defined(USE_MMTF)
+  ADD_JS_FUNCTION(readMmtfFile, 1)
+#endif
 
   //
   // Calc engines and calculations
