@@ -260,10 +260,14 @@ public:
     for (auto a : atoms)
       a->centerAt(pt);
   }
-  static Molecule* readXyzFile(const std::string &fname);
-  void writeXyzFile(const std::string &fname) const;
   std::string toString() const;
+  // read external formats
+  static Molecule* readXyzFile(const std::string &fname);
   static std::vector<Molecule*> readPdbFile(const std::string &newFname);
+  static std::vector<Molecule*> readMmtfFile(const std::string &fname);
+  // write extarnal formats
+  void writeXyzFile(const std::string &fname) const;
+  // printing
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
 }; // Molecule
 
