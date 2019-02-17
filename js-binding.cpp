@@ -17,6 +17,7 @@
 #include "temp-file.h"
 #include "tm.h"
 #include "process.h"
+#include "web-io.h"
 
 // types defined locally
 typedef std::vector<uint8_t> Binary;
@@ -588,6 +589,11 @@ static void system(js_State *J) {
   ReturnString(J, Process::exec(GetArgString(1)));
 }
 
+static void download(js_State *J) {
+  AssertNargs(3)
+  ReturnString(J, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
+}
+
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
   JsMolecule::xnewo(J, Molecule::readXyzFile(GetArgString(1)));
@@ -784,6 +790,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(tmWallclock, 0)
   ADD_JS_FUNCTION(pi, 0)
   ADD_JS_FUNCTION(system, 1)
+  ADD_JS_FUNCTION(download, 3)
 
   //
   // Read/Write functions

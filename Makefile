@@ -6,13 +6,13 @@ USE_MMTF=       yes
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
-SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp
-HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h
+SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp
+HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h
 APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\"
 CXXFLAGS=	$(CFLAGS) -std=c++17
-LDFLAGS=	$(shell pkg-config --static --libs-only-L mujs)
+LDFLAGS=	$(shell pkg-config --static --libs-only-L mujs) -pthread
 LDLIBS=		$(shell pkg-config --static --libs-only-l mujs)
 
 ifeq ($(USE_DSRPDB), yes)
