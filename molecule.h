@@ -34,6 +34,25 @@ enum Element {
   P  = 15,
   S  = 16,
   Cl = 17,
+  Ar = 18,
+  K  = 19,
+  Ca = 20,
+  Sc = 21,
+  Ti = 22,
+  V  = 23,
+  Cr = 24,
+  Mn = 25,
+  Fe = 26,
+  Co = 27,
+  Ni = 28,
+  Cu = 29,
+  Zn = 30,
+  Ga = 31,
+  Ge = 32,
+  As = 33,
+  Se = 34,
+  Br = 35,
+  Kr = 36
 };
 
 std::ostream& operator<<(std::ostream &os, Element e);
@@ -47,12 +66,14 @@ public:
   Molecule          *molecule; // Atom can only belong to one molecule
   Element            elt;
   Vec3               pos;
+  bool               isHetAtm; // what exactly is this?
+  std::string        name; // atom can be given a name, see group.atomNameList[] in MMTF spec
   std::vector<Atom*> bonds; // all bonds are listed
   void              *obj;
-  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), obj(nullptr) {
+  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), isHetAtm(false), obj(nullptr) {
     //std::cout << "Atom::Atom " << this << std::endl;
   }
-  Atom(const Atom &other) : molecule(nullptr), elt(other.elt), pos(other.pos), obj(nullptr) { // all but bonds and obj
+  Atom(const Atom &other) : molecule(nullptr), elt(other.elt), pos(other.pos), isHetAtm(other.isHetAtm), obj(nullptr) { // all but bonds and obj
     //std::cout << "Atom::Atom(copy) " << this << std::endl;
   }
   ~Atom() {
@@ -199,6 +220,9 @@ public:
   void add(const Atom &a) { // doesn't detect bonds when one atom is added
     atoms.push_back((new Atom(a))->setMolecule(this));
   }
+  void add(Atom *a) { // doesn't detect bonds when one atom is added // pass ownership of the object
+    atoms.push_back(a->setMolecule(this));
+  }
   void add(const Molecule &m) {
     for (auto a : m.atoms)
       atoms.push_back((new Atom(*a))->setMolecule(this));
@@ -265,6 +289,7 @@ public:
   static Molecule* readXyzFile(const std::string &fname);
   static std::vector<Molecule*> readPdbFile(const std::string &newFname);
   static std::vector<Molecule*> readMmtfFile(const std::string &fname);
+  static std::vector<Molecule*> readMmtfBuffer(const std::string &buffer);
   // write extarnal formats
   void writeXyzFile(const std::string &fname) const;
   // printing

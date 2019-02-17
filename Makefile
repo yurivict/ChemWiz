@@ -1,6 +1,7 @@
 
 # optional dependencies
 USE_DSRPDB=     yes
+USE_MMTF=       yes
 
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
@@ -18,6 +19,11 @@ ifeq ($(USE_DSRPDB), yes)
 SRCS_CPP+=	molecule-dsrpdb.cpp
 CXXFLAGS+=	-DUSE_DSRPDB
 LDFLAGS+=	-ldsrpdb
+endif
+
+ifeq ($(USE_MMTF), yes)
+SRCS_CPP+=	molecule-mmtf.cpp
+CXXFLAGS+=	-DUSE_MMTF
 endif
 
 ifeq ($(USE_EXCEPTIONS), yes)

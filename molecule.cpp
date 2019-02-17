@@ -16,12 +16,13 @@
 static const char* eltNames[] = {
   "H", "He",
   "Li", "Be", "B", "C", "N", "O", "F", "Ne",
-  "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"
+  "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar",
+  "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr"
 };
 
 class MapEltName : public std::map<std::string,Element> {
 public:
-  MapEltName() {
+  MapEltName() { // ASSUMES sequentialness of the Element enum
     unsigned e = unsigned(H);
     for (auto n : eltNames)
       (*this)[n] = Element(e++);

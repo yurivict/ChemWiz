@@ -34,8 +34,11 @@ static const char *TAG_TempFile   = "TempFile";
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
 #define GetNArgs()               (js_gettop(J)-1)
 #define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
-#define GetArgUInt32(n)          js_touint32(J, n)
+#define GetArgBoolean(n)         js_toboolean(J, n)
+#define GetArgFloat(n)           js_tonumber(J, n)
 #define GetArgString(n)          std::string(js_tostring(J, n))
+#define GetArgInt32(n)           js_toint32(J, n)
+#define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec(n)             objToVec(J, n)
 #define GetArgMat(n)             objToMat(J, n)
@@ -158,6 +161,14 @@ static void PushVec(js_State *J, const Vec3 &v) {
 
 static void ReturnVoid(js_State *J) {
   js_pushundefined(J);
+}
+
+//static void ReturnNull(js_State *J) {
+//  js_pushnull(J);
+//}
+
+static void ReturnBoolean(js_State *J, bool b) {
+  js_pushboolean(J, b ? 1 : 0);
 }
 
 static void ReturnFloat(js_State *J, Float f) {
@@ -306,13 +317,34 @@ static void getElement(js_State *J) {
 
 static void getPos(js_State *J) {
   AssertNargs(0)
-  auto a = GetArg(Atom, 0);
-  ReturnVec(J, a->pos);
+  ReturnVec(J, GetArg(Atom, 0)->pos);
 }
 
 static void setPos(js_State *J) {
   AssertNargs(1)
   GetArg(Atom, 0)->pos = GetArgVec(1);
+  ReturnVoid(J);
+}
+
+static void getName(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(Atom, 0)->name);
+}
+
+static void setName(js_State *J) {
+  AssertNargs(1)
+  GetArg(Atom, 0)->name = GetArgString(1);
+  ReturnVoid(J);
+}
+
+static void getHetAtm(js_State *J) {
+  AssertNargs(0)
+  ReturnBoolean(J, GetArg(Atom, 0)->isHetAtm);
+}
+
+static void setHetAtm(js_State *J) {
+  AssertNargs(1)
+  GetArg(Atom, 0)->isHetAtm = GetArgBoolean(1);
   ReturnVoid(J);
 }
 
@@ -337,6 +369,10 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Atom, getElement, 0)
     ADD_JS_METHOD(Atom, getPos, 0)
     ADD_JS_METHOD(Atom, setPos, 1)
+    ADD_JS_METHOD(Atom, getName, 0)
+    ADD_JS_METHOD(Atom, setName, 1)
+    ADD_JS_METHOD(Atom, getHetAtm, 0)
+    ADD_JS_METHOD(Atom, setHetAtm, 1)
     ADD_JS_METHOD(Atom, getNumBonds, 0)
   }
   js_pop(J, 2);
@@ -579,6 +615,13 @@ static void readMmtfFile(js_State *J) {
   for (auto m : mols)
     JsMolecule::xnewo(J, m);
 }
+
+static void readMmtfBuffer(js_State *J) {
+  AssertNargs(1)
+  auto mols = Molecule::readMmtfBuffer(GetArgString(1));
+  for (auto m : mols)
+    JsMolecule::xnewo(J, m);
+}
 #endif
 
 
@@ -752,6 +795,7 @@ void registerFunctions(js_State *J) {
 #endif
 #if defined(USE_MMTF)
   ADD_JS_FUNCTION(readMmtfFile, 1)
+  ADD_JS_FUNCTION(readMmtfBuffer, 1)
 #endif
 
   //
