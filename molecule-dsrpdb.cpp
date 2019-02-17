@@ -13,15 +13,15 @@
 
 /// Molecule
 
-std::vector<Molecule*> Molecule::readPdbFile(const std::string &newFname) {
+std::vector<Molecule*> Molecule::readPdbFile(const std::string &fname) {
   std::vector<Molecule*> res;
   // read into dsrpdb::PDB
   std::ifstream file;
-  file.open(newFname);
+  file.open(fname);
   dsrpdb::PDB pdb(file, true/*print_errors*/);
 
   if (pdb.number_of_models() == 0)
-    ERROR(str(boost::format("The PDB file '%1%' doesn't have any molecules in it") % newFname));
+    ERROR(str(boost::format("The PDB file '%1%' doesn't have any molecules in it") % fname));
 
   auto dsrpdbAtomTypeToOurs = [](auto type) {
     switch (type) {
@@ -47,7 +47,7 @@ std::vector<Molecule*> Molecule::readPdbFile(const std::string &newFname) {
       }
     }
     molecule->detectBonds();
-    molecule->setId(str(boost::format("%1%#%2%") % newFname % (m+1)));
+    molecule->setId(str(boost::format("%1%#%2%") % fname % (m+1)));
     res.push_back(molecule);
   }
   return res;
