@@ -6,7 +6,7 @@ USE_MMTF=       yes
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
-SRCS_CPP=	main.cpp obj.cpp molecule.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp
+SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp
 HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h
 APP=		chemwiz
 CXX?=		clang++80
