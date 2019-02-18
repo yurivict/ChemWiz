@@ -604,6 +604,11 @@ static void download(js_State *J) {
   ReturnString(J, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
 }
 
+static void downloadUrl(js_State *J) {
+  AssertNargs(1)
+  ReturnString(J, WebIo::downloadUrl(GetArgString(1)));
+}
+
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
   JsMolecule::xnewo(J, Molecule::readXyzFile(GetArgString(1)));
@@ -802,6 +807,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(pi, 0)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(download, 3)
+  ADD_JS_FUNCTION(downloadUrl, 1)
 
   //
   // Read/Write functions

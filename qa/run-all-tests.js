@@ -1,7 +1,7 @@
 
 // run-all-tests.js: runs all tests
 
-var all_tests = ["web-ui-http", "web-ui-https"]
+var all_tests = ["web-ui-http", "web-ui-https", "web-ui-url"]
 
 var nSucc = 0
 var nFail = 0

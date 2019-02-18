@@ -19,6 +19,9 @@
 #include <sstream>
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
+#include <regex>
+
 namespace WebIo {
 
 static const int version = 11; // can also be 10
@@ -173,6 +176,43 @@ std::string download(const std::string &host, const std::string &service, const 
   } catch (std::exception const& e) {
     ERROR(e.what() << ": URL download request failed for host=" << host << " service=" << service << " target=" << target)
   }
+}
+
+
+// parser based on: https://github.com/boostorg/beast/issues/787#issuecomment-376259849
+struct ParsedURI {
+  std::string protocol;
+  std::string domain;  // only domain must be present
+  std::string port;
+  std::string resource;
+  std::string query;   // everything after '?', possibly nothing
+};
+
+static ParsedURI parseURI(const std::string& url) {
+  ParsedURI result;
+  auto value_or = [](const std::string& value, std::string&& deflt) -> std::string {
+    return (value.empty() ? deflt : value);
+  };
+  // Note: only "http", "https", "ws", and "wss" protocols are supported
+  static const std::regex PARSE_URL{ R"((([httpsw]{2,5})://)?([^/ :]+)(:(\d+))?(/([^ ?]+)?)?/?\??([^/ ]+\=[^/ ]+)?)",
+                                     std::regex_constants::ECMAScript | std::regex_constants::icase };
+  std::smatch match;
+  if (std::regex_match(url, match, PARSE_URL) && match.size() == 9) {
+    result.protocol = value_or(boost::algorithm::to_lower_copy(std::string(match[2])), "http");
+    result.domain   = match[3];
+    const bool is_sequre_protocol = (result.protocol == "https" || result.protocol == "wss");
+    result.port     = value_or(match[5], (is_sequre_protocol)? "443" : "80");
+    result.resource = value_or(match[6], "/");
+    result.query = match[8];
+    assert(!result.domain.empty());
+  }
+  return result;
+}
+
+std::string downloadUrl(const std::string &url) {
+  // parse URL into 3 parts to supply to the above 'download' function
+  auto p = parseURI(url);
+  return download(p.domain, p.protocol, p.resource+p.query); // XXX inaccurate when port is explicitly specified
 }
 
 } // WebIo
