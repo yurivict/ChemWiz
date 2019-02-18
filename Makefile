@@ -12,7 +12,7 @@ APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\"
 CXXFLAGS=	$(CFLAGS) -std=c++17
-LDFLAGS=	$(shell pkg-config --static --libs-only-L mujs) -pthread
+LDFLAGS=	$(shell pkg-config --static --libs-only-L mujs) -pthread -lcrypto -lssl
 LDLIBS=		$(shell pkg-config --static --libs-only-l mujs)
 
 ifeq ($(USE_DSRPDB), yes)
