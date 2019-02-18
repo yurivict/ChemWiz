@@ -557,6 +557,16 @@ static void print(js_State *J) {
   ReturnVoid(J);
 }
 
+static void printn(js_State *J) {
+  unsigned int i, top = js_gettop(J);
+  for (i = 1; i < top; ++i) {
+    auto s = GetArgString(i);
+    if (i > 1) putchar(' ');
+    fputs(s.c_str(), stdout);
+  }
+  ReturnVoid(J);
+}
+
 static void sleep(js_State *J) {
   AssertNargs(1)
   auto secs = GetArgUInt32(1);
@@ -784,6 +794,7 @@ void registerFunctions(js_State *J) {
   //
 
   ADD_JS_FUNCTION(print, 1)
+  ADD_JS_FUNCTION(printn, 1)
   ADD_JS_FUNCTION(sleep, 1)
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
