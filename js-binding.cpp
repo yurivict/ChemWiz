@@ -197,6 +197,9 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
   }
 }
 
+// convenience macro to return objects
+#define Return(type, J, v) Js##type::xnewo(J, v);
+
 //
 // Define object types
 //
@@ -511,7 +514,7 @@ static void fname(js_State *J) {
 
 static void toBinary(js_State *J) {
   AssertNargs(0)
-  JsBinary::xnewo(J, GetArg(TempFile, 0)->toBinary());
+  Return(Binary, J, GetArg(TempFile, 0)->toBinary());
 }
 
 static void toPermanent(js_State *J) {
@@ -611,7 +614,7 @@ static void downloadUrl(js_State *J) {
 
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
-  JsMolecule::xnewo(J, Molecule::readXyzFile(GetArgString(1)));
+  Return(Molecule, J, Molecule::readXyzFile(GetArgString(1)));
 }
 
 static void writeXyzFile(js_State *J) {
@@ -668,7 +671,7 @@ static void calcMoleculeOptimize(js_State *J) {
   auto m = GetArg(Molecule, 1);
   auto ce = GetArg(CalcEngine, 2);
   const Calculators::Params params = GetNArgs() == 3 ? GetArgSSMap(3) : Calculators::Params();
-  JsMolecule::xnewo(J, ce->calcOptimized(*m, params));
+  Return(Molecule, J, ce->calcOptimized(*m, params));
 }
 
 static void vecPlus(js_State *J) {
