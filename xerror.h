@@ -19,9 +19,9 @@ public:
 
 #else // no exceptions
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 
-#define ERROR(msg...) {std::cerr << msg << std::endl; exit(1);}
+#define ERROR(msg...) {std::cerr << msg << std::endl; std::exit(1);}
 
 #endif
