@@ -203,7 +203,7 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 }
 
 // convenience macro to return objects
-#define Return(type, J, v) Js##type::xnewo(J, v);
+#define Return(type, v) Js##type::xnewo(J, v);
 
 //
 // Define object types
@@ -224,14 +224,14 @@ static void xnew(js_State *J) {
   auto strLen = ::strlen(str);
   b->resize(strLen);
   ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
-  xnewo(J, b);
+  Return(Binary, b);
 }
 
 namespace prototype {
 
 static void dupl(js_State *J) {
   AssertNargs(0)
-  xnewo(J, new Binary(*GetArg(Binary, 0)));
+  Return(Binary, new Binary(*GetArg(Binary, 0)));
 }
 
 static void size(js_State *J) {
@@ -258,7 +258,7 @@ static void concatenate(js_State *J) {
   auto b = new Binary(*GetArg(Binary, 0));
   auto b1 = GetArg(Binary, 1);
   b->insert(b->end(), b1->begin(), b1->end());
-  xnewo(J, b);
+  Return(Binary, b);
 }
 
 static void toString(js_State *J) {
@@ -313,14 +313,14 @@ static void xnew(js_State *J) {
   AssertNargs(2)
   auto elt = GetArgString(1);
   auto pos = GetArgVec(2);
-  xnewo(J, new Atom(elementFromString(elt), pos));
+  Return(Atom, new Atom(elementFromString(elt), pos));
 }
 
 namespace prototype {
 
 static void dupl(js_State *J) {
   AssertNargs(0)
-  xnewo(J, new Atom(*GetArg(Atom, 0)));
+  Return(Atom, new Atom(*GetArg(Atom, 0)));
 }
 
 static void str(js_State *J) {
@@ -409,14 +409,14 @@ static void xnewo(js_State *J, Molecule *m) {
 }
 
 static void xnew(js_State *J) {
-  xnewo(J, new Molecule("created-in-script"));
+  Return(Molecule, new Molecule("created-in-script"));
 }
 
 namespace prototype {
 
 static void dupl(js_State *J) {
   AssertNargs(0)
-  xnewo(J, new Molecule(*GetArg(Molecule, 0)));
+  Return(Molecule, new Molecule(*GetArg(Molecule, 0)));
 }
 
 static void str(js_State *J) {
@@ -503,13 +503,13 @@ static void xnew(js_State *J) {
   AssertNargsRange(0,2)
   switch (GetNArgs()) {
   case 0: // ()
-    xnewo(J, new TempFile);
+    Return(TempFile, new TempFile);
     break;
   case 1: // (fileName)
-    xnewo(J, new TempFile(GetArgString(1)));
+    Return(TempFile, new TempFile(GetArgString(1)));
     break;
   case 2: // (fileName, content)
-    xnewo(J, new TempFile(GetArgString(1), GetArgString(2)));
+    Return(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
     break;
   }
 }
@@ -529,7 +529,7 @@ static void fname(js_State *J) {
 
 static void toBinary(js_State *J) {
   AssertNargs(0)
-  Return(Binary, J, GetArg(TempFile, 0)->toBinary());
+  Return(Binary, GetArg(TempFile, 0)->toBinary());
 }
 
 static void toPermanent(js_State *J) {
@@ -632,12 +632,12 @@ static void system(js_State *J) {
 
 static void download(js_State *J) {
   AssertNargs(3)
-  Return(Binary, J, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
+  Return(Binary, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
 }
 
 static void downloadUrl(js_State *J) {
   AssertNargs(1)
-  Return(Binary, J, WebIo::downloadUrl(GetArgString(1)));
+  Return(Binary, WebIo::downloadUrl(GetArgString(1)));
 }
 
 template<typename C>
@@ -668,7 +668,7 @@ static void gxzip(js_State *J, C xcompressor) {
   Binary *b = new Binary;
   copyContainer(os.str(), *b); // XXX TODO optimize: need to copy between containers
 
-  Return(Binary, J, b);
+  Return(Binary, b);
 }
 
 static void gzip(js_State *J) {
@@ -683,7 +683,7 @@ static void gunzip(js_State *J) {
 
 static void readXyzFile(js_State *J) {
   AssertNargs(1)
-  Return(Molecule, J, Molecule::readXyzFile(GetArgString(1)));
+  Return(Molecule, Molecule::readXyzFile(GetArgString(1)));
 }
 
 static void writeXyzFile(js_State *J) {
@@ -740,7 +740,7 @@ static void calcMoleculeOptimize(js_State *J) {
   auto m = GetArg(Molecule, 1);
   auto ce = GetArg(CalcEngine, 2);
   const Calculators::Params params = GetNArgs() == 3 ? GetArgSSMap(3) : Calculators::Params();
-  Return(Molecule, J, ce->calcOptimized(*m, params));
+  Return(Molecule, ce->calcOptimized(*m, params));
 }
 
 static void vecPlus(js_State *J) {
