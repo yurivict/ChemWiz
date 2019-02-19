@@ -36,7 +36,7 @@ inline void writeFile(const std::string &str, const std::string &fname) {
 }
 
 template<typename Fn>
-class OnExit {
+class OnExit { // (!!) should always be used with the 'static' prefix to prevent 'exit' function calls elsewhere from escaping it XXX any better way to enforce this?
   Fn fn;
 public:
   OnExit(Fn &&newFn) : fn(newFn) { }

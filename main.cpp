@@ -22,7 +22,7 @@ static int main_guarded(int argc, char* argv[]) {
 
   // time printouts
   printTime(Tm::start(), "starting");
-  Util::OnExit doPrintTime([](){
+  static Util::OnExit doPrintTime([](){
     auto tmFinish = Tm::now();
     printTime(tmFinish, "finishing");
     std::cout << "-- ran for " << (tmFinish-Tm::start()) << " second(s) (wallclock) --" << std::endl;
