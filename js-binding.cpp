@@ -585,17 +585,38 @@ static void printn(js_State *J) {
   ReturnVoid(J);
 }
 
-static void fileRead(js_State *J) {
+static void fileRead(js_State *J) { // reads file into a string
   AssertNargs(1)
   auto fname = GetArgString(1);
 
   using it = std::istreambuf_iterator<char>;
 
-  std::ifstream file(fname, std::ios::in);
-  if (!file.is_open())
-    ERROR(str(boost::format("can't open the file: %1%") % fname));
+  std::ifstream file;
+  file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  try {
+    file.open(fname, std::ios::in);
+    ReturnString(J, std::string(it(file), it()));
+    file.close();
+  } catch (std::ifstream::failure e) {
+    ERROR(str(boost::format("can't read the file '%1%': %2%") % fname % e.what()));
+  }
+}
 
-  ReturnString(J, std::string(it(file), it()));
+static void fileWrite(js_State *J) { // writes string into a file
+  AssertNargs(2)
+  auto fname = GetArgString(2);
+
+  std::ofstream file;
+  file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+  try {
+    file.open(fname, std::ios::out);
+    file << GetArgString(1);
+    file.close();
+  } catch (std::ifstream::failure e) {
+    ERROR(str(boost::format("can't write the file '%1%': %2%") % fname % e.what()));
+  }
+
+  ReturnVoid(J);
 }
 
 static void sleep(js_State *J) {
@@ -814,6 +835,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
   ADD_JS_FUNCTION(fileRead, 1)
+  ADD_JS_FUNCTION(fileWrite, 2)
   ADD_JS_FUNCTION(sleep, 1)
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
