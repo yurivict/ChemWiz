@@ -74,6 +74,10 @@ static void defaultParams(Params &params) {
 // implementation functions
 //
 
+const char* Erkale::kind() const {
+  return "erkale";
+}
+
 Float Erkale::calcEnergy(const Molecule &m, const Params &params) {
   num++;
 

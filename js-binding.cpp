@@ -29,8 +29,8 @@ typedef std::vector<uint8_t> Binary;
 static const char *TAG_Binary     = "Binary";
 static const char *TAG_Molecule   = "Molecule";
 static const char *TAG_Atom       = "Atom";
-static const char *TAG_CalcEngine = "CalcEngine";
 static const char *TAG_TempFile   = "TempFile";
+static const char *TAG_CalcEngine = "CalcEngine";
 
 #define AssertNargs(n)           assert(js_gettop(J) == n+1);
 #define AssertNargsRange(n1,n2)  assert(n1+1 <= js_gettop(J) && js_gettop(J) <= n2+1);
@@ -203,7 +203,7 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 }
 
 // convenience macro to return objects
-#define Return(type, v) Js##type::xnewo(J, v);
+#define Return(type, v) Js##type::xnewo(J, v)
 
 //
 // Define object types
@@ -560,6 +560,67 @@ static void init(js_State *J) {
 
 } // JsTempFile
 
+namespace JsCalcEngine {
+
+static void xnewo(js_State *J, CalcEngine *ce) {
+  js_getglobal(J, TAG_CalcEngine);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_CalcEngine, ce, calcEngineFinalize);
+}
+
+static void xnew(js_State *J) {
+  AssertNargs(1)
+
+  if (auto e = CalcEngine::create(GetArgString(1)))
+    Return(CalcEngine, new Calculators::engines::Erkale);
+  else
+    ERROR(str(boost::format("unknown calc-engine '%1%' requested") % GetArgString(1)));
+}
+
+namespace prototype {
+
+static void str(js_State *J) {
+  AssertNargs(0)
+  auto f = GetArg(CalcEngine, 0);
+  ReturnString(J, str(boost::format("calc-engine{%1%}") % f->kind()));
+}
+
+static void kind(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(CalcEngine, 0)->kind());
+}
+
+static void calcEnergy(js_State *J) {
+  AssertNargsRange(1,2)
+  ReturnFloat(J, GetArg(CalcEngine, 0)->calcEnergy(*GetArg(Molecule, 1),  GetNArgs() == 2 ? GetArgSSMap(2) : Calculators::Params()));
+}
+
+static void calcOptimized(js_State *J) {
+  AssertNargsRange(1,2)
+  Return(Molecule, GetArg(CalcEngine, 0)->calcOptimized(*GetArg(Molecule, 1),  GetNArgs() == 2 ? GetArgSSMap(2) : Calculators::Params()));
+}
+
+}
+
+static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_CalcEngine);
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(CalcEngine)
+  js_getglobal(J, TAG_CalcEngine);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious()
+  { // methods
+    ADD_JS_METHOD(CalcEngine, str, 0)
+    ADD_JS_METHOD(CalcEngine, kind, 0)
+    ADD_JS_METHOD(CalcEngine, calcEnergy, 2/*1..2*/)
+    ADD_JS_METHOD(CalcEngine, calcOptimized, 2/*1..2*/)
+  }
+  js_pop(J, 2);
+  AssertStack(0);
+}
+
+} // JsCalcEngine
+
 //
 // exported functions
 //
@@ -740,29 +801,8 @@ static void readMmtfBuffer(js_State *J) {
 
 
 //
-// Calc engines
+// vector and matrix operations
 //
-
-static void getErkaleCalcEngine(js_State *J) {
-  AssertNargs(0)
-  js_newuserdata(J, TAG_CalcEngine, new Calculators::engines::Erkale, calcEngineFinalize);
-}
-
-static void calcMoleculeEnergy(js_State *J) {
-  AssertNargs2(2,3)
-  auto m = GetArg(Molecule, 1);
-  auto ce = GetArg(CalcEngine, 2);
-  const Calculators::Params params = GetNArgs() == 3 ? GetArgSSMap(3) : Calculators::Params();
-  ReturnFloat(J, ce->calcEnergy(*m, params));
-}
-
-static void calcMoleculeOptimize(js_State *J) {
-  AssertNargs2(2,3)
-  auto m = GetArg(Molecule, 1);
-  auto ce = GetArg(CalcEngine, 2);
-  const Calculators::Params params = GetNArgs() == 3 ? GetArgSSMap(3) : Calculators::Params();
-  Return(Molecule, ce->calcOptimized(*m, params));
-}
 
 static void vecPlus(js_State *J) {
   AssertNargs(2)
@@ -823,6 +863,7 @@ void registerFunctions(js_State *J) {
   JsAtom::init(J);
   JsMolecule::init(J);
   JsTempFile::init(J);
+  JsCalcEngine::init(J);
 
 #define ADD_JS_FUNCTION(name, num) \
   js_newcfunction(J, JsBinding::name, #name, num); \
@@ -859,14 +900,6 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(readMmtfFile, 1)
   ADD_JS_FUNCTION(readMmtfBuffer, 1)
 #endif
-
-  //
-  // Calc engines and calculations
-  //
-
-  ADD_JS_FUNCTION(getErkaleCalcEngine, 0)
-  ADD_JS_FUNCTION(calcMoleculeEnergy, 2)
-  ADD_JS_FUNCTION(calcMoleculeOptimize, 2)
 
   //
   // vector and matrix methods
