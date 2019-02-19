@@ -12,7 +12,9 @@ APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\"
 CXXFLAGS=	$(CFLAGS) -std=c++17
-LDFLAGS=	$(shell pkg-config --static --libs-only-L mujs) -pthread -lcrypto -lssl
+
+# for MuJS
+LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs)
 LDLIBS=		$(shell pkg-config --static --libs-only-l mujs)
 
 ifeq ($(USE_DSRPDB), yes)
@@ -29,6 +31,11 @@ endif
 ifeq ($(USE_EXCEPTIONS), yes)
 CXXFLAGS+=	-DUSE_EXCEPTIONS
 endif
+
+# for boost compressor/recompressor
+LDFLAGS+=	-lboost_iostreams -lz
+# for OpenSSL used to access https URLs
+LDFLAGS+=	$(shell pkg-config --libs openssl) -pthread
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 

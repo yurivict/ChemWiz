@@ -2,11 +2,15 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 #include <fstream>
+#include <sstream>
 #include <map>
 
-#include <boost/format.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 
 #include <unistd.h>
 #include <mujs.h>
@@ -38,6 +42,7 @@ static const char *TAG_TempFile   = "TempFile";
 #define GetArgBoolean(n)         js_toboolean(J, n)
 #define GetArgFloat(n)           js_tonumber(J, n)
 #define GetArgString(n)          std::string(js_tostring(J, n))
+#define GetArgStringCptr(n)      js_tostring(J, n)
 #define GetArgInt32(n)           js_toint32(J, n)
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
@@ -215,7 +220,10 @@ static void xnewo(js_State *J, Binary *b) {
 static void xnew(js_State *J) {
   AssertNargs(1)
   auto b = new Binary;
-  b->resize(GetArgUInt32(1));
+  auto str = GetArgStringCptr(1);
+  auto strLen = ::strlen(str);
+  b->resize(strLen);
+  ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
   xnewo(J, b);
 }
 
@@ -253,6 +261,12 @@ static void concatenate(js_State *J) {
   xnewo(J, b);
 }
 
+static void toString(js_State *J) {
+  AssertNargs(0)
+  auto b = GetArg(Binary, 0);
+  ReturnString(J, std::string(b->begin(), b->end()));
+}
+
 static void toFile(js_State *J) {
   AssertNargs(1)
   std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
@@ -276,6 +290,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Binary, resize, 1)
     ADD_JS_METHOD(Binary, append, 1)
     ADD_JS_METHOD(Binary, concatenate, 1)
+    ADD_JS_METHOD(Binary, toString, 0)
     ADD_JS_METHOD(Binary, toFile, 1)
   }
   js_pop(J, 2);
@@ -604,12 +619,53 @@ static void system(js_State *J) {
 
 static void download(js_State *J) {
   AssertNargs(3)
-  ReturnString(J, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
+  Return(Binary, J, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
 }
 
 static void downloadUrl(js_State *J) {
   AssertNargs(1)
-  ReturnString(J, WebIo::downloadUrl(GetArgString(1)));
+  Return(Binary, J, WebIo::downloadUrl(GetArgString(1)));
+}
+
+template<typename C>
+static void gxzip(js_State *J, C xcompressor) {
+  AssertNargs(1)
+
+  namespace io = boost::iostreams;
+
+  auto copyContainer = [](auto const &src, auto &dst) {
+    dst.resize(src.size());
+    ::memcpy(&dst[0], &src[0], src.size());
+  };
+
+  auto binIn = GetArg(Binary, 1);
+  std::string bufIn;
+
+  copyContainer(*binIn, bufIn); // XXX TODO optimize: need to copy between containers
+
+  std::istringstream is(bufIn);
+  std::ostringstream os;
+
+  io::filtering_streambuf<io::input> in;
+  in.push(xcompressor);
+  in.push(is);
+
+  io::copy(in, os);
+
+  Binary *b = new Binary;
+  copyContainer(os.str(), *b); // XXX TODO optimize: need to copy between containers
+
+  Return(Binary, J, b);
+}
+
+static void gzip(js_State *J) {
+  namespace io = boost::iostreams;
+  gxzip(J, io::gzip_compressor());
+}
+
+static void gunzip(js_State *J) {
+  namespace io = boost::iostreams;
+  gxzip(J, io::gzip_decompressor());
 }
 
 static void readXyzFile(js_State *J) {
@@ -811,6 +867,8 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(download, 3)
   ADD_JS_FUNCTION(downloadUrl, 1)
+  ADD_JS_FUNCTION(gzip, 1)
+  ADD_JS_FUNCTION(gunzip, 1)
 
   //
   // Read/Write functions

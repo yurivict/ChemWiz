@@ -13,13 +13,13 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/error.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <string>
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
-
-#include <boost/algorithm/string.hpp>
+#include <memory>
 #include <regex>
 
 namespace WebIo {
@@ -34,8 +34,8 @@ using tcp = net::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
 namespace Plain {
 
-static std::string download(const std::string &host, const std::string &service, const std::string &target) {
-  std::ostringstream content;
+static Binary* download(const std::string &host, const std::string &service, const std::string &target) {
+  std::unique_ptr<Binary> output(new Binary);
 
   // The io_context is required for all I/O
   net::io_context ioc;
@@ -62,13 +62,13 @@ static std::string download(const std::string &host, const std::string &service,
   beast::flat_buffer buffer;
 
   // Declare a container to hold the response
-  http::response<http::dynamic_body> res;
+  http::response<http::vector_body<Binary::value_type>> res;
 
   // Receive the HTTP response
   http::read(socket, buffer, res);
 
   // Write message into the output
-  content << res;
+  output->swap(res.body());
 
   // Gracefully close the socket
   boost::system::error_code ec;
@@ -81,7 +81,7 @@ static std::string download(const std::string &host, const std::string &service,
 
   // If we get here then the connection is closed gracefully
 
-  return content.str();
+  return output.release();
 }
 
 } // Plain
@@ -90,8 +90,8 @@ namespace Ssl {
 
 namespace ssl = net::ssl;       // from <boost/asio/ssl.hpp>
 
-static std::string download(const std::string &host, const std::string &service, const std::string &target) {
-  std::ostringstream content;
+static Binary* download(const std::string &host, const std::string &service, const std::string &target) {
+  std::unique_ptr<Binary> output(new Binary);
 
   // The io_context is required for all I/O
   net::io_context ioc;
@@ -137,13 +137,14 @@ static std::string download(const std::string &host, const std::string &service,
   beast::flat_buffer buffer;
 
   // Declare a container to hold the response
-  http::response<http::dynamic_body> res;
+  http::response<http::vector_body<Binary::value_type>> res;
 
   // Receive the HTTP response
   http::read(stream, buffer, res);
 
   // Write message into the output
-  content << res;
+  //output->insert(output->end(), (uint8_t*)&res.body(), (uint8_t*)((&res.body() + *res.payload_size())));
+  output->swap(res.body());
 
   // Gracefully close the stream
   beast::error_code ec;
@@ -158,7 +159,7 @@ static std::string download(const std::string &host, const std::string &service,
 
   // If we get here then the connection is closed gracefully
 
-  return content.str();
+  return output.release();
 }
 
 } // Ssl
@@ -167,7 +168,7 @@ static std::string download(const std::string &host, const std::string &service,
 // iface
 //
 
-std::string download(const std::string &host, const std::string &service, const std::string &target) {
+Binary* download(const std::string &host, const std::string &service, const std::string &target) {
   try {
     if (service != "443" && service != "https")
       return Plain::download(host, service, target);
@@ -209,7 +210,7 @@ static ParsedURI parseURI(const std::string& url) {
   return result;
 }
 
-std::string downloadUrl(const std::string &url) {
+Binary* downloadUrl(const std::string &url) {
   // parse URL into 3 parts to supply to the above 'download' function
   auto p = parseURI(url);
   return download(p.domain, p.protocol, p.resource+p.query); // XXX inaccurate when port is explicitly specified
