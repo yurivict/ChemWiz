@@ -440,7 +440,7 @@ static void getAtoms(js_State *J) {
 }
 
 static void addAtom(js_State *J) {
-  AssertNargs(0)
+  AssertNargs(1)
   GetArg(Molecule, 0)->add(GetArg(Atom, 1));
   ReturnVoid(J);
 }
