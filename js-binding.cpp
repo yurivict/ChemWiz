@@ -585,6 +585,19 @@ static void printn(js_State *J) {
   ReturnVoid(J);
 }
 
+static void fileRead(js_State *J) {
+  AssertNargs(1)
+  auto fname = GetArgString(1);
+
+  using it = std::istreambuf_iterator<char>;
+
+  std::ifstream file(fname, std::ios::in);
+  if (!file.is_open())
+    ERROR(str(boost::format("can't open the file: %1%") % fname));
+
+  ReturnString(J, std::string(it(file), it()));
+}
+
 static void sleep(js_State *J) {
   AssertNargs(1)
   auto secs = GetArgUInt32(1);
@@ -779,66 +792,7 @@ static void matRotate(js_State *J) {
   ReturnMat(J, Mat3::rotate(GetArgVec(1)));
 }
 
-static const char *require_js =
-  "function require(name) {\n"
-  "  var cache = require.cache;\n"
-  "  if (name in cache) return cache[name];\n"
-  "  var exports = {};\n"
-  "  cache[name] = exports;\n"
-  "  Function('exports', read(name+'.js'))(exports);\n"
-  "  return exports;\n"
-  "}\n"
-  "require.cache = Object.create(null);\n"
-;
-
-static void readfile(js_State *J) {
-  const char *filename = js_tostring(J, 1);
-  FILE *f;
-  char *s;
-  int size, t;
-
-  f = fopen(filename, "rb");
-  if (!f) {
-    js_error(J, "opening file %s failed", filename);
-  }
-  if (fseek(f, 0, SEEK_END) < 0) {
-     js_error(J, "seeking file %s failed", filename);
-  }
-  size = ftell(f);
-  if (size < 0) {
-    fclose(f);
-    js_error(J, "telling file %s failed", filename);
-  }
-  if (fseek(f, 0, SEEK_SET) < 0) {
-    fclose(f);
-    js_error(J, "seeking file %s failed", filename);
-  }
-  s = (char *) malloc(size + 1);
-  if (!s) {
-    fclose(f);
-    js_error(J, "out of memory");
-  }
-  t = fread(s, 1, size, f);
-  if (t != size) {
-    free(s);
-    fclose(f);
-    js_error(J, "reading file %s failed", filename);
-  }
-  fclose(f);
-  s[size] = '\0';
-  js_pushstring(J, s);
-  free(s);
-}
-
 void registerFunctions(js_State *J) {
-
-  //
-  // require() and read() inspired from mujs
-  //
-
-  js_newcfunction(J, readfile, "read", 1);
-  js_setglobal(J, "read");
-  js_dostring(J, require_js);
 
   //
   // init types
@@ -859,6 +813,7 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
+  ADD_JS_FUNCTION(fileRead, 1)
   ADD_JS_FUNCTION(sleep, 1)
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
@@ -906,6 +861,22 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(matRotate, 1)
 
 #undef ADD_JS_FUNCTION
+
+  //
+  // require() inspired from mujs
+  //
+
+  js_dostring(J,
+    "function require(name) {\n"
+    "  var cache = require.cache;\n"
+    "  if (name in cache) return cache[name];\n"
+    "  var exports = {};\n"
+    "  cache[name] = exports;\n"
+    "  Function('exports', fileRead(name+'.js'))(exports);\n"
+    "  return exports;\n"
+    "}\n"
+    "require.cache = Object.create(null);\n"
+  );
 }
 
 }; // JsBinding
