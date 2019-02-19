@@ -289,7 +289,7 @@ public:
   static Molecule* readXyzFile(const std::string &fname);
   static std::vector<Molecule*> readPdbFile(const std::string &newFname);
   static std::vector<Molecule*> readMmtfFile(const std::string &fname);
-  static std::vector<Molecule*> readMmtfBuffer(const std::string &buffer);
+  static std::vector<Molecule*> readMmtfBuffer(const std::vector<uint8_t> *buffer);
   // write extarnal formats
   void writeXyzFile(const std::string &fname) const;
   // printing

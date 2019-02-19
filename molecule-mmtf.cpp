@@ -76,9 +76,9 @@ std::vector<Molecule*> Molecule::readMmtfFile(const std::string &fname) {
   return readMolecule(sd);
 }
 
-std::vector<Molecule*> Molecule::readMmtfBuffer(const std::string &buffer) {
+std::vector<Molecule*> Molecule::readMmtfBuffer(const std::vector<uint8_t> *buffer) {
   mmtf::StructureData sd;
-  mmtf::decodeFromBuffer(sd, buffer.c_str(), buffer.size());
+  mmtf::decodeFromBuffer(sd, (const char*)&(*buffer)[0], buffer->size());
 
   return readMolecule(sd);
 }

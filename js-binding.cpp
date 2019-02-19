@@ -732,7 +732,7 @@ static void readMmtfFile(js_State *J) {
 
 static void readMmtfBuffer(js_State *J) {
   AssertNargs(1)
-  auto mols = Molecule::readMmtfBuffer(GetArgString(1));
+  auto mols = Molecule::readMmtfBuffer(GetArg(Binary, 1));
   for (auto m : mols)
     JsMolecule::xnewo(J, m);
 }
