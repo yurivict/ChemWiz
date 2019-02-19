@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <cmath>
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -438,6 +439,12 @@ static void getAtoms(js_State *J) {
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
+static void addAtom(js_State *J) {
+  AssertNargs(0)
+  GetArg(Molecule, 0)->add(GetArg(Atom, 1));
+  ReturnVoid(J);
+}
+
 static void appendAminoAcid(js_State *J) {
   AssertNargs(1)
   auto m = GetArg(Molecule, 0);
@@ -480,6 +487,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Molecule, str, 0)
     ADD_JS_METHOD(Molecule, numAtoms, 0)
     ADD_JS_METHOD(Molecule, getAtoms, 0)
+    ADD_JS_METHOD(Molecule, addAtom, 1)
     ADD_JS_METHOD(Molecule, appendAminoAcid, 1)
     ADD_JS_METHOD(Molecule, findAaCterm, 0)
     ADD_JS_METHOD(Molecule, findAaNterm, 0)
@@ -704,7 +712,27 @@ static void tmWallclock(js_State *J) {
 
 static void pi(js_State *J) {
   AssertNargs(0)
-  js_pushnumber(J, M_PI);
+  ReturnFloat(J, M_PI);
+}
+
+static void sin(js_State *J) {
+  AssertNargs(1)
+  ReturnFloat(J, std::sin(GetArgFloat(1)));
+}
+
+static void cos(js_State *J) {
+  AssertNargs(1)
+  ReturnFloat(J, std::cos(GetArgFloat(1)));
+}
+
+static void tan(js_State *J) {
+  AssertNargs(1)
+  ReturnFloat(J, std::tan(GetArgFloat(1)));
+}
+
+static void atan(js_State *J) {
+  AssertNargs(1)
+  ReturnFloat(J, std::atan(GetArgFloat(1)));
 }
 
 static void system(js_State *J) {
@@ -882,6 +910,10 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(tmNow, 0)
   ADD_JS_FUNCTION(tmWallclock, 0)
   ADD_JS_FUNCTION(pi, 0)
+  ADD_JS_FUNCTION(sin, 1)
+  ADD_JS_FUNCTION(cos, 1)
+  ADD_JS_FUNCTION(tan, 1)
+  ADD_JS_FUNCTION(atan, 1)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(download, 3)
   ADD_JS_FUNCTION(downloadUrl, 1)
