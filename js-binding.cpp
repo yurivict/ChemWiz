@@ -47,8 +47,8 @@ static const char *TAG_CalcEngine = "CalcEngine";
 #define GetArgInt32(n)           js_toint32(J, n)
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
-#define GetArgVec(n)             objToVec(J, n)
-#define GetArgMat(n)             objToMat(J, n)
+#define GetArgVec3(n)            objToVec3(J, n)
+#define GetArgMat3x3(n)          objToMat3x3(J, n)
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 #define ADD_JS_METHOD(cls, method, nargs) \
@@ -123,11 +123,11 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   return mres;
 }
 
-static Vec3 objToVec(js_State *J, int idx) {
+static Vec3 objToVec3(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    ERROR("objToVec: not an array");
+    ERROR("objToVec3: not an array");
   if (js_getlength(J, idx) != 3)
-    ERROR("objToVec: array size isn't 3");
+    ERROR("objToVec3: array size isn't 3");
 
   Vec3 v;
 
@@ -140,17 +140,17 @@ static Vec3 objToVec(js_State *J, int idx) {
   return v;
 }
 
-static Mat3 objToMat(js_State *J, int idx) {
+static Mat3 objToMat3x3(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    ERROR("objToMat: not an array");
+    ERROR("objToMat3x3: not an array");
   if (js_getlength(J, idx) != 3)
-    ERROR("objToMat: array size isn't 3");
+    ERROR("objToMat3x3: array size isn't 3");
 
   Mat3 m;
 
   for (unsigned i = 0; i < 3; i++) {
     js_getindex(J, idx, i);
-    m[i] = objToVec(J, -1);
+    m[i] = objToVec3(J, -1);
     js_pop(J, 1);
   }
 
@@ -313,7 +313,7 @@ static void xnewo(js_State *J, Atom *a) {
 static void xnew(js_State *J) {
   AssertNargs(2)
   auto elt = GetArgString(1);
-  auto pos = GetArgVec(2);
+  auto pos = GetArgVec3(2);
   Return(Atom, new Atom(elementFromString(elt), pos));
 }
 
@@ -342,7 +342,7 @@ static void getPos(js_State *J) {
 
 static void setPos(js_State *J) {
   AssertNargs(1)
-  GetArg(Atom, 0)->pos = GetArgVec(1);
+  GetArg(Atom, 0)->pos = GetArgVec3(1);
   ReturnVoid(J);
 }
 
@@ -834,51 +834,51 @@ static void readMmtfBuffer(js_State *J) {
 
 static void vecPlus(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec(1)+GetArgVec(2));
+  ReturnVec(J, GetArgVec3(1)+GetArgVec3(2));
 }
 
 static void vecMinus(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec(1)-GetArgVec(2));
+  ReturnVec(J, GetArgVec3(1)-GetArgVec3(2));
 }
 /*
 static void matPlus(js_State *J) {
   AssertNargs(2)
-  auto m1 = GetArgMat(1);
-  auto m2 = GetArgMat(2);
+  auto m1 = GetArgMat3x3(1);
+  auto m2 = GetArgMat3x3(2);
   ReturnMat(J, m1+m2);
 }
 
 static void matMinus(js_State *J) {
   AssertNargs(2)
-  auto m1 = GetArgMat(1);
-  auto m2 = GetArgMat(2);
+  auto m1 = GetArgMat3x3(1);
+  auto m2 = GetArgMat3x3(2);
   ReturnMat(J, m1-m2);
 }
 */
 static void mulMatVec(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgMat(1)*GetArgVec(2));
+  ReturnVec(J, GetArgMat3x3(1)*GetArgVec3(2));
 }
 
 static void mulMatMat(js_State *J) {
   AssertNargs(2)
-  ReturnMat(J, GetArgMat(1)*GetArgMat(2));
+  ReturnMat(J, GetArgMat3x3(1)*GetArgMat3x3(2));
 }
 
 static void dotVecVec(js_State *J) {
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec(1)*GetArgVec(2));
+  ReturnFloat(J, GetArgVec3(1)*GetArgVec3(2));
 }
 
 static void crossVecVec(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec(1).cross(GetArgVec(2)));
+  ReturnVec(J, GetArgVec3(1).cross(GetArgVec3(2)));
 }
 
 static void matRotate(js_State *J) {
   AssertNargs(1)
-  ReturnMat(J, Mat3::rotate(GetArgVec(1)));
+  ReturnMat(J, Mat3::rotate(GetArgVec3(1)));
 }
 
 void registerFunctions(js_State *J) {
