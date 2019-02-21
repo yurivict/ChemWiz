@@ -7,8 +7,8 @@ USE_MMTF=       yes
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
 SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp \
-		calculators.cpp
-HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h
+		calculators.cpp op-rmsd.cpp
+HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h op-rmsd.h
 APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\"
@@ -37,6 +37,10 @@ endif
 LDFLAGS+=	-lboost_iostreams -lz
 # for OpenSSL used to access https URLs
 LDFLAGS+=	$(shell pkg-config --libs openssl) -pthread
+
+# for OpenBLAS that is needed for the rmsd library
+LDFLAGS+=	-lopenblas
+LDFLAGS+=	-Wl,-rpath=/usr/local/lib/gcc8 /usr/local/lib/gcc8/libgcc_s.so # FreeBSD-specific
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 

@@ -23,6 +23,7 @@
 #include "tm.h"
 #include "process.h"
 #include "web-io.h"
+#include "op-rmsd.h"
 
 // types defined locally
 typedef std::vector<uint8_t> Binary;
@@ -49,6 +50,7 @@ static const char *TAG_CalcEngine = "CalcEngine";
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n)
 #define GetArgMat3x3(n)          objToMat3x3(J, n)
+#define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 #define ADD_JS_METHOD(cls, method, nargs) \
@@ -140,6 +142,20 @@ static Vec3 objToVec3(js_State *J, int idx) {
   return v;
 }
 
+template<unsigned N>
+static void objToVecVa(js_State *J, int idx, std::valarray<double> *va, unsigned vaIdx) {
+  if (!js_isarray(J, idx))
+    ERROR("objToVec: not an array");
+  if (js_getlength(J, idx) != N)
+    ERROR("objToVec: array size isn't " << N);
+
+  for (unsigned i = 0; i < N; i++) {
+    js_getindex(J, idx, i);
+    (*va)[vaIdx + i] = js_tonumber(J, -1);
+    js_pop(J, 1);
+  }
+}
+
 static Mat3 objToMat3x3(js_State *J, int idx) {
   if (!js_isarray(J, idx))
     ERROR("objToMat3x3: not an array");
@@ -151,6 +167,24 @@ static Mat3 objToMat3x3(js_State *J, int idx) {
   for (unsigned i = 0; i < 3; i++) {
     js_getindex(J, idx, i);
     m[i] = objToVec3(J, -1);
+    js_pop(J, 1);
+  }
+
+  return m;
+}
+
+template<unsigned N>
+static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
+  if (!js_isarray(J, idx))
+    ERROR("objToMatNxX: not an array");
+  auto len = js_getlength(J, idx);
+
+  auto m = new std::valarray<double>;
+  m->resize(len*N);
+
+  for (unsigned i = 0, vaIdx = 0; i < len; i++, vaIdx += N) {
+    js_getindex(J, idx, i);
+    objToVecVa<N>(J, -1, m, vaIdx);
     js_pop(J, 1);
   }
 
@@ -881,6 +915,13 @@ static void matRotate(js_State *J) {
   ReturnMat(J, Mat3::rotate(GetArgVec3(1)));
 }
 
+static void rmsd(js_State *J) {
+  AssertNargs(2)
+  std::unique_ptr<std::valarray<double>> v1(GetArgMatNxX(1, 3/*N=3*/));
+  std::unique_ptr<std::valarray<double>> v2(GetArgMatNxX(2, 3/*N=3*/));
+  ReturnFloat(J, Op::rmsdVec(*v1, *v2));
+}
+
 void registerFunctions(js_State *J) {
 
   //
@@ -946,6 +987,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(dotVecVec, 2)
   ADD_JS_FUNCTION(crossVecVec, 2)
   ADD_JS_FUNCTION(matRotate, 1)
+  ADD_JS_FUNCTION(rmsd, 2)
 
 #undef ADD_JS_FUNCTION
 
