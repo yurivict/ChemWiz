@@ -13,11 +13,6 @@ double rmsdVec(std::valarray<double> &v1, std::valarray<double> &v2) {
   std::valarray<double> v1ctr;
   std::valarray<double> v2ctr;
 
-  for (auto i : v1)
-    std::cout << "v1: " << i << std::endl;
-  for (auto i : v2)
-    std::cout << "v2: " << i << std::endl;
-
   assert(v1.size() == v2.size() && v1.size()%3 == 0);
   auto nPts = v1.size()/3;
 
