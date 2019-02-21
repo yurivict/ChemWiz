@@ -8,6 +8,7 @@
 #include <sstream>
 #include <map>
 #include <cmath>
+#include <memory>
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
