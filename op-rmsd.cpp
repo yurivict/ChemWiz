@@ -9,7 +9,7 @@ namespace Op {
 
 typedef std::valarray<double> matrix;
 
-double rmsdVec(std::valarray<double> &v1, std::valarray<double> &v2) {
+double rmsd(std::valarray<double> &v1, std::valarray<double> &v2) {
   std::valarray<double> v1ctr;
   std::valarray<double> v2ctr;
 

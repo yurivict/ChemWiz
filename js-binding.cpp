@@ -920,7 +920,7 @@ static void rmsd(js_State *J) {
   AssertNargs(2)
   std::unique_ptr<std::valarray<double>> v1(GetArgMatNxX(1, 3/*N=3*/));
   std::unique_ptr<std::valarray<double>> v2(GetArgMatNxX(2, 3/*N=3*/));
-  ReturnFloat(J, Op::rmsdVec(*v1, *v2));
+  ReturnFloat(J, Op::rmsd(*v1, *v2));
 }
 
 void registerFunctions(js_State *J) {
