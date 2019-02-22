@@ -409,6 +409,12 @@ static void getNumBonds(js_State *J) {
   ReturnUnsigned(J, a->bonds.size());
 }
 
+static void getBonds(js_State *J) {
+  AssertNargs(0)
+  auto a = GetArg(Atom, 0);
+  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -429,6 +435,7 @@ static void init(js_State *J) {
     ADD_JS_METHOD(Atom, getHetAtm, 0)
     ADD_JS_METHOD(Atom, setHetAtm, 1)
     ADD_JS_METHOD(Atom, getNumBonds, 0)
+    ADD_JS_METHOD(Atom, getBonds, 0)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -876,6 +883,12 @@ static void vecMinus(js_State *J) {
   AssertNargs(2)
   ReturnVec(J, GetArgVec3(1)-GetArgVec3(2));
 }
+
+static void vecLength(js_State *J) {
+  AssertNargs(1)
+  auto v = GetArgVec3(1);
+  ReturnFloat(J, v.len());
+}
 /*
 static void matPlus(js_State *J) {
   AssertNargs(2)
@@ -981,6 +994,7 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(vecPlus, 2)
   ADD_JS_FUNCTION(vecMinus, 2)
+  ADD_JS_FUNCTION(vecLength, 1)
   //ADD_JS_FUNCTION(matPlus, 2)
   //ADD_JS_FUNCTION(matMinus, 2)
   ADD_JS_FUNCTION(mulMatVec, 2)
