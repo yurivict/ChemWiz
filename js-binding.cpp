@@ -54,7 +54,8 @@ static const char *TAG_CalcEngine = "CalcEngine";
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
-#define ADD_JS_METHOD(cls, method, nargs) \
+// add method defined by the C++ code
+#define ADD_METHOD_CPP(cls, method, nargs) \
   AssertStack(2); \
   js_newcfunction(J, prototype::method, #cls ".prototype." #method, nargs); /*PUSH a function object wrapping a C function pointer*/ \
   js_defproperty(J, -2, #method, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
@@ -321,13 +322,13 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   StackPopPrevious()
   { // methods
-    ADD_JS_METHOD(Binary, dupl, 0)
-    ADD_JS_METHOD(Binary, size, 0)
-    ADD_JS_METHOD(Binary, resize, 1)
-    ADD_JS_METHOD(Binary, append, 1)
-    ADD_JS_METHOD(Binary, concatenate, 1)
-    ADD_JS_METHOD(Binary, toString, 0)
-    ADD_JS_METHOD(Binary, toFile, 1)
+    ADD_METHOD_CPP(Binary, dupl, 0)
+    ADD_METHOD_CPP(Binary, size, 0)
+    ADD_METHOD_CPP(Binary, resize, 1)
+    ADD_METHOD_CPP(Binary, append, 1)
+    ADD_METHOD_CPP(Binary, concatenate, 1)
+    ADD_METHOD_CPP(Binary, toString, 0)
+    ADD_METHOD_CPP(Binary, toFile, 1)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -425,17 +426,17 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
   StackPopPrevious()
   { // methods
-    ADD_JS_METHOD(Atom, dupl, 0)
-    ADD_JS_METHOD(Atom, str, 0)
-    ADD_JS_METHOD(Atom, getElement, 0)
-    ADD_JS_METHOD(Atom, getPos, 0)
-    ADD_JS_METHOD(Atom, setPos, 1)
-    ADD_JS_METHOD(Atom, getName, 0)
-    ADD_JS_METHOD(Atom, setName, 1)
-    ADD_JS_METHOD(Atom, getHetAtm, 0)
-    ADD_JS_METHOD(Atom, setHetAtm, 1)
-    ADD_JS_METHOD(Atom, getNumBonds, 0)
-    ADD_JS_METHOD(Atom, getBonds, 0)
+    ADD_METHOD_CPP(Atom, dupl, 0)
+    ADD_METHOD_CPP(Atom, str, 0)
+    ADD_METHOD_CPP(Atom, getElement, 0)
+    ADD_METHOD_CPP(Atom, getPos, 0)
+    ADD_METHOD_CPP(Atom, setPos, 1)
+    ADD_METHOD_CPP(Atom, getName, 0)
+    ADD_METHOD_CPP(Atom, setName, 1)
+    ADD_METHOD_CPP(Atom, getHetAtm, 0)
+    ADD_METHOD_CPP(Atom, setHetAtm, 1)
+    ADD_METHOD_CPP(Atom, getNumBonds, 0)
+    ADD_METHOD_CPP(Atom, getBonds, 0)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -525,15 +526,15 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
   StackPopPrevious()
   { // methods
-    ADD_JS_METHOD(Molecule, dupl, 0)
-    ADD_JS_METHOD(Molecule, str, 0)
-    ADD_JS_METHOD(Molecule, numAtoms, 0)
-    ADD_JS_METHOD(Molecule, getAtoms, 0)
-    ADD_JS_METHOD(Molecule, addAtom, 1)
-    ADD_JS_METHOD(Molecule, appendAminoAcid, 1)
-    ADD_JS_METHOD(Molecule, findAaCterm, 0)
-    ADD_JS_METHOD(Molecule, findAaNterm, 0)
-    ADD_JS_METHOD(Molecule, findAaLast, 0)
+    ADD_METHOD_CPP(Molecule, dupl, 0)
+    ADD_METHOD_CPP(Molecule, str, 0)
+    ADD_METHOD_CPP(Molecule, numAtoms, 0)
+    ADD_METHOD_CPP(Molecule, getAtoms, 0)
+    ADD_METHOD_CPP(Molecule, addAtom, 1)
+    ADD_METHOD_CPP(Molecule, appendAminoAcid, 1)
+    ADD_METHOD_CPP(Molecule, findAaCterm, 0)
+    ADD_METHOD_CPP(Molecule, findAaNterm, 0)
+    ADD_METHOD_CPP(Molecule, findAaLast, 0)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -598,11 +599,11 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   StackPopPrevious()
   { // methods
-    ADD_JS_METHOD(TempFile, str, 0)
-    ADD_JS_METHOD(TempFile, fname, 0)
-    ADD_JS_METHOD(TempFile, toBinary, 0)
-    ADD_JS_METHOD(TempFile, toPermanent, 1)
-    //ADD_JS_METHOD(TempFile, writeBinary, 1) // to write binary data into the temp file
+    ADD_METHOD_CPP(TempFile, str, 0)
+    ADD_METHOD_CPP(TempFile, fname, 0)
+    ADD_METHOD_CPP(TempFile, toBinary, 0)
+    ADD_METHOD_CPP(TempFile, toPermanent, 1)
+    //ADD_METHOD_CPP(TempFile, writeBinary, 1) // to write binary data into the temp file
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -660,10 +661,10 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   StackPopPrevious()
   { // methods
-    ADD_JS_METHOD(CalcEngine, str, 0)
-    ADD_JS_METHOD(CalcEngine, kind, 0)
-    ADD_JS_METHOD(CalcEngine, calcEnergy, 2/*1..2*/)
-    ADD_JS_METHOD(CalcEngine, calcOptimized, 2/*1..2*/)
+    ADD_METHOD_CPP(CalcEngine, str, 0)
+    ADD_METHOD_CPP(CalcEngine, kind, 0)
+    ADD_METHOD_CPP(CalcEngine, calcEnergy, 2/*1..2*/)
+    ADD_METHOD_CPP(CalcEngine, calcOptimized, 2/*1..2*/)
   }
   js_pop(J, 2);
   AssertStack(0);
