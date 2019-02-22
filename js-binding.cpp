@@ -441,6 +441,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, setHetAtm, 1)
     ADD_METHOD_CPP(Atom, getNumBonds, 0)
     ADD_METHOD_CPP(Atom, getBonds, 0)
+    ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
   }
   js_pop(J, 2);
   AssertStack(0);
