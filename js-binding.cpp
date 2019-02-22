@@ -61,6 +61,10 @@ static const char *TAG_CalcEngine = "CalcEngine";
   js_defproperty(J, -2, #method, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
   AssertStack(2);
 
+// add method defined in JavaScript
+#define ADD_METHOD_JS(cls, method, code...) \
+  js_dostring(J, str(boost::format("%1%.prototype['%2%'] = %3%") % #cls % #method % #code).c_str());
+
 static void InitObjectRegistry(js_State *J, const char *tag) {
   js_newobject(J);
   js_setregistry(J, tag);
@@ -532,6 +536,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, getAtoms, 0)
     ADD_METHOD_CPP(Molecule, addAtom, 1)
     ADD_METHOD_CPP(Molecule, appendAminoAcid, 1)
+    ADD_METHOD_JS (Molecule, findAtoms, function(filter) {return this.getAtoms().filter(filter)})
     ADD_METHOD_CPP(Molecule, findAaCterm, 0)
     ADD_METHOD_CPP(Molecule, findAaNterm, 0)
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
