@@ -18,6 +18,7 @@
 #include <mujs.h>
 
 #include "js-binding.h"
+#include "obj.h"
 #include "molecule.h"
 #include "calculators.h"
 #include "temp-file.h"
@@ -29,6 +30,7 @@
 // types defined locally
 typedef std::vector<uint8_t> Binary;
 
+static const char *TAG_Obj        = "Obj";
 static const char *TAG_Binary     = "Binary";
 static const char *TAG_Molecule   = "Molecule";
 static const char *TAG_Atom       = "Atom";
@@ -250,6 +252,44 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 // Define object types
 //
 
+namespace JsObj {
+
+static void xnewo(js_State *J, Obj *o) {
+  js_getglobal(J, TAG_Obj);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_Obj, o, 0/*finalize*/);
+}
+
+static void xnew(js_State *J) {
+  AssertNargs(0)
+  Return(Obj, new Obj);
+}
+
+namespace prototype {
+
+static void id(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(Obj, 0)->id());
+}
+
+}
+
+static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_Obj);
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(Obj)
+  js_getglobal(J, TAG_Obj);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious()
+  { // methods
+    ADD_METHOD_CPP(Obj, id, 0)
+  }
+  js_pop(J, 2);
+  AssertStack(0);
+}
+
+} // JsObj
+
 namespace JsBinary {
 
 static void xnewo(js_State *J, Binary *b) {
@@ -359,6 +399,11 @@ static void xnew(js_State *J) {
 
 namespace prototype {
 
+static void id(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(Atom, 0)->id());
+}
+
 static void dupl(js_State *J) {
   AssertNargs(0)
   Return(Atom, new Atom(*GetArg(Atom, 0)));
@@ -430,6 +475,7 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
   StackPopPrevious()
   { // methods
+    ADD_METHOD_CPP(Atom, id, 0)
     ADD_METHOD_CPP(Atom, dupl, 0)
     ADD_METHOD_CPP(Atom, str, 0)
     ADD_METHOD_CPP(Atom, getElement, 0)
@@ -463,6 +509,11 @@ static void xnew(js_State *J) {
 
 namespace prototype {
 
+static void id(js_State *J) {
+  AssertNargs(0)
+  ReturnString(J, GetArg(Molecule, 0)->id());
+}
+
 static void dupl(js_State *J) {
   AssertNargs(0)
   Return(Molecule, new Molecule(*GetArg(Molecule, 0)));
@@ -471,9 +522,7 @@ static void dupl(js_State *J) {
 static void str(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
-  char str[256];
-  sprintf(str, "molecule{%p, id=%s}", m, m->id.c_str());
-  ReturnString(J, str);
+  ReturnString(J, str(boost::format("molecule{%1%, id=%2%}") % m % m->idx.c_str()));
 }
 
 static void numAtoms(js_State *J) {
@@ -531,6 +580,7 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
   StackPopPrevious()
   { // methods
+    ADD_METHOD_CPP(Molecule, id, 0)
     ADD_METHOD_CPP(Molecule, dupl, 0)
     ADD_METHOD_CPP(Molecule, str, 0)
     ADD_METHOD_CPP(Molecule, numAtoms, 0)
@@ -949,6 +999,7 @@ void registerFunctions(js_State *J) {
   // init types
   //
 
+  JsObj::init(J);
   JsBinary::init(J);
   JsAtom::init(J);
   JsMolecule::init(J);

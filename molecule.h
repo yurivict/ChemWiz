@@ -209,13 +209,13 @@ public:
 
 class Molecule : public Obj {
 public:
-  std::string        id;
+  std::string        idx;
   std::string        descr;
   std::vector<Atom*> atoms; // own atoms here
   Molecule(const std::string &newDescr);
   Molecule(const Molecule &other);
   ~Molecule();
-  void setId(const std::string &newId) {id = newId;}
+  void setIdx(const std::string &newIdx) {idx = newIdx;}
   unsigned numAtoms() const {return atoms.size();}
   void add(const Atom &a) { // doesn't detect bonds when one atom is added
     atoms.push_back((new Atom(a))->setMolecule(this));

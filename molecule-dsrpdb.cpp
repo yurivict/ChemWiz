@@ -47,7 +47,7 @@ std::vector<Molecule*> Molecule::readPdbFile(const std::string &fname) {
       }
     }
     molecule->detectBonds();
-    molecule->setId(str(boost::format("%1%#%2%") % fname % (m+1)));
+    molecule->setIdx(str(boost::format("%1%#%2%") % fname % (m+1)));
     res.push_back(molecule);
   }
   return res;

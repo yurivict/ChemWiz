@@ -1,14 +1,17 @@
 #pragma once
 
 #include "common.h"
+#include "obj.h"
+
 #include <map>
+
 class Molecule;
 
 namespace Calculators {
 
 typedef std::map<std::string,std::string> Params;
 
-class Engine {
+class Engine : public Obj {
 public:
   virtual ~Engine() { }
   static Engine* create(const std::string &kind); // returns nullptr when this kind doesn't exist
