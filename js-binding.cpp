@@ -762,6 +762,11 @@ static void printn(js_State *J) {
   ReturnVoid(J);
 }
 
+static void fileExists(js_State *J) {
+  AssertNargs(1)
+  ReturnBoolean(J, std::ifstream(GetArgString(1)).good());
+}
+
 static void fileRead(js_State *J) { // reads file into a string
   AssertNargs(1)
   auto fname = GetArgString(1);
@@ -1043,6 +1048,7 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
+  ADD_JS_FUNCTION(fileExists, 1)
   ADD_JS_FUNCTION(fileRead, 1)
   ADD_JS_FUNCTION(fileWrite, 2)
   ADD_JS_FUNCTION(sleep, 1)
@@ -1104,7 +1110,7 @@ void registerFunctions(js_State *J) {
     "  if (name in cache) return cache[name];\n"
     "  var exports = {};\n"
     "  cache[name] = exports;\n"
-    "  Function('exports', fileRead(name+'.js'))(exports);\n"
+    "  Function('exports', fileRead('modules/'+name+'.js'))(exports);\n"
     "  return exports;\n"
     "}\n"
     "require.cache = Object.create(null);\n"

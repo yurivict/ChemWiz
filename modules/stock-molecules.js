@@ -62,3 +62,6 @@ exports.h2o_dimer_2000 = function () {
   return m
 }
 
+exports.fatty_acid = function () {
+}
+
