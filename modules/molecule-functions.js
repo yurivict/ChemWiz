@@ -94,10 +94,11 @@ exports.findLevelsFrom = function(atom1, atom2) {
 }
 
 //
-// printGeometryDetails: accepts the output of findLevelsFrom, prints inter-level distances and angles
+// reportGeometryDetails: accepts the output of findLevelsFrom, prints inter-level distances and angles
 //
 
-exports.printGeometryDetails = function(levels) {
+exports.reportGeometryDetails = function(levels) {
+  var details = ""
   function descrAtom(a, lev) {
     return a.getElement()+"@"+lev
   }
@@ -112,13 +113,14 @@ exports.printGeometryDetails = function(levels) {
               var prev = levPrev[p][1]
               var curr1 = levCurr[c1][1]
               var curr2 = levCurr[c2][1]
-              print("level #"+l+": "+descrAtom(curr1, l)+"‒"+descrAtom(prev, l-1)+"‒"+descrAtom(curr2, l)+":"
+              details = details + "level #"+l+": "+descrAtom(curr1, l)+"‒"+descrAtom(prev, l-1)+"‒"+descrAtom(curr2, l)+":"
                 +" "+fmtAngle(prev.angleBetweenDeg(curr1, curr2))
                 +" "+fmtDistanceA(prev.distance(curr1))
                 +" "+fmtDistanceA(prev.distance(curr2))
                 +" "+fmtDistanceA(curr1.distance(curr2))
-              )
+                +"\n"
             }
   }
+  return details
 }
 
