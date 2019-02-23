@@ -60,6 +60,54 @@ bool Atom::hasBond(const Atom *other) const {
   return false;
 }
 
+Atom* Atom::getOtherBondOf3(Atom *othr1, Atom *othr2) const {
+  assert(nbonds() == 3);
+  if (bonds[0]!=othr1 && bonds[0]!=othr2)
+    return bonds[0];
+  if (bonds[1]!=othr1 && bonds[1]!=othr2)
+    return bonds[1];
+  return bonds[2];
+}
+
+Atom* Atom::findOnlyC() const {
+  Atom *res = nullptr;
+  for (auto n : bonds)
+    if (n->elt == C) {
+      if (!res)
+        res = n;
+      else
+        return nullptr; // not the only one
+    }
+  return res;
+}
+
+Atom* Atom::findSingleNeighbor(Element elt) const {
+  Atom *res = nullptr;
+  for (auto a : bonds)
+    if (a->nbonds() == 1 && a->elt == elt) {
+      if (!res)
+        res = a;
+      else
+        return nullptr; // not found
+    }
+  return res;
+}
+
+Atom* Atom::findSingleNeighbor2(Element elt1, Element elt2) const {
+  Atom *res = nullptr;
+  for (auto a : bonds)
+    if (a->nbonds() == 2 && a->elt == elt1) {
+      auto nx = a->bonds[0] == this ? a->bonds[1] : a->bonds[0];
+      if (nx->nbonds() == 1 && nx->elt == elt2) {
+        if (!res)
+          res = a;
+        else
+          return nullptr; // not found
+      }
+    }
+  return res;
+}
+
 std::ostream& operator<<(std::ostream &os, const Atom &a) {
   auto prnCoord = [](Float c) {
     char buf[10];

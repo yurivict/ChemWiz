@@ -132,17 +132,10 @@ public:
   void applyMatrix(const Mat3 &m) {
     pos = m*pos;
   }
-  Atom* findOnlyC() const {
-    Atom *res = nullptr;
-    for (auto n : bonds)
-      if (n->elt == C) {
-        if (!res)
-          res = n;
-        else
-          return nullptr; // not the only one
-      }
-    return res;
-  }
+  Atom* getOtherBondOf3(Atom *othr1, Atom *othr2) const;
+  Atom* findOnlyC() const;
+  Atom* findSingleNeighbor(Element elt) const;
+  Atom* findSingleNeighbor2(Element elt1, Element elt2) const;
   auto findFirstBond(Element bondElt) {
     for (auto a : bonds)
       if (a->elt == bondElt)

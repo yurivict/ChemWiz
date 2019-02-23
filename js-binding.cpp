@@ -54,6 +54,7 @@ static const char *TAG_CalcEngine = "CalcEngine";
 #define GetArgVec3(n)            objToVec3(J, n)
 #define GetArgMat3x3(n)          objToMat3x3(J, n)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
+#define GetArgElement(n)         elementFromString(GetArgString(n))
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 // add method defined by the C++ code
@@ -247,6 +248,7 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
 
 // convenience macro to return objects
 #define Return(type, v) Js##type::xnewo(J, v)
+#define ReturnZ(type, v) Js##type::xnewoZ(J, v)
 
 //
 // Define object types
@@ -390,6 +392,13 @@ static void xnewo(js_State *J, Atom *a) {
   js_newuserdata(J, TAG_Atom, a, atomFinalize);
 }
 
+static void xnewoZ(js_State *J, Atom *a) { // object or undefined when a==nulllptr
+  if (a)
+    xnewo(J, a);
+  else
+    js_pushundefined(J);
+}
+
 static void xnew(js_State *J) {
   AssertNargs(2)
   auto elt = GetArgString(1);
@@ -470,6 +479,21 @@ static void hasBond(js_State *J) {
   ReturnBoolean(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
 }
 
+static void getOtherBondOf3(js_State *J) {
+  AssertNargs(2)
+  Return(Atom, GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
+}
+
+static void findSingleNeighbor(js_State *J) {
+  AssertNargs(1)
+  ReturnZ(Atom, GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));
+}
+
+static void findSingleNeighbor2(js_State *J) {
+  AssertNargs(2)
+  ReturnZ(Atom, GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -493,6 +517,9 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, getNumBonds, 0)
     ADD_METHOD_CPP(Atom, getBonds, 0)
     ADD_METHOD_CPP(Atom, hasBond, 1)
+    ADD_METHOD_CPP(Atom, getOtherBondOf3, 2)
+    ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
+    ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
     ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return vecAngleRad(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return vecAngleDeg(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
