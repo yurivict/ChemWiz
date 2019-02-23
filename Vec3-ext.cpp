@@ -1,8 +1,8 @@
 #include "Vec3.h"
 #include "Vec3-ext.h"
 #include "Mat3.h"
-#include <cmath>
 
+#include <cmath>
 #include <iostream>
 
 Mat3 Vec3Extra::rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 &m1, const Vec3 &m2) {
