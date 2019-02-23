@@ -10,10 +10,14 @@ function extractCoords(m) {
   return res
 }
 
-// extract coordinates of all atoms
+//
+// extractCoords: extract coordinates of all atoms
+//
 exports.extractCoords = extractCoords
 
-// RMSD operation between molecules
+//
+// rmsd: computes RMSD between molecules
+//
 exports.rmsd = function(m1, m2) {
   return rmsd(extractCoords(m1), extractCoords(m2))
 }
@@ -28,6 +32,37 @@ exports.printBondLengths = function(m) {
       var bondAtom = bonds[b]
       print(" ---> bond#"+(b+1)+": elt="+bondAtom.getElement()+" pos="+bondAtom.getPos()+" bondLength="+vecLength(vecMinus(atom.getPos(),bondAtom.getPos())))
     }
+  }
+}
+
+//
+// traverseForward: traverses atoms beginning from the bond atom1 -> atom2, calls function fn(atomId, atom, lev) per object
+//
+exports.traverseForward = function(m, atom1, atom2, fn) {
+  var seen = {}
+  var todo = []
+  function traverseBonds(a, lev) {
+    var bonds = a.getBonds()
+    for (var b = 0; b < bonds.length; b++) {
+      var bondAtom = bonds[b]
+      var bondAtomId = bondAtom.id()
+      if (!(bondAtomId in seen)) {
+        todo.push([bondAtomId, bondAtom, lev])
+      }
+    }
+  }
+  seen[atom1.id()] = atom1
+  seen[atom2.id()] = atom2
+  var dist = 0 // distance from atom2
+  var a = atom2
+  // seed
+  traverseBonds(atom2, 1)
+  // iterate
+  while (todo.length > 0) {
+    var tri = todo.pop()
+    fn(tri[0], tri[1], tri[2])
+    seen[tri[0]] = tri[1]
+    traverseBonds(tri[1], tri[2]+1)
   }
 }
 
