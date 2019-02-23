@@ -84,6 +84,7 @@ public:
   }
   Atom* setMolecule(Molecule *m) {molecule = m; return this;}
   unsigned nbonds() const {return bonds.size();}
+  bool hasBond(const Atom *other) const;
   static Float atomBondAvgRadius(Element elt) {
     // based on the paper Raji Heyrovska "Atomic Structures of all the Twenty Essential Amino Acids and a Tripeptide, with Bond Lengths as Sums of Atomic Covalent Radii"
     // tolerances will be added to account for ranges

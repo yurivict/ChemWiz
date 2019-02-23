@@ -456,13 +456,18 @@ static void setHetAtm(js_State *J) {
 static void getNumBonds(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
-  ReturnUnsigned(J, a->bonds.size());
+  ReturnUnsigned(J, a->nbonds());
 }
 
 static void getBonds(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
+}
+
+static void hasBond(js_State *J) {
+  AssertNargs(1)
+  ReturnBoolean(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
 }
 
 } // prototype
@@ -487,7 +492,11 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, setHetAtm, 1)
     ADD_METHOD_CPP(Atom, getNumBonds, 0)
     ADD_METHOD_CPP(Atom, getBonds, 0)
+    ADD_METHOD_CPP(Atom, hasBond, 1)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
+    ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return vecAngleRad(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return vecAngleDeg(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, distance, function(othr) {return vecLength(vecMinus(this.getPos(), othr.getPos()))})
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -839,6 +848,13 @@ static void system(js_State *J) {
   ReturnString(J, Process::exec(GetArgString(1)));
 }
 
+static void formatFp(js_State *J) {
+  AssertNargs(2)
+  char buf[32];
+  ::sprintf(buf, "%.*lf", GetArgUInt32(2), GetArgFloat(1));
+  ReturnString(J, buf);
+}
+
 static void download(js_State *J) {
   AssertNargs(3)
   Return(Binary, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
@@ -946,6 +962,17 @@ static void vecLength(js_State *J) {
   auto v = GetArgVec3(1);
   ReturnFloat(J, v.len());
 }
+
+static void vecAngleRad(js_State *J) { // angle in radians between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+  AssertNargs(2)
+  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2)));
+}
+
+static void vecAngleDeg(js_State *J) { // angle in degrees between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+  AssertNargs(2)
+  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2))/M_PI*180);
+}
+
 /*
 static void matPlus(js_State *J) {
   AssertNargs(2)
@@ -1028,6 +1055,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(tan, 1)
   ADD_JS_FUNCTION(atan, 1)
   ADD_JS_FUNCTION(system, 1)
+  ADD_JS_FUNCTION(formatFp, 2)
   ADD_JS_FUNCTION(download, 3)
   ADD_JS_FUNCTION(downloadUrl, 1)
   ADD_JS_FUNCTION(gzip, 1)
@@ -1053,6 +1081,8 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(vecPlus, 2)
   ADD_JS_FUNCTION(vecMinus, 2)
   ADD_JS_FUNCTION(vecLength, 1)
+  ADD_JS_FUNCTION(vecAngleRad, 2)
+  ADD_JS_FUNCTION(vecAngleDeg, 2)
   //ADD_JS_FUNCTION(matPlus, 2)
   //ADD_JS_FUNCTION(matMinus, 2)
   ADD_JS_FUNCTION(mulMatVec, 2)

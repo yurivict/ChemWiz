@@ -53,6 +53,9 @@ public:
     const Vec3 &i = *this;
     return Vec3(-i(Z)*v(Y) + i(Y)*v(Z), i(Z)*v(X) - i(X)*v(Z), -i(Y)*v(X) + i(X)*v(Y)); // see https://en.wikipedia.org/wiki/Cross_product#Conversion_to_matrix_multiplication
   }
+  Float angle(const Vec3 &v) const {
+    return std::acos((*this)*v/(this->len()*v.len()));
+  }
   Vec3 operator/(Float m) const {
     const Vec3 &i = *this;
     return Vec3(i(X)/m, i(Y)/m, i(Z)/m);

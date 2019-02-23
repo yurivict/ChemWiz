@@ -53,6 +53,13 @@ Element elementFromString(const std::string &s) {
 
 /// Atom
 
+bool Atom::hasBond(const Atom *other) const {
+  for (auto a : bonds)
+    if (a == other)
+      return true;
+  return false;
+}
+
 std::ostream& operator<<(std::ostream &os, const Atom &a) {
   auto prnCoord = [](Float c) {
     char buf[10];
