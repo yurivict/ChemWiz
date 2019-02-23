@@ -66,3 +66,19 @@ exports.traverseForward = function(m, atom1, atom2, fn) {
   }
 }
 
+//
+// findLevelsFrom: find atom levels beginning from the bond atom1 -> atom2, returns the array of levels
+//
+exports.findLevelsFrom = function(m, atom1, atom2) {
+  var res = []
+  exports.traverseForward(m, atom1, atom2, function(id,a,lev) {
+    // resize
+    while (lev >= res.length) {
+      res.push([])
+    }
+    // add
+    res[lev].push([id,a])
+  })
+  return res
+}
+
