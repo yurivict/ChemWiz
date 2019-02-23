@@ -49,7 +49,7 @@ exports.printBondLengths = function(m) {
 //
 // traverseForward: traverses atoms beginning from the bond atom1 -> atom2, calls function fn(atomId, atom, lev) per object
 //
-exports.traverseForward = function(m, atom1, atom2, fn) {
+exports.traverseForward = function(atom1, atom2, fn) {
   var seen = {}
   var todo = []
   function traverseBonds(a, lev) {
@@ -80,9 +80,9 @@ exports.traverseForward = function(m, atom1, atom2, fn) {
 //
 // findLevelsFrom: find atom levels beginning from the bond atom1 -> atom2, returns the array of levels
 //
-exports.findLevelsFrom = function(m, atom1, atom2) {
+exports.findLevelsFrom = function(atom1, atom2) {
   var res = []
-  exports.traverseForward(m, atom1, atom2, function(id,a,lev) {
+  exports.traverseForward(atom1, atom2, function(id,a,lev) {
     // resize
     while (lev >= res.length) {
       res.push([])
