@@ -1,6 +1,6 @@
 
 exports.run = function() {
-  var Url = require('scripts/url')
+  var Url = require('url')
 
   var pdbRecord = "4HHB"
   var m = readMmtfBuffer(gunzip(downloadUrl(Url.pdbMmtfGzipped(pdbRecord))))

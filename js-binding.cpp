@@ -1137,7 +1137,7 @@ void registerFunctions(js_State *J) {
     "  if (name in cache) return cache[name];\n"
     "  var exports = {};\n"
     "  cache[name] = exports;\n"
-    "  Function('exports', fileRead('modules/'+name+'.js'))(exports);\n"
+    "  Function('exports', fileRead(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports);\n"
     "  return exports;\n"
     "}\n"
     "require.cache = Object.create(null);\n"
