@@ -36,7 +36,7 @@ Molecule* Molecule::createFromSMILES(const std::string &smiles, const std::strin
     m->add(Atom(Element(a->GetAtomicNum()), Vec3(a->GetX(), a->GetY(), a->GetZ())));
   }
 
-  //
+  // rebuild bonds and return
   m->detectBonds(); // TODO read bonds from OpenBabel structures
   return m;
 }
