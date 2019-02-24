@@ -401,9 +401,7 @@ static void xnewoZ(js_State *J, Atom *a) { // object or undefined when a==nulllp
 
 static void xnew(js_State *J) {
   AssertNargs(2)
-  auto elt = GetArgString(1);
-  auto pos = GetArgVec3(2);
-  Return(Atom, new Atom(elementFromString(elt), pos));
+  Return(Atom, new Atom(elementFromString(GetArgString(1)), GetArgVec3(2)));
 }
 
 namespace prototype {
