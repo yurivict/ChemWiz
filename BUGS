@@ -1,1 +1,2 @@
 * Why are local symbols available when module functions are invoked (inside these modules)?
+* OpenBabel outputs aren't repeatable: https://github.com/openbabel/openbabel/issues/1934
