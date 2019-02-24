@@ -21,6 +21,10 @@ public:
     return (*this)[idx-1];
   }
   static Vec3 one(unsigned idx, Float val) {Vec3 vec(0,0,0); vec(idx) = val; return vec;}
+  static bool almostEquals(const Vec3 &v1, const Vec3 &v2, Float eps)
+    {return almostEquals(v1(X),v2(X),eps) && almostEquals(v1(Y),v2(Y),eps) && almostEquals(v1(Z),v2(Z),eps);}
+  static bool almostEquals(Float c1, Float c2, Float eps)
+    {return std::fabs(c1 - c2) <= eps;}
   Float len2() const {return sq((*this)(X)) + sq((*this)(Y)) + sq((*this)(Z));}
   Float len() const {return sqrt(len2());}
   Vec3 normalize() const {

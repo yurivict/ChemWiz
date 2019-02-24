@@ -27,6 +27,8 @@ public:
     swap(tmp(2,3), tmp(3,2));
     return tmp;
   }
+  static bool almostEquals(const Mat3 &m1, const Mat3 &m2, Float eps)
+    {return Vec3::almostEquals(m1[0], m2[0], eps) && Vec3::almostEquals(m1[1], m2[1], eps) && Vec3::almostEquals(m1[2], m2[2], eps);}
   static Mat3 unity() {return Mat3(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));}
   static Mat3 rotate(const Vec3 &r) {
     Float rLen = r.len();
@@ -53,6 +55,12 @@ public:
   friend std::ostream& operator<<(std::ostream &os, const Mat3 &m) {
     os << "{" << m[0] << "," << m[1] << "," << m[2] << "}";
     return os;
+  }
+  Mat3 operator+(const Mat3 &m) const {
+    return Mat3((*this)[0]+m[0], (*this)[1]+m[1], (*this)[2]+m[2]);
+  }
+  Mat3 operator-(const Mat3 &m) const {
+    return Mat3((*this)[0]-m[0], (*this)[1]-m[1], (*this)[2]-m[2]);
   }
   Mat3 operator*(Float m) const {
     return Mat3((*this)[0]*m, (*this)[1]*m, (*this)[2]*m);
