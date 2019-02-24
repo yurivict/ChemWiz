@@ -606,6 +606,13 @@ static void findAaLast(js_State *J) {
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
+static void toXyz(js_State *J) {
+  AssertNargs(0)
+  std::ostringstream ss;
+  ss << *GetArg(Molecule, 0);
+  ReturnString(J, ss.str());
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -627,6 +634,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaCterm, 0)
     ADD_METHOD_CPP(Molecule, findAaNterm, 0)
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
+    ADD_METHOD_CPP(Molecule, toXyz, 0)
   }
   js_pop(J, 2);
   AssertStack(0);
