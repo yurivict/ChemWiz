@@ -1,7 +1,10 @@
 
 // run-all-tests.js: runs all tests
 
-var all_tests = ["xyz", "web-ui-http", "web-ui-https", "web-ui-url", "gzip", "mmtf"]
+var all_tests = ["xyz",
+                 "vec3-rmsd",
+                 "web-ui-http", "web-ui-https", "web-ui-url",
+                 "gzip", "mmtf"]
 
 var nSucc = 0
 var nFail = 0
