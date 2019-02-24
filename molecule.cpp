@@ -53,6 +53,11 @@ Element elementFromString(const std::string &s) {
 
 /// Atom
 
+bool Atom::isEqual(const Atom &other) const {
+  return elt == other.elt &&
+         pos == other.pos;
+}
+
 bool Atom::hasBond(const Atom *other) const {
   for (auto a : bonds)
     if (a == other)
@@ -205,6 +210,17 @@ void Molecule::detectBonds() {
       }
     }
   }
+}
+
+bool Molecule::isEqual(const Molecule &other) const {
+  // atoms
+  if (atoms.size() != other.atoms.size())
+    return false;
+  for (unsigned i = 0; i < atoms.size(); i++)
+    if (!atoms[i]->isEqual(*other.atoms[i]))
+      return false;
+
+  return true;
 }
 
 void Molecule::appendAsAminoAcidChain(Molecule &aa) { // ASSUME that aa is an amino acid XXX alters aa

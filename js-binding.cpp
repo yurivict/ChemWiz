@@ -422,6 +422,11 @@ static void str(js_State *J) {
   ReturnString(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
 }
 
+static void isEqual(js_State *J) {
+  AssertNargs(1)
+  ReturnBoolean(J, GetArg(Atom, 0)->isEqual(*GetArg(Atom, 1)));
+}
+
 static void getElement(js_State *J) {
   AssertNargs(0)
   ReturnString(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
@@ -505,6 +510,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, id, 0)
     ADD_METHOD_CPP(Atom, dupl, 0)
     ADD_METHOD_CPP(Atom, str, 0)
+    ADD_METHOD_CPP(Atom, isEqual, 1)
     ADD_METHOD_CPP(Atom, getElement, 0)
     ADD_METHOD_CPP(Atom, getPos, 0)
     ADD_METHOD_CPP(Atom, setPos, 1)
@@ -604,6 +610,11 @@ static void findAaLast(js_State *J) {
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
+static void isEqual(js_State *J) {
+  AssertNargs(1)
+  ReturnBoolean(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
+}
+
 static void toXyz(js_State *J) {
   AssertNargs(0)
   std::ostringstream ss;
@@ -632,6 +643,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaCterm, 0)
     ADD_METHOD_CPP(Molecule, findAaNterm, 0)
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
+    ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
   }
   js_pop(J, 2);

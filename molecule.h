@@ -83,6 +83,7 @@ public:
     return Atom(elt, Mat3::rotate(rot)*pos + shft);
   }
   Atom* setMolecule(Molecule *m) {molecule = m; return this;}
+  bool isEqual(const Atom &other) const; // compares if the data is exactly the same
   unsigned nbonds() const {return bonds.size();}
   bool hasBond(const Atom *other) const;
   static Float atomBondAvgRadius(Element elt) {
@@ -248,6 +249,7 @@ public:
   std::array<Atom*,5> findAaCterm();
   std::vector<Atom*> findAaLast();
   void detectBonds();
+  bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   // high-level append
   void appendAsAminoAcidChain(Molecule &aa); // ASSUME that aa is an amino acid XXX alters aa
   // remove
