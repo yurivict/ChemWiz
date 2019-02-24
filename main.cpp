@@ -1,5 +1,4 @@
 
-#include <iostream>
 
 #include "xerror.h"
 #include "common.h"
@@ -8,6 +7,8 @@
 #include "tm.h"
 
 #include <mujs.h>
+
+#include <iostream>
 
 static void printTime(std::time_t tm, const char *when) {
   std::cout << "-- " << PROGRAM_NAME << " is " << when << " at " << ctime(&tm); // ctime contains EOL
