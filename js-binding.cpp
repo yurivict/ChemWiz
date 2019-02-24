@@ -1051,6 +1051,13 @@ static void rmsd(js_State *J) {
   ReturnFloat(J, Op::rmsd(*v1, *v2));
 }
 
+static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) { // borrowed from the MuJS sources
+  const char *pname = strrchr(name, '.');
+  pname = pname ? pname + 1 : name;
+  js_newcfunction(J, cfun, name, n);
+  js_defproperty(J, -2, pname, JS_DONTENUM);
+}
+
 void registerFunctions(js_State *J) {
 
   //
@@ -1067,6 +1074,11 @@ void registerFunctions(js_State *J) {
 #define ADD_JS_FUNCTION(name, num) \
   js_newcfunction(J, JsBinding::name, #name, num); \
   js_setglobal(J, #name);
+
+// macros to define static functions in global namespaces
+#define BEGIN_NAMESPACE()                         js_newobject(J);
+#define ADD_STATIC_FUNCTION(ns, jsfn, cfn, nargs) jsB_propf(J, #ns "." #jsfn, cfn, nargs);
+#define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
 
   //
   // Misc
@@ -1120,8 +1132,14 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(dotVecVec, 2)
   ADD_JS_FUNCTION(crossVecVec, 2)
   ADD_JS_FUNCTION(matRotate, 1)
-  ADD_JS_FUNCTION(rmsd, 2)
 
+  BEGIN_NAMESPACE()
+    ADD_STATIC_FUNCTION(Vec3, rmsd, rmsd, 2)
+  END_NAMESPACE(Vec3)
+
+#undef BEGIN_NAMESPACE
+#undef ADD_STATIC_FUNCTION
+#undef END_NAMESPACE
 #undef ADD_JS_FUNCTION
 
   //
