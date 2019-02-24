@@ -1,3 +1,8 @@
+
+//
+// All OpenBabel-dependent functionality is in this module. It's all molecule-related.
+//
+
 #include "molecule.h"
 
 #include <openbabel/mol.h>
