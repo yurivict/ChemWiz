@@ -2,7 +2,8 @@
 // run-all-tests.js: runs all tests
 
 var all_tests = ["xyz",
-                 "vec3-rmsd",
+                 "vec3-ops", "vec3-rmsd",
+                 "mat3-ops",
                  "web-ui-http", "web-ui-https", "web-ui-url",
                  "gzip", "mmtf"]
 
