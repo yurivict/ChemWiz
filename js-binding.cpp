@@ -974,6 +974,12 @@ static void readMmtfBuffer(js_State *J) {
 }
 #endif
 
+#if defined(USE_OPENBABEL)
+static void moleculeFromSMILES(js_State *J) {
+  AssertNargs(2)
+  Return(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)));
+}
+#endif
 
 //
 // vector and matrix operations
@@ -1105,6 +1111,9 @@ void registerFunctions(js_State *J) {
 #if defined(USE_MMTF)
   ADD_JS_FUNCTION(readMmtfFile, 1)
   ADD_JS_FUNCTION(readMmtfBuffer, 1)
+#endif
+#if defined(USE_OPENBABEL)
+  ADD_JS_FUNCTION(moleculeFromSMILES, 2)
 #endif
 
   //

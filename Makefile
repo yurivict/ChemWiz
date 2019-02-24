@@ -2,6 +2,7 @@
 # optional dependencies
 USE_DSRPDB=     yes
 USE_MMTF=       yes
+USE_OPENBABEL=  yes
 
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
@@ -27,6 +28,12 @@ endif
 ifeq ($(USE_MMTF), yes)
 SRCS_CPP+=	molecule-mmtf.cpp
 CXXFLAGS+=	-DUSE_MMTF
+endif
+
+ifeq ($(USE_OPENBABEL), yes)
+SRCS_CPP+=	molecule-ob.cpp
+CXXFLAGS+=	-DUSE_OPENBABEL $(shell pkg-config --cflags openbabel-2.0)
+LDFLAGS+=	$(shell pkg-config --libs openbabel-2.0)
 endif
 
 ifeq ($(USE_EXCEPTIONS), yes)

@@ -284,6 +284,9 @@ public:
   static std::vector<Molecule*> readPdbFile(const std::string &newFname);
   static std::vector<Molecule*> readMmtfFile(const std::string &fname);
   static std::vector<Molecule*> readMmtfBuffer(const std::vector<uint8_t> *buffer);
+#if defined(USE_OPENBABEL)
+  static Molecule* createFromSMILES(const std::string &smiles, const std::string &opt);
+#endif
   // write extarnal formats
   void writeXyzFile(const std::string &fname) const;
   // printing
