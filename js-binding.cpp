@@ -525,9 +525,9 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
     ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
-    ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return vecAngleRad(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
-    ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return vecAngleDeg(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
-    ADD_METHOD_JS (Atom, distance, function(othr) {return vecLength(vecMinus(this.getPos(), othr.getPos()))})
+    ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, distance, function(othr) {return Vec3.length(vecMinus(this.getPos(), othr.getPos()))})
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -978,70 +978,47 @@ static void moleculeFromSMILES(js_State *J) {
 // vector and matrix operations
 //
 
-static void vecPlus(js_State *J) {
-  AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1)+GetArgVec3(2));
+namespace JsVec3 {
+
+static void almostEquals(js_State *J) {
+  AssertNargs(3)
+  ReturnBoolean(J, Vec3::almostEquals(GetArgVec3(1), GetArgVec3(2), GetArgFloat(3)));
 }
 
-static void vecMinus(js_State *J) {
-  AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1)-GetArgVec3(2));
-}
-
-static void vecLength(js_State *J) {
+static void length(js_State *J) {
   AssertNargs(1)
   auto v = GetArgVec3(1);
   ReturnFloat(J, v.len());
 }
 
-static void vecAngleRad(js_State *J) { // angle in radians between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+static void plus(js_State *J) {
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2)));
+  ReturnVec(J, GetArgVec3(1)+GetArgVec3(2));
 }
 
-static void vecAngleDeg(js_State *J) { // angle in degrees between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+static void minus(js_State *J) {
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2))/M_PI*180);
+  ReturnVec(J, GetArgVec3(1)-GetArgVec3(2));
 }
 
-/*
-static void matPlus(js_State *J) {
-  AssertNargs(2)
-  auto m1 = GetArgMat3x3(1);
-  auto m2 = GetArgMat3x3(2);
-  ReturnMat(J, m1+m2);
-}
-
-static void matMinus(js_State *J) {
-  AssertNargs(2)
-  auto m1 = GetArgMat3x3(1);
-  auto m2 = GetArgMat3x3(2);
-  ReturnMat(J, m1-m2);
-}
-*/
-static void mulMatVec(js_State *J) {
-  AssertNargs(2)
-  ReturnVec(J, GetArgMat3x3(1)*GetArgVec3(2));
-}
-
-static void mulMatMat(js_State *J) {
-  AssertNargs(2)
-  ReturnMat(J, GetArgMat3x3(1)*GetArgMat3x3(2));
-}
-
-static void dotVecVec(js_State *J) {
+static void dot(js_State *J) {
   AssertNargs(2)
   ReturnFloat(J, GetArgVec3(1)*GetArgVec3(2));
 }
 
-static void crossVecVec(js_State *J) {
+static void cross(js_State *J) {
   AssertNargs(2)
   ReturnVec(J, GetArgVec3(1).cross(GetArgVec3(2)));
 }
 
-static void matRotate(js_State *J) {
-  AssertNargs(1)
-  ReturnMat(J, Mat3::rotate(GetArgVec3(1)));
+static void angleRad(js_State *J) { // angle in radians between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+  AssertNargs(2)
+  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2)));
+}
+
+static void angleDeg(js_State *J) { // angle in degrees between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
+  AssertNargs(2)
+  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2))/M_PI*180);
 }
 
 static void rmsd(js_State *J) {
@@ -1050,6 +1027,47 @@ static void rmsd(js_State *J) {
   std::unique_ptr<std::valarray<double>> v2(GetArgMatNxX(2, 3/*N=3*/));
   ReturnFloat(J, Op::rmsd(*v1, *v2));
 }
+
+} // JsVec3
+
+namespace JsMat3 {
+
+static void almostEquals(js_State *J) {
+  AssertNargs(3)
+  ReturnBoolean(J, Mat3::almostEquals(GetArgMat3x3(1), GetArgMat3x3(2), GetArgFloat(3)));
+}
+
+static void plus(js_State *J) {
+  AssertNargs(2)
+  ReturnMat(J, GetArgMat3x3(1)+GetArgMat3x3(2));
+}
+
+static void minus(js_State *J) {
+  AssertNargs(2)
+  ReturnMat(J, GetArgMat3x3(1)-GetArgMat3x3(2));
+}
+
+static void muln(js_State *J) {
+  AssertNargs(2)
+  ReturnMat(J, GetArgMat3x3(1)*GetArgFloat(2));
+}
+
+static void mulv(js_State *J) {
+  AssertNargs(2)
+  ReturnVec(J, GetArgMat3x3(1)*GetArgVec3(2));
+}
+
+static void mul(js_State *J) {
+  AssertNargs(2)
+  ReturnMat(J, GetArgMat3x3(1)*GetArgMat3x3(2));
+}
+
+static void rotate(js_State *J) {
+  AssertNargs(1)
+  ReturnMat(J, Mat3::rotate(GetArgVec3(1)));
+}
+
+} // JsMat3
 
 static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) { // borrowed from the MuJS sources
   const char *pname = strrchr(name, '.');
@@ -1120,22 +1138,27 @@ void registerFunctions(js_State *J) {
   // vector and matrix methods
   //
 
-  ADD_JS_FUNCTION(vecPlus, 2)
-  ADD_JS_FUNCTION(vecMinus, 2)
-  ADD_JS_FUNCTION(vecLength, 1)
-  ADD_JS_FUNCTION(vecAngleRad, 2)
-  ADD_JS_FUNCTION(vecAngleDeg, 2)
-  //ADD_JS_FUNCTION(matPlus, 2)
-  //ADD_JS_FUNCTION(matMinus, 2)
-  ADD_JS_FUNCTION(mulMatVec, 2)
-  ADD_JS_FUNCTION(mulMatMat, 2)
-  ADD_JS_FUNCTION(dotVecVec, 2)
-  ADD_JS_FUNCTION(crossVecVec, 2)
-  ADD_JS_FUNCTION(matRotate, 1)
+  BEGIN_NAMESPACE()
+    ADD_STATIC_FUNCTION(Vec3, almostEquals, JsVec3::almostEquals, 3)
+    ADD_STATIC_FUNCTION(Vec3, length,       JsVec3::length, 1)
+    ADD_STATIC_FUNCTION(Vec3, plus,         JsVec3::plus, 2)
+    ADD_STATIC_FUNCTION(Vec3, minus,        JsVec3::minus, 2)
+    ADD_STATIC_FUNCTION(Vec3, dot,          JsVec3::dot, 2)
+    ADD_STATIC_FUNCTION(Vec3, cross,        JsVec3::cross, 2)
+    ADD_STATIC_FUNCTION(Vec3, angleRad,     JsVec3::angleRad, 2)
+    ADD_STATIC_FUNCTION(Vec3, angleDeg,     JsVec3::angleDeg, 2)
+    ADD_STATIC_FUNCTION(Vec3, rmsd,         JsVec3::rmsd, 2)
+  END_NAMESPACE(Vec3)
 
   BEGIN_NAMESPACE()
-    ADD_STATIC_FUNCTION(Vec3, rmsd, rmsd, 2)
-  END_NAMESPACE(Vec3)
+    ADD_STATIC_FUNCTION(Mat3, almostEquals, JsMat3::almostEquals, 3)
+    ADD_STATIC_FUNCTION(Mat3, plus,         JsMat3::plus, 2)
+    ADD_STATIC_FUNCTION(Mat3, minus,        JsMat3::minus, 2)
+    ADD_STATIC_FUNCTION(Mat3, muln,         JsMat3::muln, 2)
+    ADD_STATIC_FUNCTION(Mat3, mulv,         JsMat3::mulv, 2)
+    ADD_STATIC_FUNCTION(Mat3, mul,          JsMat3::mul, 2)
+    ADD_STATIC_FUNCTION(Mat3, rotate,       JsMat3::rotate, 1)
+  END_NAMESPACE(Mat3)
 
 #undef BEGIN_NAMESPACE
 #undef ADD_STATIC_FUNCTION
