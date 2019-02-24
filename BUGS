@@ -1,0 +1,1 @@
+* Why are local symbols available when module functions are invoked (inside these modules)?
