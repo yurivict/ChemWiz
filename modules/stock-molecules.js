@@ -7,7 +7,7 @@
 
 // convert angles to radians
 function a2r(angle) {
-  return 2*pi()*(angle/360)
+  return 2*Math.PI*(angle/360)
 }
 
 // convert pms to Angstroms
@@ -27,8 +27,8 @@ exports.h2o_wiki = function () {
 
   var m = new Molecule
   m.addAtom(new Atom("O", [0,0,0]))
-  m.addAtom(new Atom("H", [Dh*cos(A/2), +Dh*sin(A/2), 0]))
-  m.addAtom(new Atom("H", [Dh*cos(A/2), -Dh*sin(A/2), 0]))
+  m.addAtom(new Atom("H", [Dh*Math.cos(A/2), +Dh*Math.sin(A/2), 0]))
+  m.addAtom(new Atom("H", [Dh*Math.cos(A/2), -Dh*Math.sin(A/2), 0]))
   return m
 }
 
@@ -49,15 +49,15 @@ exports.h2o_dimer_2000 = function () {
   // Oa
   m.addAtom(new Atom("O", [-R/2,0,0]))
   // Ha
-  m.addAtom(new Atom("H", [-R/2+Ra*cos(Athetaa/2)*cos(Abeta), -Ra*sin(Athetaa/2), -Ra*cos(Athetaa/2)*sin(Abeta)]))
+  m.addAtom(new Atom("H", [-R/2+Ra*Math.cos(Athetaa/2)*Math.cos(Abeta), -Ra*Math.sin(Athetaa/2), -Ra*Math.cos(Athetaa/2)*Math.sin(Abeta)]))
   // Hb
-  m.addAtom(new Atom("H", [-R/2+Ra*cos(Athetaa/2)*cos(Abeta), +Ra*sin(Athetaa/2), -Ra*cos(Athetaa/2)*sin(Abeta)]))
+  m.addAtom(new Atom("H", [-R/2+Ra*Math.cos(Athetaa/2)*Math.cos(Abeta), +Ra*Math.sin(Athetaa/2), -Ra*Math.cos(Athetaa/2)*Math.sin(Abeta)]))
   // Od
   m.addAtom(new Atom("O", [+R/2, 0, 0]))
   // Hd
-  m.addAtom(new Atom("H", [+R/2-Rd*cos(Aalpha), 0, Rd*sin(Aalpha)]))
+  m.addAtom(new Atom("H", [+R/2-Rd*Math.cos(Aalpha), 0, Rd*Math.sin(Aalpha)]))
   // Hf
-  m.addAtom(new Atom("H", [+R/2-Rf*cos(Aalpha+Athetad), 0, Rd*sin(Aalpha+Athetad)]))
+  m.addAtom(new Atom("H", [+R/2-Rf*Math.cos(Aalpha+Athetad), 0, Rd*Math.sin(Aalpha+Athetad)]))
 
   return m
 }

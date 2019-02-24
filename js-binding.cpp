@@ -868,31 +868,6 @@ static void tmWallclock(js_State *J) {
   js_pushnumber(J, Tm::wallclock());
 }
 
-static void pi(js_State *J) {
-  AssertNargs(0)
-  ReturnFloat(J, M_PI);
-}
-
-static void sin(js_State *J) {
-  AssertNargs(1)
-  ReturnFloat(J, std::sin(GetArgFloat(1)));
-}
-
-static void cos(js_State *J) {
-  AssertNargs(1)
-  ReturnFloat(J, std::cos(GetArgFloat(1)));
-}
-
-static void tan(js_State *J) {
-  AssertNargs(1)
-  ReturnFloat(J, std::tan(GetArgFloat(1)));
-}
-
-static void atan(js_State *J) {
-  AssertNargs(1)
-  ReturnFloat(J, std::atan(GetArgFloat(1)));
-}
-
 static void system(js_State *J) {
   AssertNargs(1)
   ReturnString(J, Process::exec(GetArgString(1)));
@@ -1106,11 +1081,6 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
   ADD_JS_FUNCTION(tmWallclock, 0)
-  ADD_JS_FUNCTION(pi, 0)
-  ADD_JS_FUNCTION(sin, 1)
-  ADD_JS_FUNCTION(cos, 1)
-  ADD_JS_FUNCTION(tan, 1)
-  ADD_JS_FUNCTION(atan, 1)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)
   ADD_JS_FUNCTION(download, 3)
