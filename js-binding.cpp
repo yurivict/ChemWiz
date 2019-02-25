@@ -538,9 +538,9 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
     ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
-    ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
-    ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(vecMinus(a1.getPos(),p), vecMinus(a2.getPos(),p))})
-    ADD_METHOD_JS (Atom, distance, function(othr) {return Vec3.length(vecMinus(this.getPos(), othr.getPos()))})
+    ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
+    ADD_METHOD_JS (Atom, distance, function(othr) {return Vec3.length(Vec3.minus(this.getPos(), othr.getPos()))})
   }
   js_pop(J, 2);
   AssertStack(0);
