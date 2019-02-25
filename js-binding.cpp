@@ -671,6 +671,15 @@ static void init(js_State *J) {
   AssertStack(0);
 }
 
+// static functions in the Molecule namespace
+
+#if defined(USE_OPENBABEL)
+static void fromSMILES(js_State *J) {
+  AssertNargs(2)
+  Return(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)));
+}
+#endif
+
 } // JsMolecule
 
 namespace JsTempFile {
@@ -996,13 +1005,6 @@ static void readMmtfBuffer(js_State *J) {
 }
 #endif
 
-#if defined(USE_OPENBABEL)
-static void moleculeFromSMILES(js_State *J) {
-  AssertNargs(2)
-  Return(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)));
-}
-#endif
-
 //
 // vector and matrix operations
 //
@@ -1157,9 +1159,6 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(readMmtfFile, 1)
   ADD_JS_FUNCTION(readMmtfBuffer, 1)
 #endif
-#if defined(USE_OPENBABEL)
-  ADD_JS_FUNCTION(moleculeFromSMILES, 2)
-#endif
 
   //
   // vector and matrix functions
@@ -1186,6 +1185,12 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Mat3, mul,          JsMat3::mul, 2)
     ADD_NS_FUNCTION_CPP(Mat3, rotate,       JsMat3::rotate, 1)
   END_NAMESPACE(Mat3)
+
+  BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
+#if defined(USE_OPENBABEL)
+    ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
+#endif
+  END_NAMESPACE(Moleculex)
 
 #undef BEGIN_NAMESPACE
 #undef ADD_NS_FUNCTION_CPP
