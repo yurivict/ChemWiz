@@ -1216,14 +1216,14 @@ void registerFunctions(js_State *J) {
 
   js_dostring(J,
     "function require(name) {\n"
-    "  var cache = require.cache;\n"
-    "  if (name in cache) return cache[name];\n"
-    "  var exports = {};\n"
-    "  cache[name] = exports;\n"
-    "  Function('exports', File.read(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports);\n"
-    "  return exports;\n"
+    "  var cache = require.cache\n"
+    "  if (name in cache) return cache[name]\n"
+    "  var exports = {}\n"
+    "  cache[name] = exports\n"
+    "  Function('exports', File.read(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports)\n"
+    "  return exports\n"
     "}\n"
-    "require.cache = Object.create(null);\n"
+    "require.cache = Object.create(null)\n"
   );
 }
 
