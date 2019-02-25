@@ -1,5 +1,4 @@
 
-
 #include "xerror.h"
 #include "common.h"
 #include "js-binding.h"
@@ -14,12 +13,16 @@ static void printTime(std::time_t tm, const char *when) {
   std::cout << "-- " << PROGRAM_NAME << " is " << when << " at " << ctime(&tm); // ctime contains EOL
 }
 
+static int usage(const char *ename) {
+  std::cerr << ename << " expects arguments: [(file.js|-s js-script) ...]" << std::endl;
+  return 1;
+}
+
 static int main_guarded(int argc, char* argv[]) {
-  // arguments parsing
-  if (argc < 2) {
-    std::cerr << "expect an argument: {xyz-file}" << std::endl;
-    return 1;
-  }
+
+  // arguments parsing: expect at least one argument
+  if (argc < 2)
+    return usage(argv[0]);
 
   // time printouts
   printTime(Tm::start(), "starting");
@@ -30,12 +33,27 @@ static int main_guarded(int argc, char* argv[]) {
   });
 
   // run JavaScript, everything else is done from there
-  js_State *J = js_newstate(NULL, NULL, JS_STRICT);
-  JsBinding::registerFunctions(J);
-  js_dofile(J, argv[1]);
-  js_freestate(J);
+  unsigned errs = 0;
+  if (js_State *J = js_newstate(NULL, NULL, JS_STRICT)) {
+    // register out functions
+    JsBinding::registerFunctions(J);
+    // execute the supplied JavaScript file
+    for (unsigned i = 1; i < argc && !errs; i++) {
+      if (argv[i][0] != '-')
+        errs += js_dofile(J, argv[i]);
+      else if (argv[i][1] == 's' && argv[i][2] == 0 && i+1 < argc) {
+        errs += js_dostring(J, argv[++i]);
+      } else {
+        return usage(argv[0]);
+      }
+    }
+    // free the interpreter
+    js_freestate(J);
+  } else {
+    ERROR("Failed to create the JavaScript interpreter")
+  }
 
-  return 0;
+  return !errs ? 0 : 1;
 }
 
 int main(int argc, char* argv[]) {
