@@ -878,20 +878,24 @@ static void sleep(js_State *J) {
   ReturnVoid(J);
 }
 
-static void tmStart(js_State *J) {
+namespace JsTime {
+
+static void start(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, Tm::start());
 }
 
-static void tmNow(js_State *J) {
+static void now(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, Tm::now());
 }
 
-static void tmWallclock(js_State *J) {
+static void wallclock(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, Tm::wallclock());
 }
+
+} // JsTime
 
 static void system(js_State *J) {
   AssertNargs(1)
@@ -1125,13 +1129,15 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(printn, 1)
   BEGIN_NAMESPACE(File)
     ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
-    ADD_NS_FUNCTION_CPP(File, read, JsFile::read, 1)
-    ADD_NS_FUNCTION_CPP(File, write, JsFile::write, 2)
+    ADD_NS_FUNCTION_CPP(File, read,   JsFile::read, 1)
+    ADD_NS_FUNCTION_CPP(File, write,  JsFile::write, 2)
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
-  ADD_JS_FUNCTION(tmStart, 0)
-  ADD_JS_FUNCTION(tmNow, 0)
-  ADD_JS_FUNCTION(tmWallclock, 0)
+  BEGIN_NAMESPACE(Time)
+    ADD_NS_FUNCTION_CPP(Time, start,     JsTime::start, 0)
+    ADD_NS_FUNCTION_CPP(Time, now,       JsTime::now, 0)
+    ADD_NS_FUNCTION_CPP(Time, wallclock, JsTime::wallclock, 0)
+  END_NAMESPACE(Time)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)
   ADD_JS_FUNCTION(download, 3)
