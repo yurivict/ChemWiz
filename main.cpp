@@ -35,7 +35,7 @@ static int main_guarded(int argc, char* argv[]) {
   // run JavaScript, everything else is done from there
   unsigned errs = 0;
   if (js_State *J = js_newstate(NULL, NULL, JS_STRICT)) {
-    // register out functions
+    // register our functions
     JsBinding::registerFunctions(J);
     // execute supplied JavaScript file or string argument
     for (unsigned i = 1; i < argc && !errs; i++) {
