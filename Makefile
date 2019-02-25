@@ -56,5 +56,8 @@ $(APP): $(OBJS) $(HEADERS) Makefile
 
 $(OBJS): $(HEADERS) Makefile
 
+test:
+	./$(APP) qa/run-all-tests.js
+
 clean:
 	rm -f $(OBJS) $(APP)
