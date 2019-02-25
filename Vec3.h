@@ -20,6 +20,7 @@ public:
   Float operator()(unsigned idx) const { // 1-based index access
     return (*this)[idx-1];
   }
+  static Vec3 zero() {return Vec3(0,0,0);}
   static Vec3 one(unsigned idx, Float val) {Vec3 vec(0,0,0); vec(idx) = val; return vec;}
   static bool almostEquals(const Vec3 &v1, const Vec3 &v2, Float eps)
     {return almostEquals(v1(X),v2(X),eps) && almostEquals(v1(Y),v2(Y),eps) && almostEquals(v1(Z),v2(Z),eps);}

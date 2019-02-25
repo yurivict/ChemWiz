@@ -1016,6 +1016,11 @@ static void almostEquals(js_State *J) {
   ReturnBoolean(J, Vec3::almostEquals(GetArgVec3(1), GetArgVec3(2), GetArgFloat(3)));
 }
 
+static void zero(js_State *J) {
+  AssertNargs(0)
+  ReturnVec(J, Vec3::zero());
+}
+
 static void length(js_State *J) {
   AssertNargs(1)
   auto v = GetArgVec3(1);
@@ -1176,6 +1181,7 @@ void registerFunctions(js_State *J) {
 
   BEGIN_NAMESPACE(Vec3)
     ADD_NS_FUNCTION_CPP(Vec3, almostEquals, JsVec3::almostEquals, 3)
+    ADD_NS_FUNCTION_CPP(Vec3, zero,         JsVec3::zero, 0)
     ADD_NS_FUNCTION_CPP(Vec3, length,       JsVec3::length, 1)
     ADD_NS_FUNCTION_CPP(Vec3, plus,         JsVec3::plus, 2)
     ADD_NS_FUNCTION_CPP(Vec3, minus,        JsVec3::minus, 2)
