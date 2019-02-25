@@ -37,6 +37,7 @@ static std::vector<std::string> runProcess(unsigned num, const Molecule &m, cons
     std::ofstream fileXyzFile(ssXyzFile.str(), std::ios::out);
     fileXyzFile << m;
   }
+
   // run the process
   auto lines = Util::splitLines(Process::exec(str(boost::format("/bin/sh -c \"/usr/local/bin/%1% %2% 2>&1\" | tee out") % erkale_cmd % ssRunfile.str())));
 
