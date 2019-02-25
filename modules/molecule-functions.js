@@ -12,27 +12,6 @@ function fmtDistanceA(dist) {
   return "l="+formatFp(dist, 2)+"Å"
 }
 
-function extractCoords(m) {
-  var res = []
-  var atoms = m.getAtoms()
-  for (var i = 0; i < atoms.length; i++) {
-    res.push(atoms[i].getPos())
-  }
-  return res
-}
-
-//
-// extractCoords: extract coordinates of all atoms
-//
-exports.extractCoords = extractCoords
-
-//
-// rmsd: computes RMSD between molecules
-//
-exports.rmsd = function(m1, m2) {
-  return rmsd(extractCoords(m1), extractCoords(m2))
-}
-
 exports.printBondLengths = function(m) {
   var aa = m.getAtoms()
   for (var a = 0; a < aa.length; a++) {

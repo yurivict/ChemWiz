@@ -658,6 +658,14 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
+    ADD_METHOD_JS (Molecule, extractCoords, function(m) {
+      var res = [];
+      var atoms = this.getAtoms();
+      for (var i = 0; i < atoms.length; i++)
+        res.push(atoms[i].getPos());
+      return res;
+    });
+    ADD_METHOD_JS (Molecule, rmsd, function(othr) {return Vec3.rmsd(this.extractCoords(), othr.extractCoords())})
   }
   js_pop(J, 2);
   AssertStack(0);
