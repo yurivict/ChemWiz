@@ -37,7 +37,7 @@ static int main_guarded(int argc, char* argv[]) {
   if (js_State *J = js_newstate(NULL, NULL, JS_STRICT)) {
     // register out functions
     JsBinding::registerFunctions(J);
-    // execute the supplied JavaScript file
+    // execute supplied JavaScript file or string argument
     for (unsigned i = 1; i < argc && !errs; i++) {
       if (argv[i][0] != '-')
         errs += js_dofile(J, argv[i]);
