@@ -828,12 +828,14 @@ static void printn(js_State *J) {
   ReturnVoid(J);
 }
 
-static void fileExists(js_State *J) {
+namespace JsFile {
+
+static void exists(js_State *J) {
   AssertNargs(1)
   ReturnBoolean(J, std::ifstream(GetArgString(1)).good());
 }
 
-static void fileRead(js_State *J) { // reads file into a string
+static void read(js_State *J) { // reads file into a string
   AssertNargs(1)
   auto fname = GetArgString(1);
 
@@ -850,7 +852,7 @@ static void fileRead(js_State *J) { // reads file into a string
   }
 }
 
-static void fileWrite(js_State *J) { // writes string into a file
+static void write(js_State *J) { // writes string into a file
   AssertNargs(2)
   auto fname = GetArgString(2);
 
@@ -866,6 +868,8 @@ static void fileWrite(js_State *J) { // writes string into a file
 
   ReturnVoid(J);
 }
+
+} // JsFile
 
 static void sleep(js_State *J) {
   AssertNargs(1)
@@ -1119,9 +1123,11 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
-  ADD_JS_FUNCTION(fileExists, 1)
-  ADD_JS_FUNCTION(fileRead, 1)
-  ADD_JS_FUNCTION(fileWrite, 2)
+  BEGIN_NAMESPACE(File)
+    ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
+    ADD_NS_FUNCTION_CPP(File, read, JsFile::read, 1)
+    ADD_NS_FUNCTION_CPP(File, write, JsFile::write, 2)
+  END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
   ADD_JS_FUNCTION(tmStart, 0)
   ADD_JS_FUNCTION(tmNow, 0)
@@ -1150,7 +1156,7 @@ void registerFunctions(js_State *J) {
 #endif
 
   //
-  // vector and matrix methods
+  // vector and matrix functions
   //
 
   BEGIN_NAMESPACE(Vec3)
@@ -1191,7 +1197,7 @@ void registerFunctions(js_State *J) {
     "  if (name in cache) return cache[name];\n"
     "  var exports = {};\n"
     "  cache[name] = exports;\n"
-    "  Function('exports', fileRead(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports);\n"
+    "  Function('exports', File.read(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports);\n"
     "  return exports;\n"
     "}\n"
     "require.cache = Object.create(null);\n"
