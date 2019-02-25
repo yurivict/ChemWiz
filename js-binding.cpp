@@ -1095,7 +1095,8 @@ void registerFunctions(js_State *J) {
 
 // macros to define static functions in global namespaces
 #define BEGIN_NAMESPACE()                         js_newobject(J);
-#define ADD_STATIC_FUNCTION(ns, jsfn, cfn, nargs) jsB_propf(J, #ns "." #jsfn, cfn, nargs);
+#define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) jsB_propf(J, #ns "." #jsfn, cfn, nargs);
+#define ADD_NS_FUNCTION_JS(ns, func, code...)     js_dostring(J, str(boost::format("%1%.%2% = %3%") % #cls % #method % #code).c_str());
 #define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
 
   //
@@ -1139,29 +1140,30 @@ void registerFunctions(js_State *J) {
   //
 
   BEGIN_NAMESPACE()
-    ADD_STATIC_FUNCTION(Vec3, almostEquals, JsVec3::almostEquals, 3)
-    ADD_STATIC_FUNCTION(Vec3, length,       JsVec3::length, 1)
-    ADD_STATIC_FUNCTION(Vec3, plus,         JsVec3::plus, 2)
-    ADD_STATIC_FUNCTION(Vec3, minus,        JsVec3::minus, 2)
-    ADD_STATIC_FUNCTION(Vec3, dot,          JsVec3::dot, 2)
-    ADD_STATIC_FUNCTION(Vec3, cross,        JsVec3::cross, 2)
-    ADD_STATIC_FUNCTION(Vec3, angleRad,     JsVec3::angleRad, 2)
-    ADD_STATIC_FUNCTION(Vec3, angleDeg,     JsVec3::angleDeg, 2)
-    ADD_STATIC_FUNCTION(Vec3, rmsd,         JsVec3::rmsd, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, almostEquals, JsVec3::almostEquals, 3)
+    ADD_NS_FUNCTION_CPP(Vec3, length,       JsVec3::length, 1)
+    ADD_NS_FUNCTION_CPP(Vec3, plus,         JsVec3::plus, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, minus,        JsVec3::minus, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, dot,          JsVec3::dot, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, cross,        JsVec3::cross, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, angleRad,     JsVec3::angleRad, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, angleDeg,     JsVec3::angleDeg, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, rmsd,         JsVec3::rmsd, 2)
   END_NAMESPACE(Vec3)
 
   BEGIN_NAMESPACE()
-    ADD_STATIC_FUNCTION(Mat3, almostEquals, JsMat3::almostEquals, 3)
-    ADD_STATIC_FUNCTION(Mat3, plus,         JsMat3::plus, 2)
-    ADD_STATIC_FUNCTION(Mat3, minus,        JsMat3::minus, 2)
-    ADD_STATIC_FUNCTION(Mat3, muln,         JsMat3::muln, 2)
-    ADD_STATIC_FUNCTION(Mat3, mulv,         JsMat3::mulv, 2)
-    ADD_STATIC_FUNCTION(Mat3, mul,          JsMat3::mul, 2)
-    ADD_STATIC_FUNCTION(Mat3, rotate,       JsMat3::rotate, 1)
+    ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
+    ADD_NS_FUNCTION_CPP(Mat3, plus,         JsMat3::plus, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, minus,        JsMat3::minus, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, muln,         JsMat3::muln, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, mulv,         JsMat3::mulv, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, mul,          JsMat3::mul, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, rotate,       JsMat3::rotate, 1)
   END_NAMESPACE(Mat3)
 
 #undef BEGIN_NAMESPACE
-#undef ADD_STATIC_FUNCTION
+#undef ADD_NS_FUNCTION_CPP
+#undef ADD_NS_FUNCTION_JS
 #undef END_NAMESPACE
 #undef ADD_JS_FUNCTION
 
