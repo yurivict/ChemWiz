@@ -29,11 +29,12 @@ public:
   }
   static bool almostEquals(const Mat3 &m1, const Mat3 &m2, Float eps)
     {return Vec3::almostEquals(m1[0], m2[0], eps) && Vec3::almostEquals(m1[1], m2[1], eps) && Vec3::almostEquals(m1[2], m2[2], eps);}
-  static Mat3 unity() {return Mat3(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));}
+  static Mat3 zero() {return Mat3(Vec3(0,0,0), Vec3(0,0,0), Vec3(0,0,0));}
+  static Mat3 identity() {return Mat3(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));}
   static Mat3 rotate(const Vec3 &r) {
     Float rLen = r.len();
     if (rLen == 0)
-      return Mat3::unity();
+      return Mat3::identity();
     return rotate(r/rLen, rLen);
   }
   static Mat3 rotate(const Vec3 &u, Float theta) {

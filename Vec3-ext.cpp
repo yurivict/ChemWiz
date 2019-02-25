@@ -22,7 +22,7 @@ Mat3 Vec3Extra::rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 
     if (!Vec3::is(vLen,0)) { // not parallel: rotate around it
       return Mat3::rotate(v/vLen, std::acos(s));
     } else if (Vec3::is(s,1)) { // parallel
-      return Mat3::unity();
+      return Mat3::identity();
     } else { // anti-parallel: rotate around some orthogonal vector
       return Mat3::rotate(v2o, M_PI);
     }

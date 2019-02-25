@@ -1068,6 +1068,16 @@ static void almostEquals(js_State *J) {
   ReturnBoolean(J, Mat3::almostEquals(GetArgMat3x3(1), GetArgMat3x3(2), GetArgFloat(3)));
 }
 
+static void zero(js_State *J) {
+  AssertNargs(0)
+  ReturnMat(J, Mat3::zero());
+}
+
+static void identity(js_State *J) {
+  AssertNargs(0)
+  ReturnMat(J, Mat3::identity());
+}
+
 static void plus(js_State *J) {
   AssertNargs(2)
   ReturnMat(J, GetArgMat3x3(1)+GetArgMat3x3(2));
@@ -1178,6 +1188,8 @@ void registerFunctions(js_State *J) {
 
   BEGIN_NAMESPACE(Mat3)
     ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
+    ADD_NS_FUNCTION_CPP(Mat3, zero,         JsMat3::zero, 0)
+    ADD_NS_FUNCTION_CPP(Mat3, identity,     JsMat3::identity, 0)
     ADD_NS_FUNCTION_CPP(Mat3, plus,         JsMat3::plus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, minus,        JsMat3::minus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, muln,         JsMat3::muln, 2)
