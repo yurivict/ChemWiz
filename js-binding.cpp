@@ -1094,9 +1094,9 @@ void registerFunctions(js_State *J) {
   js_setglobal(J, #name);
 
 // macros to define static functions in global namespaces
-#define BEGIN_NAMESPACE()                         js_newobject(J);
+#define BEGIN_NAMESPACE(ns)                       js_newobject(J);
 #define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) jsB_propf(J, #ns "." #jsfn, cfn, nargs);
-#define ADD_NS_FUNCTION_JS(ns, func, code...)     js_dostring(J, str(boost::format("%1%.%2% = %3%") % #cls % #method % #code).c_str());
+#define ADD_NS_FUNCTION_JS(ns, func, code...)     js_dostring(J, str(boost::format("%1%.%2% = %3%") % #ns % #func % #code).c_str());
 #define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
 
   //
@@ -1139,7 +1139,7 @@ void registerFunctions(js_State *J) {
   // vector and matrix methods
   //
 
-  BEGIN_NAMESPACE()
+  BEGIN_NAMESPACE(Vec3)
     ADD_NS_FUNCTION_CPP(Vec3, almostEquals, JsVec3::almostEquals, 3)
     ADD_NS_FUNCTION_CPP(Vec3, length,       JsVec3::length, 1)
     ADD_NS_FUNCTION_CPP(Vec3, plus,         JsVec3::plus, 2)
@@ -1151,7 +1151,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, rmsd,         JsVec3::rmsd, 2)
   END_NAMESPACE(Vec3)
 
-  BEGIN_NAMESPACE()
+  BEGIN_NAMESPACE(Mat3)
     ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
     ADD_NS_FUNCTION_CPP(Mat3, plus,         JsMat3::plus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, minus,        JsMat3::minus, 2)
