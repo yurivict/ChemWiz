@@ -78,6 +78,19 @@ static void InitObjectRegistry(js_State *J, const char *tag) {
   js_newcconstructor(J, Js##cls::xnew, Js##cls::xnew, TAG_##cls, 0/*nargs*/); /*@lev=2*/ \
   js_defproperty(J, -2, TAG_##cls, JS_DONTENUM);                              /*@lev=1*/
 
+namespace MuJS {
+
+// code borrowed from the MuJS sources
+
+static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) {
+  const char *pname = strrchr(name, '.');
+  pname = pname ? pname + 1 : name;
+  js_newcfunction(J, cfun, name, n);
+  js_defproperty(J, -2, pname, JS_DONTENUM);
+}
+
+} // MuJS
+
 namespace JsBinding {
 
 //
@@ -1069,13 +1082,6 @@ static void rotate(js_State *J) {
 
 } // JsMat3
 
-static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) { // borrowed from the MuJS sources
-  const char *pname = strrchr(name, '.');
-  pname = pname ? pname + 1 : name;
-  js_newcfunction(J, cfun, name, n);
-  js_defproperty(J, -2, pname, JS_DONTENUM);
-}
-
 void registerFunctions(js_State *J) {
 
   //
@@ -1095,7 +1101,7 @@ void registerFunctions(js_State *J) {
 
 // macros to define static functions in global namespaces
 #define BEGIN_NAMESPACE(ns)                       js_newobject(J);
-#define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) jsB_propf(J, #ns "." #jsfn, cfn, nargs);
+#define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) MuJS::jsB_propf(J, #ns "." #jsfn, cfn, nargs);
 #define ADD_NS_FUNCTION_JS(ns, func, code...)     js_dostring(J, str(boost::format("%1%.%2% = %3%") % #ns % #func % #code).c_str());
 #define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
 
@@ -1184,5 +1190,5 @@ void registerFunctions(js_State *J) {
   );
 }
 
-}; // JsBinding
+} // JsBinding
 
