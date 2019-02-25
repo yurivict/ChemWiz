@@ -20,7 +20,7 @@ exports.printBondLengths = function(m) {
     var bonds = atom.getBonds()
     for (var b = 0; b < bonds.length; b++) {
       var bondAtom = bonds[b]
-      print(" ---> bond#"+(b+1)+": elt="+bondAtom.getElement()+" pos="+bondAtom.getPos()+" bondLength="+vecLength(vecMinus(atom.getPos(),bondAtom.getPos())))
+      print(" ---> bond#"+(b+1)+": elt="+bondAtom.getElement()+" pos="+bondAtom.getPos()+" bondLength="+Vec3.length(Vec3.minus(atom.getPos(),bondAtom.getPos())))
     }
   }
 }
