@@ -39,6 +39,14 @@ static const char *TAG_Atom       = "Atom";
 static const char *TAG_TempFile   = "TempFile";
 static const char *TAG_CalcEngine = "CalcEngine";
 
+static void ckErr(js_State *J, int err) {
+  if (err) {
+    std::cerr << js_trystring(J, -1, "Error") << std::endl;
+    js_pop(J, 1);
+    abort();
+  }
+}
+
 #define AssertNargs(n)           assert(js_gettop(J) == n+1);
 #define AssertNargsRange(n1,n2)  assert(n1+1 <= js_gettop(J) && js_gettop(J) <= n2+1);
 #define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
@@ -1180,7 +1188,9 @@ void registerFunctions(js_State *J) {
 // macros to define static functions in global namespaces
 #define BEGIN_NAMESPACE(ns)                       js_newobject(J);
 #define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) MuJS::jsB_propf(J, #ns "." #jsfn, cfn, nargs);
-#define ADD_NS_FUNCTION_JS(ns, func, code...)     js_dostring(J, str(boost::format("%1%.%2% = %3%") % #ns % #func % #code).c_str());
+#define ADD_NS_FUNCTION_JS(ns, func, code...)     ckErr(J, js_ploadstring(J, "[static function " #ns "." #func "]", "(" #code ")")); \
+                                                  js_call(J, -1); \
+                                                  js_defproperty(J, -2, #func, JS_DONTENUM);
 #define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
 
   //
@@ -1256,6 +1266,7 @@ void registerFunctions(js_State *J) {
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
+  ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1,m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
   END_NAMESPACE(Moleculex)
 
 #undef BEGIN_NAMESPACE
