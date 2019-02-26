@@ -1215,7 +1215,7 @@ void registerFunctions(js_State *J) {
       var t1 = Time.now();
       func();
       var t2 = Time.now();
-      print("tm: step "+name+" took "+(t2-t1)+" sec(s) (wallclock)");
+      print("-- tm: step "+name+" took "+(t2-t1)+" sec(s) (wallclock) --");
     })
   END_NAMESPACE(Time)
   ADD_JS_FUNCTION(system, 1)
