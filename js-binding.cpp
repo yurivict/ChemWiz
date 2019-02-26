@@ -1211,6 +1211,12 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Time, now,                JsTime::now, 0)
     ADD_NS_FUNCTION_CPP(Time, wallclock,          JsTime::wallclock, 0)
     ADD_NS_FUNCTION_CPP(Time, currentDateTimeStr, JsTime::currentDateTimeStr, 0)
+    ADD_NS_FUNCTION_JS (Time, timeTheCode, function(name, func) {
+      var t1 = Time.now();
+      func();
+      var t2 = Time.now();
+      print("tm: step "+name+" took "+(t2-t1)+" sec(s) (wallclock)");
+    })
   END_NAMESPACE(Time)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)
@@ -1266,7 +1272,7 @@ void registerFunctions(js_State *J) {
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
-  ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1,m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
+  ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1, m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
   END_NAMESPACE(Moleculex)
 
 #undef BEGIN_NAMESPACE
