@@ -265,11 +265,15 @@ std::string Molecule::toString() const {
   return ss.str();
 }
 
+void Molecule::prnCoords(std::ostream &os) const {
+  for (auto &a : atoms)
+    os << *a << std::endl;
+}
+
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {
   os << m.atoms.size() << std::endl;
   os << m.descr << std::endl;
-  for (auto &a : m.atoms)
-    os << *a << std::endl;
+  m.prnCoords(os);
   return os;
 }
 

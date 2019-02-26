@@ -292,6 +292,7 @@ public:
   // write extarnal formats
   void writeXyzFile(const std::string &fname) const;
   // printing
+  void prnCoords(std::ostream &os) const;
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
 }; // Molecule
 

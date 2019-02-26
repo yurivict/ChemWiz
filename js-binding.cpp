@@ -637,6 +637,13 @@ static void toXyz(js_State *J) {
   ReturnString(J, ss.str());
 }
 
+static void toXyzCoords(js_State *J) {
+  AssertNargs(0)
+  std::ostringstream ss;
+  GetArg(Molecule, 0)->prnCoords(ss);
+  ReturnString(J, ss.str());
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -660,6 +667,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
+    ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
