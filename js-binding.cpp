@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #include <fstream>
 #include <sstream>
@@ -878,6 +880,12 @@ static void write(js_State *J) { // writes string into a file
   ReturnVoid(J);
 }
 
+static void mkdir(js_State *J) { // writes string into a file
+  AssertNargs(1)
+  // N/A yet: std::filesystem::create_directory(GetArgString(1));
+  ::mkdir(GetArgString(1).c_str(), 0777);
+}
+
 } // JsFile
 
 static void sleep(js_State *J) {
@@ -902,6 +910,16 @@ static void now(js_State *J) {
 static void wallclock(js_State *J) {
   AssertNargs(0)
   js_pushnumber(J, Tm::wallclock());
+}
+
+static void currentDateTimeStr(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
+  AssertNargs(0)
+  time_t     now = time(0);
+  struct tm  tstruct;
+  char       buf[80];
+  tstruct = *localtime(&now);
+  strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+  ReturnString(J, buf);
 }
 
 } // JsTime
@@ -1153,12 +1171,14 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
     ADD_NS_FUNCTION_CPP(File, read,   JsFile::read, 1)
     ADD_NS_FUNCTION_CPP(File, write,  JsFile::write, 2)
+    ADD_NS_FUNCTION_CPP(File, mkdir,  JsFile::mkdir, 1)
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
   BEGIN_NAMESPACE(Time)
-    ADD_NS_FUNCTION_CPP(Time, start,     JsTime::start, 0)
-    ADD_NS_FUNCTION_CPP(Time, now,       JsTime::now, 0)
-    ADD_NS_FUNCTION_CPP(Time, wallclock, JsTime::wallclock, 0)
+    ADD_NS_FUNCTION_CPP(Time, start,              JsTime::start, 0)
+    ADD_NS_FUNCTION_CPP(Time, now,                JsTime::now, 0)
+    ADD_NS_FUNCTION_CPP(Time, wallclock,          JsTime::wallclock, 0)
+    ADD_NS_FUNCTION_CPP(Time, currentDateTimeStr, JsTime::currentDateTimeStr, 0)
   END_NAMESPACE(Time)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)
