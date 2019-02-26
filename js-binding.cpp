@@ -625,6 +625,12 @@ static void findAaLast(js_State *J) {
   returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
+static void detectBonds(js_State *J) {
+  AssertNargs(0)
+  GetArg(Molecule, 0)->detectBonds();
+  ReturnVoid(J);
+}
+
 static void isEqual(js_State *J) {
   AssertNargs(1)
   ReturnBoolean(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
@@ -665,6 +671,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaCterm, 0)
     ADD_METHOD_CPP(Molecule, findAaNterm, 0)
     ADD_METHOD_CPP(Molecule, findAaLast, 0)
+    ADD_METHOD_CPP(Molecule, detectBonds, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
     ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
@@ -676,6 +683,13 @@ static void init(js_State *J) {
       return res;
     });
     ADD_METHOD_JS (Molecule, rmsd, function(othr) {return Vec3.rmsd(this.extractCoords(), othr.extractCoords())})
+    ADD_METHOD_JS (Molecule, allElements, function() {
+      var mm = {};
+      var atoms = this.getAtoms();
+      for (var i = 0; i < atoms.length; i++)
+        mm[atoms[i].getElement()] = 1;
+      return Object.keys(mm);
+    })
   }
   js_pop(J, 2);
   AssertStack(0);
