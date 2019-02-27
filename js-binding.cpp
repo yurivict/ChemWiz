@@ -1218,7 +1218,7 @@ static void close(js_State *J) {
 
 namespace JsInvoke {
 
-static void int32StrOPtr(js_State *J) {
+static void intStrOPtr(js_State *J) {
   typedef int(*Fn)(char*, void**);
   AssertNargs(2)
   void *ptr = 0;
@@ -1231,7 +1231,7 @@ static void int32StrOPtr(js_State *J) {
     js_setindex(J, -2, 1/*index*/);
 }
 
-static void int32Ptr(js_State *J) {
+static void intPtr(js_State *J) {
   typedef int(*Fn)(void*);
   AssertNargs(2)
   ReturnNumber(J, Fn(GetArgPtr(1))(GetArgPtr(2)));
@@ -1344,8 +1344,8 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Dl, close,          JsDl::close, 1)
   END_NAMESPACE(Dl)
   BEGIN_NAMESPACE(Invoke)
-    ADD_NS_FUNCTION_CPP(Invoke, int32StrOPtr,        JsInvoke::int32StrOPtr, 1)
-    ADD_NS_FUNCTION_CPP(Invoke, int32Ptr,            JsInvoke::int32Ptr, 2)
+    ADD_NS_FUNCTION_CPP(Invoke, intStrOPtr,        JsInvoke::intStrOPtr, 1)
+    ADD_NS_FUNCTION_CPP(Invoke, intPtr,            JsInvoke::intPtr, 2)
   END_NAMESPACE(Invoke)
 
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions

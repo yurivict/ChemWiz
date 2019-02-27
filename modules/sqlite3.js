@@ -13,7 +13,7 @@ function ckErr(err) {
 }
 
 exports.openDatabase = function(loc) {
-  var open = Invoke.int32StrOPtr(sqlite3_open, loc)
+  var open = Invoke.intStrOPtr(sqlite3_open, loc)
   ckErr(open[0])
   return { // db
     dbHandle: open[1],
@@ -24,7 +24,7 @@ exports.openDatabase = function(loc) {
       print("SQLite3: called run function")
     },
     close: function() {
-      ckErr(Invoke.int32Ptr(sqlite3_close, this.dbHandle))
+      ckErr(Invoke.intPtr(sqlite3_close, this.dbHandle))
     }
   }
 }
