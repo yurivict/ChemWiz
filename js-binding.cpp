@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <dlfcn.h>
 
 #include <fstream>
 #include <sstream>
@@ -65,6 +66,7 @@ static void ckErr(js_State *J, int err) {
 #define GetArgMat3x3(n)          objToMat3x3(J, n)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         elementFromString(GetArgString(n))
+#define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 // add method defined by the C++ code
@@ -104,8 +106,22 @@ static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) {
 namespace JsBinding {
 
 //
-// helper functions
+// helper classes and functions
 //
+
+class StrPtr { // class that maps pointer<->string for the purpose of passing pointers to JS
+public:
+  static void* s2p(const std::string &s) {
+    void *ptr = 0;
+    ::sscanf(s.c_str(), "%p", &ptr);
+    return ptr;
+  }
+  static std::string p2s(void *ptr) {
+    char buf[sizeof(void*)*2+1];
+    ::sprintf(buf, "%p", ptr);
+    return buf;
+  }
+}; // StrPtr
 
 static void binaryFinalize(js_State *J, void *p) {
   delete (Binary*)p;
@@ -267,6 +283,10 @@ static void ReturnMat(js_State *J, const Mat3 &m) {
     PushVec(J, r);
     js_setindex(J, -2, idx++);
   }
+}
+
+static void ReturnPtr(js_State *J, void *ptr) {
+  ReturnString(J, StrPtr::p2s(ptr));
 }
 
 // convenience macro to return objects
@@ -1168,6 +1188,30 @@ static void rotate(js_State *J) {
 
 } // JsMat3
 
+namespace JsDl {
+
+static void open(js_State *J) {
+  AssertNargs(2)
+  auto handle = dlopen(GetArgString(1).c_str(), GetArgUInt32(2));
+  if (handle == 0)
+    ERROR("dlopen for '" << GetArgString(1) << "' failed: " << dlerror())
+  ReturnPtr(J, handle);
+}
+
+static void sym(js_State *J) {
+  AssertNargs(2)
+  ReturnPtr(J, dlsym(GetArgPtr(1), GetArgString(2).c_str()));
+}
+
+static void close(js_State *J) {
+  AssertNargs(1)
+  if (dlclose(GetArgPtr(1)) != 0)
+    ERROR("dlclose failed: " << dlerror())
+  ReturnVoid(J);
+}
+
+} // JsDl
+
 void registerFunctions(js_State *J) {
 
   //
@@ -1267,6 +1311,11 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Mat3, mul,          JsMat3::mul, 2)
     ADD_NS_FUNCTION_CPP(Mat3, rotate,       JsMat3::rotate, 1)
   END_NAMESPACE(Mat3)
+  BEGIN_NAMESPACE(Dl)
+    ADD_NS_FUNCTION_CPP(Dl, open,           JsDl::open, 2)
+    ADD_NS_FUNCTION_CPP(Dl, sym,            JsDl::sym, 2)
+    ADD_NS_FUNCTION_CPP(Dl, close,          JsDl::close, 1)
+  END_NAMESPACE(Dl)
 
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
 #if defined(USE_OPENBABEL)
