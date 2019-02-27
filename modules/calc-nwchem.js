@@ -9,10 +9,11 @@ var deftBasis = "6-311G*"
 // utils
 //
 
-function createRunDir(name) {
+function createRunDir(rname) {
   var timestamp = Time.currentDateTimeStr()
   File.mkdir(runsDir) // ignore failure by design
-  var fullDir = runsDir+'/'+timestamp+"-"+name
+  File.mkdir(runsDir+"/"+name) // ignore failure by design
+  var fullDir = runsDir+'/'+name+"/"+timestamp+"-"+rname
   File.mkdir(fullDir)
   return fullDir
 }
@@ -44,7 +45,11 @@ function formInpForOptimize(m, params) {
   for (var elts = m.allElements(), i = 0; i < elts.length; i++)
     inp += ' '+elts[i]+' library '+deftBasis+'\n'
   inp += 'end\n'
-  inp += 'task dft optimize\n'
+  inp += 'scf\n'
+  if (params.precision != undefined)
+    inp += '  thresh '+params.precision+'\n'
+  inp += 'end\n'
+  inp += 'task scf optimize\n'
   return inp
 }
 
@@ -113,8 +118,8 @@ exports.create = function() {
     var runDir = createRunDir("optimize")
     File.write(formInpForOptimize(m, params), runDir+"/inp")
     // run the process
-    //var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
-    var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+    //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+    var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
     // process output
     var lines = out.split('\n')
     var err = findErrors(lines)
