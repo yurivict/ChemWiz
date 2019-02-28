@@ -10,6 +10,7 @@ Program for manipulations with molecules and performing computations with them
 * Boost: for some container types and string formatting (build: header-only library)
 * OpenSSL: for crypto used to access https:// URLs
 * OpenBLAS: used by the 'rmsd' code for matrix computations
+* SQLite3: to save results and persistent state across runs. The library is loaded dynamically by the JS code, the executable isn't linked with it.
 * (optional, library) OpenBabel: for parsing molecules in SMILES format (http://openbabel.org/wiki/Main_Page)
 * (optional, library) libdsrpdb: for parsing proteins in the PDB format (or perhaps any large and complex molecules) (https://graphics.stanford.edu/~drussel/pdb/)
 * (optional, build-time headers-only) mmtf-cpp: for parsing chemical structures in the MMTF format (https://github.com/rcsb/mmtf-cpp)

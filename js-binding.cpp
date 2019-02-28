@@ -53,6 +53,12 @@ static void ckErr(js_State *J, int err) {
 #define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
 #define AssertStack(n)           assert(js_gettop(J) == n);
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
+#define DbgPrintStackObject(loc, idx) std::cout << "DBG JS Stack: @" << loc << " stack[" << idx << "]=" << js_tostring(J, idx) << std::endl
+#define DbgPrintStack(loc)       std::cout << "DBG JS Stack: @" << loc << ">>>" << std::endl; \
+                                 for (int i = 1; i < js_gettop(J); i++) \
+                                   std::cout << "  -- @idx=" << -i << ": " << js_tostring(J, -i)  << std::endl; \
+                                 std::cout << "DBG JS Stack: @" << loc << "<<<" << std::endl; \
+                                 abort(); // because DbgPrintStack damages stack by converting all values to strings
 #define GetNArgs()               (js_gettop(J)-1)
 #define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
 #define GetArgBoolean(n)         js_toboolean(J, n)
@@ -1231,10 +1237,69 @@ static void intStrOPtr(js_State *J) {
     js_setindex(J, -2, 1/*index*/);
 }
 
+// helper for intPtrStrCb4intOpaqueIntSArrSArrPtrOStr
+static int cb4intOpaqueIntSArrSArr(void* optr, int argInt, char **argSArr1, char **argSArr2) {
+  auto J = (js_State*)optr;
+  // test if the callback is passed to us, XXX testing every time is inefficient, TODO pass this info here
+  if (!js_iscallable(J, -2))
+    return 0; // no function is passed
+  // pass the arguments for the callback
+  js_copy(J, -2/*argument#5 (cb) in the above call*/);           // cbFunc
+  js_pushundefined(J);                                           // 'this' argument
+  js_copy(J, -3/*argument#5 (cbUserObject) in the above call*/); // arg 1: opaqueObject
+  js_pushnumber(J, argInt);                                      // arg 2: int
+  js_newarray(J);                                                // arg 3: argSArr1
+    for (unsigned idx = 0; argSArr1[idx]; idx++) {
+      js_pushstring(J, argSArr1[idx]);
+      js_setindex(J, -2, idx);
+    }
+  js_newarray(J);                                                // arg 4: argSArr2
+    for (unsigned idx = 0; argSArr2[idx]; idx++) {
+      js_pushstring(J, argSArr2[idx]);
+      js_setindex(J, -2, idx);
+    }
+  // call the callback
+  js_call(J, 4/*number of args above*/);
+  // return the value
+  auto cbRetValue = (int)js_tonumber(J, -1);
+  js_pop(J, 1);
+  return cbRetValue;
+}
+
+static void intPtrStrCb4intOpaqueIntSArrSArrPtrOStr(js_State *J) {
+  typedef int(*Fn)(void*, char*, int (*callback)(void*,int,char**,char**), void*, char**);
+  AssertNargs(5)
+  auto fnReturnArr2 = [J](int i, char *strz) {
+    js_newarray(J);
+      js_pushnumber(J, i);
+      js_setindex(J, -2, 0/*index*/);
+      // str
+      if (strz)
+        js_pushstring(J, strz);
+      else
+        js_pushundefined(J); // no string has been returned
+      js_setindex(J, -2, 1/*index*/);
+  };
+  // check if the callback is callable
+  if (!js_iscallable(J, 4) && !js_isundefined(J, 4))
+    js_typeerror(J, "callback should be either callable or undefined");
+  // call the callback
+  char *ostr = nullptr;
+  int fnRes = Fn(GetArgPtr(1))(GetArgPtr(2), (char*)GetArgString(3).c_str(), cb4intOpaqueIntSArrSArr, J/*as userData*/, &ostr);
+  // return array
+  fnReturnArr2(fnRes, ostr);
+}
+
 static void intPtr(js_State *J) {
   typedef int(*Fn)(void*);
   AssertNargs(2)
   ReturnNumber(J, Fn(GetArgPtr(1))(GetArgPtr(2)));
+}
+
+static void strInt(js_State *J) {
+  typedef char*(*Fn)(int);
+  AssertNargs(2)
+  ReturnString(J, Fn(GetArgPtr(1))(GetArgInt32(2)));
 }
 
 } // JsInvoke
@@ -1344,8 +1409,10 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Dl, close,          JsDl::close, 1)
   END_NAMESPACE(Dl)
   BEGIN_NAMESPACE(Invoke)
-    ADD_NS_FUNCTION_CPP(Invoke, intStrOPtr,        JsInvoke::intStrOPtr, 1)
-    ADD_NS_FUNCTION_CPP(Invoke, intPtr,            JsInvoke::intPtr, 2)
+    ADD_NS_FUNCTION_CPP(Invoke, intStrOPtr,                               JsInvoke::intStrOPtr, 1)
+    ADD_NS_FUNCTION_CPP(Invoke, intPtrStrCb4intOpaqueIntSArrSArrPtrOStr,  JsInvoke::intPtrStrCb4intOpaqueIntSArrSArrPtrOStr, 5)
+    ADD_NS_FUNCTION_CPP(Invoke, intPtr,                                   JsInvoke::intPtr, 2)
+    ADD_NS_FUNCTION_CPP(Invoke, strInt,                                   JsInvoke::strInt, 2)
   END_NAMESPACE(Invoke)
 
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
