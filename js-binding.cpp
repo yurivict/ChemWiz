@@ -940,10 +940,16 @@ static void write(js_State *J) { // writes string into a file
   ReturnVoid(J);
 }
 
-static void mkdir(js_State *J) { // writes string into a file
+static void mkdir(js_State *J) { // creates a directory
   AssertNargs(1)
   // N/A yet: std::filesystem::create_directory(GetArgString(1));
   ::mkdir(GetArgString(1).c_str(), 0777);
+}
+
+static void ckdir(js_State *J) { // checks if the directory exists
+  AssertNargs(1)
+  struct stat fileStat;
+  ReturnBoolean(J, ::stat(GetArgString(1).c_str(), &fileStat)==0 && S_ISDIR(fileStat.st_mode));
 }
 
 } // JsFile
@@ -1340,6 +1346,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(File, read,   JsFile::read, 1)
     ADD_NS_FUNCTION_CPP(File, write,  JsFile::write, 2)
     ADD_NS_FUNCTION_CPP(File, mkdir,  JsFile::mkdir, 1)
+    ADD_NS_FUNCTION_CPP(File, ckdir,  JsFile::ckdir, 1)
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
   BEGIN_NAMESPACE(Time)
