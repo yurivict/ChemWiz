@@ -17,14 +17,20 @@ var sqlite3_exec   = Dl.sym(soHandle, "sqlite3_exec")
 var sqlite3_close  = Dl.sym(soHandle, "sqlite3_close")
 var sqlite3_errstr = Dl.sym(soHandle, "sqlite3_errstr")
 
-// error codes
-var enums = {
-  SQLITE_ABORT: 4
-}
 
 //
 // error processing
 //
+
+var enums = {
+  // error codes
+  SQLITE_OK:       0,
+  SQLITE_ERROR:    1,
+  SQLITE_INTERNAL: 2,
+  SQLITE_PERM:     3,
+  SQLITE_ABORT:    4,
+  SQLITE_BUSY:     5
+}
 
 function errStr(errCode) {
   return Invoke.strInt(sqlite3_errstr, errCode)
