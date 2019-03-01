@@ -14,7 +14,6 @@ function createRunDir(rname, params) {
     return runsDir+'/'+name+"/"+timestamp+"-"+rname
   }
   if (!params.reprocess) {
-    print("no reprocess")
     var timestamp = Time.currentDateTimeStr()
     var fullDir = formDirName(runsDir, timestamp, rname)
     if (File.ckdir(fullDir))
