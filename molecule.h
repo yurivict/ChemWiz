@@ -229,6 +229,7 @@ public:
     detectBonds();
   }
   unsigned getNumAtoms() const {return atoms.size();}
+  Atom* getAtom(unsigned idx) const {return atoms[idx];}
   void applyMatrix(const Mat3 &m) {
     for (auto a : atoms)
       a->applyMatrix(m);
