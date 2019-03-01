@@ -640,11 +640,15 @@ static void addAtom(js_State *J) {
   ReturnVoid(J);
 }
 
+static void addMolecule(js_State *J) {
+  AssertNargs(1)
+  GetArg(Molecule, 0)->add(*GetArg(Molecule, 1));
+}
+
 static void appendAminoAcid(js_State *J) {
   AssertNargs(1)
-  auto m = GetArg(Molecule, 0);
   Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
-  m->appendAsAminoAcidChain(aa);
+  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa);
 }
 
 static void findAaCterm(js_State *J) {
@@ -711,6 +715,13 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, getAtoms, 0)
     ADD_METHOD_CPP(Molecule, addAtom, 1)
     ADD_METHOD_JS (Molecule, findAtoms, function(filter) {return this.getAtoms().filter(filter)})
+    ADD_METHOD_JS (Molecule, transform, function(rot,shift) {
+      for (var i = 0; i < this.numAtoms(); i++) {
+        var a = this.getAtom(i);
+        a.setPos(Vec3.plus(Mat3.mulv(rot, a.getPos()), shift));
+      }
+    })
+    ADD_METHOD_CPP(Molecule, addMolecule, 1)
     ADD_METHOD_CPP(Molecule, appendAminoAcid, 1)
     ADD_METHOD_CPP(Molecule, findAaCterm, 0)
     ADD_METHOD_CPP(Molecule, findAaNterm, 0)
