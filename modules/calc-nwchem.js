@@ -1,7 +1,7 @@
 // module CalcNWChem: quantum chemistry computation module using NWChem (http://www.nwchem-sw.org/)
 
 var name = "NWChem"
-var runsDir = ".nwchem"
+var runsDir = ".calc-runs"
 var executable = "nwchem"
 var deftBasis = "6-311G*"
 
@@ -9,12 +9,24 @@ var deftBasis = "6-311G*"
 // utils
 //
 
-function createRunDir(rname) {
-  var timestamp = Time.currentDateTimeStr()
-  File.mkdir(runsDir) // ignore failure by design
-  File.mkdir(runsDir+"/"+name) // ignore failure by design
-  var fullDir = runsDir+'/'+name+"/"+timestamp+"-"+rname
-  File.mkdir(fullDir)
+function createRunDir(rname, params) {
+  var formDirName = function(runsDir, timestamp, rname) {
+    return runsDir+'/'+name+"/"+timestamp+"-"+rname
+  }
+  if (!params.reprocess) {
+    print("no reprocess")
+    var timestamp = Time.currentDateTimeStr()
+    var fullDir = formDirName(runsDir, timestamp, rname)
+    if (File.ckdir(fullDir))
+      throw "run directory for a new process '"+params.reprocess+"' already exists"
+    File.mkdir(runsDir) // ignore failure by design
+    File.mkdir(runsDir+"/"+name) // ignore failure by design
+    File.mkdir(fullDir)
+  } else {
+    var fullDir = formDirName(runsDir, params.reprocess, rname)
+    if (!File.ckdir(fullDir))
+      throw "run directory to reprocess '"+params.reprocess+"' doesn't exist"
+  }
   return fullDir
 }
 
@@ -94,13 +106,25 @@ function parseCoordsSection(lines, lno, m) {
   return mo
 }
 
-function parseLastMolecule(lines, m) {
+function parseLastCoordSection(lines, m) {
   // find headers
   var molHeaders = parseMoleculeHeaderLnos(lines)
   if (molHeaders.length == 0)
     xthrow("no output coordinates found")
   // parse the last molecule
   return parseCoordsSection(lines, molHeaders[molHeaders.length-1], m)
+}
+
+function parseAllCoordSections(lines, m) {
+  // find headers
+  var molHeaders = parseMoleculeHeaderLnos(lines)
+  if (molHeaders.length == 0)
+    xthrow("no output coordinates found")
+  // parse the last molecule
+  var mols = []
+  for (var i = 0; i < molHeaders.length; i++)
+    mols.push(parseCoordsSection(lines, molHeaders[i], m))
+  return mols
 }
 
 //
@@ -115,17 +139,38 @@ exports.create = function() {
     throw "TODO NWChem.calcEnergy"
   }
   mod.calcOptimized = function(m, params) {
-    var runDir = createRunDir("optimize")
-    File.write(formInpForOptimize(m, params), runDir+"/inp")
-    // run the process
-    //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
-    var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
+    var runDir = createRunDir("optimize", params)
+    if (!params.reprocess) {
+      File.write(formInpForOptimize(m, params), runDir+"/inp")
+      // run the process
+      //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+      var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
+    } else {
+      var out = File.read(runDir+"/outp")
+    }
     // process output
     var lines = out.split('\n')
     var err = findErrors(lines)
     if (err != undefined)
       xthrow(err)
-    return parseLastMolecule(lines, m)
+    return parseLastCoordSection(lines, m)
+  }
+  mod.calcOptimizedWithSteps = function(m, params) {
+    var runDir = createRunDir("optimize", params)
+    if (!params.reprocess) {
+      File.write(formInpForOptimize(m, params), runDir+"/inp")
+      // run the process
+      //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+      var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
+    } else {
+      var out = File.read(runDir+"/outp")
+    }
+    // process output
+    var lines = out.split('\n')
+    var err = findErrors(lines)
+    if (err != undefined)
+      xthrow(err)
+    return parseAllCoordSections(lines, m)
   }
   return mod
 }
