@@ -165,13 +165,13 @@ static void returnArrayUserData(js_State *J, const A &arr, const char *tag, void
 static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   std::map<std::string,std::string> mres;
   if (!js_isobject(J, idx))
-    ERROR("objToMap: not an object");
+    js_typeerror(J, "objToMap: not an object");
   js_pushiterator(J, idx/*idx*/, 1/*own*/);
   const char *key;
   while ((key = js_nextiterator(J, -1))) {
     js_getproperty(J, idx, key);
     if (!js_isstring(J, -1))
-      ERROR("objToMap: value isn't a string");
+      js_typeerror(J, "objToMap: value isn't a string");
     const char *val = js_tostring(J, -1);
     mres[key] = val;
     js_pop(J, 1);
@@ -181,9 +181,9 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
 
 static Vec3 objToVec3(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    ERROR("objToVec3: not an array");
+    js_typeerror(J, "Vec3: not an array");
   if (js_getlength(J, idx) != 3)
-    ERROR("objToVec3: array size isn't 3");
+    js_typeerror(J, "Vec3: array size isn't 3 (len=%d)", js_getlength(J, idx));
 
   Vec3 v;
 
@@ -199,9 +199,9 @@ static Vec3 objToVec3(js_State *J, int idx) {
 template<unsigned N>
 static void objToVecVa(js_State *J, int idx, std::valarray<double> *va, unsigned vaIdx) {
   if (!js_isarray(J, idx))
-    ERROR("objToVec: not an array");
+    js_typeerror(J, "objToVec: not an array");
   if (js_getlength(J, idx) != N)
-    ERROR("objToVec: array size isn't " << N);
+    js_typeerror(J, "Vec3: array size isn't %d (len=%d)", N, js_getlength(J, idx));
 
   for (unsigned i = 0; i < N; i++) {
     js_getindex(J, idx, i);
@@ -212,9 +212,9 @@ static void objToVecVa(js_State *J, int idx, std::valarray<double> *va, unsigned
 
 static Mat3 objToMat3x3(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    ERROR("objToMat3x3: not an array");
+    js_typeerror(J, "objToMat3x3: not an array");
   if (js_getlength(J, idx) != 3)
-    ERROR("objToMat3x3: array size isn't 3");
+    js_typeerror(J, "objToMat3x3: array size isn't 3 (len=%d)", js_getlength(J, idx));
 
   Mat3 m;
 
@@ -230,7 +230,7 @@ static Mat3 objToMat3x3(js_State *J, int idx) {
 template<unsigned N>
 static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   if (!js_isarray(J, idx))
-    ERROR("objToMatNxX: not an array");
+    js_typeerror(J, "MatNxX: not an array (N=%d)", N);
   auto len = js_getlength(J, idx);
 
   auto m = new std::valarray<double>;
