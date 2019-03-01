@@ -153,11 +153,21 @@ static void tempFileFinalize(js_State *J, void *p) {
 }
 
 template<typename A, typename FnNew>
-static void returnArrayUserData(js_State *J, const A &arr, const char *tag, void(*finalize)(js_State *J, void *p), FnNew fnNew) {
+static void returnArrayOfUserData(js_State *J, const A &arr, const char *tag, void(*finalize)(js_State *J, void *p), FnNew fnNew) {
   js_newarray(J);
   unsigned idx = 0;
   for (auto a : arr) {
     fnNew(J, a);
+    js_setindex(J, -2, idx++);
+  }
+}
+
+template<typename A, typename FnNew>
+static void returnArrayOfArrayOfUserData(js_State *J, const A &arr, const char *tag, void(*finalize)(js_State *J, void *p), FnNew fnNew) {
+  js_newarray(J);
+  unsigned idx = 0;
+  for (auto &a : arr) {
+    returnArrayOfUserData<typename A::value_type>(J, a, tag, finalize, fnNew);
     js_setindex(J, -2, idx++);
   }
 }
@@ -527,7 +537,7 @@ static void getNumBonds(js_State *J) {
 static void getBonds(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
-  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
+  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void hasBond(js_State *J) {
@@ -631,7 +641,7 @@ static void getAtom(js_State *J) {
 static void getAtoms(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
-  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
+  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void addAtom(js_State *J) {
@@ -655,21 +665,21 @@ static void findAaCterm(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Cterm = m->findAaCterm();
-  returnArrayUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
+  returnArrayOfUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void findAaNterm(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto Nterm = m->findAaNterm();
-  returnArrayUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
+  returnArrayOfUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void findAaLast(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
   auto aa = m->findAaLast();
-  returnArrayUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
+  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 static void detectBonds(js_State *J) {
@@ -695,6 +705,11 @@ static void toXyzCoords(js_State *J) {
   std::ostringstream ss;
   GetArg(Molecule, 0)->prnCoords(ss);
   ReturnString(J, ss.str());
+}
+
+static void findComponents(js_State *J) {
+  AssertNargs(0)
+  returnArrayOfArrayOfUserData<std::vector<std::vector<Atom*>>, void(*)(js_State*,Atom*)>(J, GetArg(Molecule, 0)->findComponents(), TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
 } // prototype
@@ -730,6 +745,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
     ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
+    ADD_METHOD_CPP(Molecule, findComponents, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();

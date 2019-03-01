@@ -8,6 +8,8 @@
 #include <stdio.h>
 
 #include <map>
+#include <set>
+#include <list>
 #include <array>
 #include <ostream>
 
@@ -140,6 +142,35 @@ Molecule::~Molecule() {
   //std::cout << "Molecule::~Molecule " << this << std::endl;
   for (auto a : atoms)
     delete a;
+}
+
+std::vector<std::vector<Atom*>> Molecule::findComponents() const {
+  std::vector<std::vector<Atom*>> res;
+  std::set<const Atom*> seen;
+  auto already = [&seen](const Atom *atom) {return seen.find(atom) != seen.end();};
+  for (auto a : atoms)
+    if (!already(a)) {
+      // new component
+      res.resize(res.size()+1);
+      auto &curr = *res.rbegin();
+      std::list<const Atom*> todo;
+      todo.push_back(a);
+      seen.insert(a);
+      curr.push_back(a);
+      while (!todo.empty()) {
+        auto at = *todo.begin();
+        todo.pop_front();
+        // iterate through the bonds
+        for (auto ab : at->bonds)
+          if (!already(ab)) {
+            todo.push_back(ab);
+            seen.insert(ab);
+            curr.push_back(ab);
+          }
+      }
+    }
+
+  return res;
 }
 
 std::array<Atom*,3> Molecule::findAaNterm() { // expects that the molecule has an open N-term in the beginning

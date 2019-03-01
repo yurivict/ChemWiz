@@ -234,6 +234,7 @@ public:
     for (auto a : atoms)
       a->applyMatrix(m);
   }
+  std::vector<std::vector<Atom*>> findComponents() const;
   Atom* findFirst(Element elt) {
     for (auto a : atoms)
       if (a->elt == elt)
