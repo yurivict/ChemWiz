@@ -623,6 +623,11 @@ static void numAtoms(js_State *J) {
   ReturnUnsigned(J, GetArg(Molecule, 0)->getNumAtoms());
 }
 
+static void getAtom(js_State *J) {
+  AssertNargs(1)
+  Return(Atom, GetArg(Molecule, 0)->getAtom(GetArgUInt32(1)));
+}
+
 static void getAtoms(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
@@ -702,6 +707,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, dupl, 0)
     ADD_METHOD_CPP(Molecule, str, 0)
     ADD_METHOD_CPP(Molecule, numAtoms, 0)
+    ADD_METHOD_CPP(Molecule, getAtom, 1)
     ADD_METHOD_CPP(Molecule, getAtoms, 0)
     ADD_METHOD_CPP(Molecule, addAtom, 1)
     ADD_METHOD_JS (Molecule, findAtoms, function(filter) {return this.getAtoms().filter(filter)})
