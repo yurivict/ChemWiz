@@ -103,3 +103,42 @@ exports.reportGeometryDetails = function(levels) {
   return details
 }
 
+//
+// interpolate: interpolates molecule's conformations
+//
+exports.interpolate = function(mols, npts, how) {
+  // resolve the interpolation function
+  if (how == "linear")
+    var fnInterp = require("interpolate").linear3D
+  else
+    throw "unknown molecule interpolation type '"+how+"' requested"
+
+  // molecules to point trajectories
+  var fnCalcSegmsForAtom = function(a) {
+    var pts = []
+    for (var i = 0; i < mols.length; i++)
+      pts.push(mols[i].getAtom(a).getPos())
+    var nsplits = []
+    for (var i = 1; i < mols.length; i++)
+      nsplits.push(npts)
+    return fnInterp(pts, nsplits)
+  }
+  var numAtoms = mols[0].numAtoms()
+  var trajs = []
+  for (var a = 0; a < numAtoms; a++)
+    trajs.push(fnCalcSegmsForAtom(a))
+
+  // animate molecule according to the splined trajectories
+  var animMols = []
+  var traj0 = trajs[0]
+  for (var s = 0; s < traj0.length; s++) {
+    for (var p = 0; p < traj0[s].length; p++) {
+      var m = mols[0].dupl()
+      for (var a = 0; a < numAtoms; a++)
+        m.getAtom(a).setPos(trajs[a][s][p])
+      animMols.push(m)
+    }
+  }
+
+  return animMols
+}
