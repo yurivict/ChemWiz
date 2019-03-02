@@ -712,6 +712,16 @@ static void findComponents(js_State *J) {
   returnArrayOfArrayOfUserData<std::vector<std::vector<Atom*>>, void(*)(js_State*,Atom*)>(J, GetArg(Molecule, 0)->findComponents(), TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
+static void computeConvexHullFacets(js_State *J) {
+  AssertNargs(0)
+  js_newarray(J);
+    unsigned idx = 0;
+    for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets()) {
+      ReturnVec(J, facetNormal);
+      js_setindex(J, -2, idx++);
+    }
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -746,6 +756,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, toXyz, 0)
     ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
     ADD_METHOD_CPP(Molecule, findComponents, 0)
+    ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();

@@ -8,7 +8,7 @@ USE_OPENBABEL=  yes
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
 SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp js-binding.cpp calc-engine-erkale.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp \
-		calculators.cpp op-rmsd.cpp
+		calculators.cpp op-rmsd.cpp molecule-qhull.cpp
 HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h calculators.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h op-rmsd.h
 APP=		chemwiz
 CXX?=		clang++80
@@ -40,6 +40,8 @@ ifeq ($(USE_EXCEPTIONS), yes)
 CXXFLAGS+=	-DUSE_EXCEPTIONS
 endif
 
+# for libqhull
+LDFLAGS+=	-lqhull_r
 # for boost compressor/recompressor
 LDFLAGS+=	-lboost_iostreams -lz
 # for OpenSSL used to access https URLs
