@@ -38,6 +38,15 @@ public:
     else
       return Vec3(0,0,0);
   }
+  void snapToGrid(const Vec3 &grid) {
+    Vec3 &i = *this;
+    snapToGrid(i(X), grid(X));
+    snapToGrid(i(Y), grid(Y));
+    snapToGrid(i(Z), grid(Z));
+  }
+  static void snapToGrid(Float &c, Float g) {
+    c = int(c/g)*g;
+  }
   friend std::ostream& operator<<(std::ostream &os, const Vec3 &v) {
     os << "{" << v(X) << "," << v(Y) << "," << v(Z) << "}";
     return os;
