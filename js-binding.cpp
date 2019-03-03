@@ -1481,7 +1481,6 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, rmsd,         JsVec3::rmsd, 2)
     ADD_NS_FUNCTION_CPP(Vec3, snapToGrid,   JsVec3::snapToGrid, 2)
   END_NAMESPACE(Vec3)
-
   BEGIN_NAMESPACE(Mat3)
     ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
     ADD_NS_FUNCTION_CPP(Mat3, zero,         JsMat3::zero, 0)
@@ -1504,7 +1503,6 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Invoke, intPtr,                                   JsInvoke::intPtr, 2)
     ADD_NS_FUNCTION_CPP(Invoke, strInt,                                   JsInvoke::strInt, 2)
   END_NAMESPACE(Invoke)
-
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
