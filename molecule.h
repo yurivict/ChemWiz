@@ -235,7 +235,7 @@ public:
       a->applyMatrix(m);
   }
   std::vector<std::vector<Atom*>> findComponents() const;
-  std::vector<Vec3> computeConvexHullFacets() const; // in molecule-qhull.cpp
+  std::vector<Vec3> computeConvexHullFacets(std::vector<double> *withFurthestdist) const; // in molecule-qhull.cpp
   Atom* findFirst(Element elt) {
     for (auto a : atoms)
       if (a->elt == elt)

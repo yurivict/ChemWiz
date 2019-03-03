@@ -712,14 +712,31 @@ static void findComponents(js_State *J) {
   returnArrayOfArrayOfUserData<std::vector<std::vector<Atom*>>, void(*)(js_State*,Atom*)>(J, GetArg(Molecule, 0)->findComponents(), TAG_Atom, atomFinalize, JsAtom::xnewo);
 }
 
-static void computeConvexHullFacets(js_State *J) {
-  AssertNargs(0)
+static void computeConvexHullFacets(js_State *J) { // arguments: (withFurthestdist)
+  AssertNargs(1)
+  // withFurthestdist argument
+  std::unique_ptr<std::vector<double>> withFurthestdist;
+  if (js_isarray(J, 1))
+    withFurthestdist.reset(new std::vector<double>);
+  else if (!js_isundefined(J, 1))
+    js_typeerror(J, "withFurthestdist should be either an array or undefined");
+  // call the C++ function and fill the array
   js_newarray(J);
+  {
     unsigned idx = 0;
-    for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets()) {
+    for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets(withFurthestdist.get())) {
       ReturnVec(J, facetNormal);
       js_setindex(J, -2, idx++);
     }
+  }
+  // return withFurthestdist when requested
+  if (withFurthestdist.get()) {
+    unsigned idx = 0;
+    for (auto d : *withFurthestdist.get()) {
+      js_pushnumber(J, d);
+      js_setindex(J, 1, idx++);
+    }
+  }
 }
 
 } // prototype
@@ -756,7 +773,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, toXyz, 0)
     ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
     ADD_METHOD_CPP(Molecule, findComponents, 0)
-    ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 0)
+    ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 1)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
