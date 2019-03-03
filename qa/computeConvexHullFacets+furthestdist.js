@@ -5,9 +5,9 @@ function toData(facets, furthestdist) {
 }
 
 exports.run = function() {
-  // prepare: create two benzene molecules with one being displaced from another
+  // prepare
   //var m = Moleculex.fromSMILES("CC(=O)C") // acetone (OpenBabel randomizes coordinates for acetone, but for benzene for some reason)
-  var m = Moleculex.fromSMILES("c1ccccc1")
+  var m = Moleculex.fromSMILES("c1ccccc1") // benzene
   var furthestdist = []
 
   // compute
