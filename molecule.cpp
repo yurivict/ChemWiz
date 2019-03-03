@@ -115,6 +115,10 @@ Atom* Atom::findSingleNeighbor2(Element elt1, Element elt2) const {
   return res;
 }
 
+void Atom::snapToGrid(const Vec3 &grid) {
+  pos.snapToGrid(grid);
+}
+
 std::ostream& operator<<(std::ostream &os, const Atom &a) {
   auto prnCoord = [](Float c) {
     char buf[10];
@@ -299,6 +303,11 @@ std::string Molecule::toString() const {
 void Molecule::prnCoords(std::ostream &os) const {
   for (auto &a : atoms)
     os << *a << std::endl;
+}
+
+void Molecule::snapToGrid(const Vec3 &grid) {
+  for (auto a : atoms)
+    a->snapToGrid(grid);
 }
 
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {

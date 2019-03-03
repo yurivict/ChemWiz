@@ -198,6 +198,7 @@ public:
   void centerAt(const Vec3 &pt) {
     pos -= pt;
   }
+  void snapToGrid(const Vec3 &grid);
   // printing
   friend std::ostream& operator<<(std::ostream &os, const Atom &a);
 }; // Atom
@@ -296,6 +297,7 @@ public:
   void writeXyzFile(const std::string &fname) const;
   // printing
   void prnCoords(std::ostream &os) const;
+  void snapToGrid(const Vec3 &grid);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
 }; // Molecule
 

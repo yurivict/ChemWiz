@@ -560,6 +560,12 @@ static void findSingleNeighbor2(js_State *J) {
   ReturnZ(Atom, GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
 }
 
+static void snapToGrid(js_State *J) {
+  AssertNargs(1)
+  GetArg(Atom, 0)->snapToGrid(GetArgVec3(1));
+  ReturnVoid(J);
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -587,6 +593,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, getOtherBondOf3, 2)
     ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
     ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
+    ADD_METHOD_CPP(Atom, snapToGrid, 1)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
     ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
@@ -739,6 +746,12 @@ static void computeConvexHullFacets(js_State *J) { // arguments: (withFurthestdi
   }
 }
 
+static void snapToGrid(js_State *J) {
+  AssertNargs(1)
+  GetArg(Molecule, 0)->snapToGrid(GetArgVec3(1));
+  ReturnVoid(J);
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -774,6 +787,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
     ADD_METHOD_CPP(Molecule, findComponents, 0)
     ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 1)
+    ADD_METHOD_CPP(Molecule, snapToGrid, 1)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
@@ -1214,6 +1228,13 @@ static void rmsd(js_State *J) {
   ReturnFloat(J, Op::rmsd(*v1, *v2));
 }
 
+static void snapToGrid(js_State *J) {
+  AssertNargs(2)
+  auto v = GetArgVec3(1);
+  v.snapToGrid(GetArgVec3(2));
+  ReturnVec(J, v);
+}
+
 } // JsVec3
 
 namespace JsMat3 {
@@ -1458,6 +1479,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, angleRad,     JsVec3::angleRad, 2)
     ADD_NS_FUNCTION_CPP(Vec3, angleDeg,     JsVec3::angleDeg, 2)
     ADD_NS_FUNCTION_CPP(Vec3, rmsd,         JsVec3::rmsd, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, snapToGrid,   JsVec3::snapToGrid, 2)
   END_NAMESPACE(Vec3)
 
   BEGIN_NAMESPACE(Mat3)
