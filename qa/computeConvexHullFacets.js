@@ -16,6 +16,6 @@ exports.run = function() {
   if (JSON.stringify(facets)+"\n" == File.read("qa/computeConvexHullFacets.gold"))
     return "OK"
   else
-    return "BAD"
+    return "FAIL"
 }
 
