@@ -4,9 +4,10 @@
 var all_tests = ["xyz",
                  "vec3-ops", "vec3-rmsd",
                  "mat3-ops", "mat3-rotate",
+                 "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
                  "web-ui-http", "web-ui-https", "web-ui-url",
-                 "gzip", "mmtf",
-                 "computeConvexHullFacets"]
+                 "gzip", "mmtf"
+                ]
 
 var nSucc = 0
 var nFail = 0
