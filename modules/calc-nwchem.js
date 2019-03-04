@@ -5,6 +5,8 @@ var runsDir = ".calc-runs"
 var executable = "nwchem"
 var deftBasis = "6-311G*"
 
+var numCPUs = System.numCPUs()
+
 //
 // utils
 //
@@ -35,6 +37,13 @@ function arrRmEmpty(arr) {
     if (arr[i] != "")
       res.push(arr[i])
   return res
+}
+
+function runProcess(runDir) {
+  if (numCPUs == 1)
+    return system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+  else
+    return system("cd "+runDir+" && mpirun -np "+numCPUs+" "+executable+" inp 2>&1 | tee outp")
 }
 
 function xthrow(msg) {
@@ -142,8 +151,7 @@ exports.create = function() {
     if (!params.reprocess) {
       File.write(formInpForOptimize(m, params), runDir+"/inp")
       // run the process
-      //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
-      var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
+      var out = runProcess(runDir)
     } else {
       var out = File.read(runDir+"/outp")
     }
@@ -159,8 +167,7 @@ exports.create = function() {
     if (!params.reprocess) {
       File.write(formInpForOptimize(m, params), runDir+"/inp")
       // run the process
-      //var out = system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
-      var out = system("cd "+runDir+" && mpirun -np 8 "+executable+" inp 2>&1 | tee outp")
+      var out = runProcess(runDir)
     } else {
       var out = File.read(runDir+"/outp")
     }
