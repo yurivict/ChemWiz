@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <dlfcn.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
 #include <fstream>
 #include <sstream>
@@ -974,6 +976,24 @@ static void printn(js_State *J) {
   ReturnVoid(J);
 }
 
+namespace JsSystem {
+
+static void numCPUs(js_State *J) {
+  AssertNargs(0)
+#if defined(__FreeBSD__)
+  int buf;
+  size_t size = sizeof(buf);
+  auto res = sysctlbyname("hw.ncpu", &buf, &size, NULL, 0);
+  if (res)
+    ERROR_SYSCALL(sysctlbyname)
+  ReturnUnsigned(J, (unsigned) buf);
+#else
+#  error "numCPUs not defined for your system"
+#endif
+}
+
+} // JsSystem
+
 namespace JsFile {
 
 static void exists(js_State *J) {
@@ -1423,6 +1443,9 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
+  BEGIN_NAMESPACE(System)
+    ADD_NS_FUNCTION_CPP(System, numCPUs, JsSystem::numCPUs, 0)
+  END_NAMESPACE(System)
   BEGIN_NAMESPACE(File)
     ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
     ADD_NS_FUNCTION_CPP(File, read,   JsFile::read, 1)
