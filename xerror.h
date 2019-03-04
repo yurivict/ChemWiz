@@ -5,6 +5,8 @@
 #include <exception>
 #include <string>
 
+#include <errno.h>
+
 class Exception : public std::exception {
   std::string msg;
 public:
@@ -25,3 +27,6 @@ public:
 #define ERROR(msg...) {std::cerr << msg << std::endl; std::exit(1);}
 
 #endif
+
+// syscall failure reporting
+#define ERROR_SYSCALL(syscall) ERROR("system call '" << #syscall << "' failed: " << strerror(errno))
