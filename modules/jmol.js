@@ -46,14 +46,14 @@ function renderMoleculesToFiles(molecules, params) {
   var xyzFiles = []
   var pngFiles = []
   var script = ""
-  for (var i = 0; i < molecules.length; i++) {
+  molecules.forEach(function(m) {
     var xyzFile = new TempFile("xyz")
-    writeXyzFile(molecules[i], xyzFile.fname())
+    writeXyzFile(m, xyzFile.fname())
     xyzFiles.push(xyzFile)
     var pngFile = new TempFile("png")
     pngFiles.push(pngFile)
     script += scriptXyzToPngInstruction(xyzFile, pngFile, sz)
-  }
+  })
   // run jmoldata command
   runJmoldata(new TempFile("jmol-script", script))
   //
