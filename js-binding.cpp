@@ -1530,8 +1530,42 @@ void registerFunctions(js_State *J) {
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
-  ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1, m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
+    ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1, m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
   END_NAMESPACE(Moleculex)
+  BEGIN_NAMESPACE(Arrayx)
+    ADD_NS_FUNCTION_JS (Arrayx, min, function(arr) {
+      var idx = 0;
+      var mi = -1;
+      var mv = 0;
+      arr.forEach(function(v) {
+        if (idx == 0) {
+          mv = v;
+          mi = idx;
+        } else if (v < mv) {
+          mv = v;
+          mi = idx;
+        };
+        idx++;
+      });
+      return [mi, mv]
+    })
+    ADD_NS_FUNCTION_JS (Arrayx, max, function(arr) {
+      var idx = 0;
+      var mi = -1;
+      var mv = 0;
+      arr.forEach(function(v) {
+        if (idx == 0) {
+          mv = v;
+          mi = idx;
+        } else if (v > mv) {
+          mv = v;
+          mi = idx;
+        };
+        idx++;
+      });
+      return [mi, mv]
+    })
+  END_NAMESPACE(Arrayx)
 
 #undef BEGIN_NAMESPACE
 #undef ADD_NS_FUNCTION_CPP
