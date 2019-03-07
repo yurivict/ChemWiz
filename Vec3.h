@@ -31,8 +31,18 @@ public:
   Vec3 normalize() const {
     return (*this)/len();
   }
+  Vec3 normalizeZ(Float l) const { // expects the pre-computed length argument for efficiency
+    if (l != 0)
+      return (*this)/l;
+    else
+      return Vec3(0,0,0);
+  }
   Vec3 normalizeZ() const {
+    return normalizeZ(len());
+  }
+  Vec3 normalizeZl(Float outLen) const {
     auto l = len();
+    outLen = l;
     if (l != 0)
       return (*this)/l;
     else

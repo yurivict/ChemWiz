@@ -1202,8 +1202,22 @@ static void zero(js_State *J) {
 
 static void length(js_State *J) {
   AssertNargs(1)
-  auto v = GetArgVec3(1);
-  ReturnFloat(J, v.len());
+  ReturnFloat(J, GetArgVec3(1).len());
+}
+
+static void normalize(js_State *J) {
+  AssertNargs(1)
+  ReturnVec(J, GetArgVec3(1).normalize());
+}
+
+static void normalizeZ(js_State *J) {
+  AssertNargs(1)
+  ReturnVec(J, GetArgVec3(1).normalizeZ());
+}
+
+static void normalizeZl(js_State *J) {
+  AssertNargs(2)
+  ReturnVec(J, GetArgVec3(1).normalizeZ(GetArgFloat(2)));
 }
 
 static void plus(js_State *J) {
@@ -1494,6 +1508,9 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, almostEquals, JsVec3::almostEquals, 3)
     ADD_NS_FUNCTION_CPP(Vec3, zero,         JsVec3::zero, 0)
     ADD_NS_FUNCTION_CPP(Vec3, length,       JsVec3::length, 1)
+    ADD_NS_FUNCTION_CPP(Vec3, normalize,    JsVec3::normalize, 1)
+    ADD_NS_FUNCTION_CPP(Vec3, normalizeZ,   JsVec3::normalizeZ, 1)
+    ADD_NS_FUNCTION_CPP(Vec3, normalizeZl,  JsVec3::normalizeZl, 2)
     ADD_NS_FUNCTION_CPP(Vec3, plus,         JsVec3::plus, 2)
     ADD_NS_FUNCTION_CPP(Vec3, minus,        JsVec3::minus, 2)
     ADD_NS_FUNCTION_CPP(Vec3, muln,         JsVec3::muln, 2)
