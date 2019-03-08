@@ -812,10 +812,15 @@ static void init(js_State *J) {
 
 // static functions in the Molecule namespace
 
+static void fromXyz(js_State *J) {
+  AssertNargs(1)
+  Return(Molecule, Molecule::readXyzFile(GetArgString(1)));
+}
+
 #if defined(USE_OPENBABEL)
 static void fromSMILES(js_State *J) {
   AssertNargs(2)
-  Return(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)));
+  Return(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)/*opt*/));
 }
 #endif
 
@@ -1146,11 +1151,6 @@ static void gzip(js_State *J) {
 static void gunzip(js_State *J) {
   namespace io = boost::iostreams;
   gxzip(J, io::gzip_decompressor());
-}
-
-static void readXyzFile(js_State *J) {
-  AssertNargs(1)
-  Return(Molecule, Molecule::readXyzFile(GetArgString(1)));
 }
 
 static void writeXyzFile(js_State *J) {
@@ -1490,7 +1490,6 @@ void registerFunctions(js_State *J) {
   //
   // Read/Write functions
   //
-  ADD_JS_FUNCTION(readXyzFile, 1)
   ADD_JS_FUNCTION(writeXyzFile, 2)
 #if defined(USE_DSRPDB)
   ADD_JS_FUNCTION(readPdbFile, 1)
@@ -1544,6 +1543,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Invoke, strInt,                                   JsInvoke::strInt, 2)
   END_NAMESPACE(Invoke)
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
+    ADD_NS_FUNCTION_CPP(Moleculex, fromXyz, JsMolecule::fromXyz, 1)
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
