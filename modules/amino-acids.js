@@ -21,7 +21,7 @@ function decodePeptide(peptide, f) {
 function combine(peptide) {
   var peptideChain;
   decodePeptide(peptide, function(i,code) {
-    var aaMolecule = Moleculex.fromXyz(codeToFile(code))
+    var aaMolecule = Moleculex.fromXyzOne(codeToFile(code))
     if (i == 0) {
       peptideChain = aaMolecule
     } else {

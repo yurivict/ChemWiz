@@ -812,7 +812,7 @@ static void init(js_State *J) {
 
 // static functions in the Molecule namespace
 
-static void fromXyz(js_State *J) {
+static void fromXyzOne(js_State *J) {
   AssertNargs(1)
   Return(Molecule, Molecule::readXyzFileOne(GetArgString(1)));
 }
@@ -1543,7 +1543,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Invoke, strInt,                                   JsInvoke::strInt, 2)
   END_NAMESPACE(Invoke)
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
-    ADD_NS_FUNCTION_CPP(Moleculex, fromXyz, JsMolecule::fromXyz, 1)
+    ADD_NS_FUNCTION_CPP(Moleculex, fromXyzOne, JsMolecule::fromXyzOne, 1)
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
