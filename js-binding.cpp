@@ -814,7 +814,7 @@ static void init(js_State *J) {
 
 static void fromXyz(js_State *J) {
   AssertNargs(1)
-  Return(Molecule, Molecule::readXyzFile(GetArgString(1)));
+  Return(Molecule, Molecule::readXyzFileOne(GetArgString(1)));
 }
 
 #if defined(USE_OPENBABEL)

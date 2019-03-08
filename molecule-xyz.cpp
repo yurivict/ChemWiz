@@ -61,7 +61,7 @@ std::istream& operator>>(std::istream &is, Molecule &m) {
   return is;
 }
 
-Molecule* Molecule::readXyzFile(const std::string &fname) { // reads a file with a single xyz section
+Molecule* Molecule::readXyzFileOne(const std::string &fname) { // reads a file with a single xyz section
   // open file
   std::ifstream file(fname, std::ios::in);
   if (!file.is_open())

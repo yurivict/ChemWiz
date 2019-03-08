@@ -163,7 +163,7 @@ Molecule* Erkale::calcOptimized(const Molecule &m, const Params &params) {
   return mopt;
 */
 
-  return Molecule::readXyzFile(ssResultXyzFile.str());
+  return Molecule::readXyzFileOne(ssResultXyzFile.str());
 }
 
 }; // engines
