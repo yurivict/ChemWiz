@@ -612,6 +612,8 @@ namespace JsMolecule {
 static void xnewo(js_State *J, Molecule *m) {
   js_getglobal(J, TAG_Molecule);
   js_getproperty(J, -1, "prototype");
+  js_rot2(J);
+  js_pop(J,1);
   js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
 }
 
