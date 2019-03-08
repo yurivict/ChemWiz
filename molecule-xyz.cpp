@@ -1,6 +1,7 @@
 
 #include "molecule.h"
 #include "xerror.h"
+#include "util.h"
 
 #include <boost/format.hpp>
 
@@ -77,6 +78,27 @@ Molecule* Molecule::readXyzFileOne(const std::string &fname) { // reads a file w
     ERROR(str(boost::format("trailing characters after the atom data: %1%") % dummy));
   //
   return output.release();
+}
+
+std::vector<Molecule*> Molecule::readXyzFileMany(const std::string &fname) { // reads a file with a single xyz section
+  // open file
+  std::ifstream file(fname, std::ios::in);
+  if (!file.is_open())
+    ERROR(str(boost::format("can't open the xyz file for reading: %1%") % fname));
+  // create
+  std::vector<std::unique_ptr<Molecule>> output;
+  while (!Util::realEof(file)) {
+    Molecule *m;
+    // create a molecule
+    output.push_back(std::unique_ptr<Molecule>(m = new Molecule("")));
+    // read
+    file >> *m;
+  }
+  // return as a plain vector
+  std::vector<Molecule*> res;
+  for (auto &m : output)
+    res.push_back(m.release());
+  return res;
 }
 
 void Molecule::writeXyzFile(const std::string &fname) const {

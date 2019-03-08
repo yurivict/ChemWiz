@@ -819,6 +819,11 @@ static void fromXyzOne(js_State *J) {
   Return(Molecule, Molecule::readXyzFileOne(GetArgString(1)));
 }
 
+static void fromXyzMany(js_State *J) {
+  AssertNargs(1)
+  returnArrayOfUserData<std::vector<Molecule*>, void(*)(js_State*,Molecule*)>(J, Molecule::readXyzFileMany(GetArgString(1)), TAG_Molecule, moleculeFinalize, JsMolecule::xnewo);
+}
+
 #if defined(USE_OPENBABEL)
 static void fromSMILES(js_State *J) {
   AssertNargs(2)
@@ -1546,6 +1551,7 @@ void registerFunctions(js_State *J) {
   END_NAMESPACE(Invoke)
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
     ADD_NS_FUNCTION_CPP(Moleculex, fromXyzOne, JsMolecule::fromXyzOne, 1)
+    ADD_NS_FUNCTION_CPP(Moleculex, fromXyzMany, JsMolecule::fromXyzMany, 1)
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif

@@ -287,7 +287,8 @@ public:
   }
   std::string toString() const;
   // read external formats
-  static Molecule* readXyzFileOne(const std::string &fname);
+  static Molecule* readXyzFileOne(const std::string &fname); // expects one xyz record
+  static std::vector<Molecule*> readXyzFileMany(const std::string &fname); // expects 1+ xyz records
   static std::vector<Molecule*> readPdbFile(const std::string &newFname);
   static std::vector<Molecule*> readMmtfFile(const std::string &fname);
   static std::vector<Molecule*> readMmtfBuffer(const std::vector<uint8_t> *buffer);
