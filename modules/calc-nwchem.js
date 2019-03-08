@@ -1,7 +1,8 @@
 // module CalcNWChem: quantum chemistry computation module using NWChem (http://www.nwchem-sw.org/)
 
+var CalcUtils = require('calc-utils')
+
 var name = "NWChem"
-var runsDir = ".calc-runs"
 var executable = "nwchem"
 var deftBasis = "6-311G*"
 
@@ -10,26 +11,6 @@ var numCPUs = System.numCPUs()
 //
 // utils
 //
-
-function createRunDir(rname, params) {
-  var formDirName = function(runsDir, timestamp, rname) {
-    return runsDir+'/'+name+"/"+timestamp+"-"+rname
-  }
-  if (!params.reprocess) {
-    var timestamp = Time.currentDateTimeStr()
-    var fullDir = formDirName(runsDir, timestamp, rname)
-    if (File.ckdir(fullDir))
-      throw "run directory for a new process '"+params.reprocess+"' already exists"
-    File.mkdir(runsDir) // ignore failure by design
-    File.mkdir(runsDir+"/"+name) // ignore failure by design
-    File.mkdir(fullDir)
-  } else {
-    var fullDir = formDirName(runsDir, params.reprocess, rname)
-    if (!File.ckdir(fullDir))
-      throw "run directory to reprocess '"+params.reprocess+"' doesn't exist"
-  }
-  return fullDir
-}
 
 function arrRmEmpty(arr) {
   var res = []
@@ -147,7 +128,7 @@ exports.create = function() {
     throw "TODO NWChem.calcEnergy"
   }
   mod.calcOptimized = function(m, params) {
-    var runDir = createRunDir("optimize", params)
+    var runDir = CalcUtils.createRunDir(name, "optimize", params)
     if (!params.reprocess) {
       File.write(formInpForOptimize(m, params), runDir+"/inp")
       // run the process
@@ -163,7 +144,7 @@ exports.create = function() {
     return parseLastCoordSection(lines, m)
   }
   mod.calcOptimizedWithSteps = function(m, params) {
-    var runDir = createRunDir("optimize", params)
+    var runDir = CalcUtils.createRunDir(name, "optimize", params)
     if (!params.reprocess) {
       File.write(formInpForOptimize(m, params), runDir+"/inp")
       // run the process
