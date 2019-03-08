@@ -11,18 +11,13 @@
 
 /// Molecule
 
-Molecule* Molecule::readXyzFile(const std::string &fname) {
-  std::ifstream file(fname, std::ios::in);
-  if (!file.is_open())
-    ERROR(str(boost::format("can't open the xyz file: %1%") % fname));
-
+std::istream& operator>>(std::istream &is, Molecule &m) {
   unsigned natoms = 0;
   std::string dummy;
-  std::unique_ptr<Molecule> m;
 
   char phase = 'N'; // number
   std::string line;
-  while (std::getline(file, line)) {
+  while (phase != 'E' && std::getline(is, line)) {
     switch (phase) {
     case 'N': {
       std::istringstream is(line);
@@ -33,7 +28,7 @@ Molecule* Molecule::readXyzFile(const std::string &fname) {
       phase = 'D'; // description
       break;
     } case 'D': {
-      m.reset(new Molecule(line));
+      m.setDescr(line);
       phase = 'A'; // atoms
       break;
     } case 'A': {
@@ -43,7 +38,7 @@ Molecule* Molecule::readXyzFile(const std::string &fname) {
       Float y;
       Float z;
       if (is >> elt >> x >> y >> z)
-        m->add(Atom(elt, Vec3(x, y, z)));
+        m.add(Atom(elt, Vec3(x, y, z)));
       else
         ERROR(str(boost::format("no atom description found in line: %1%") % line));
       // atom line can also have a gradient in it
@@ -55,24 +50,41 @@ Molecule* Molecule::readXyzFile(const std::string &fname) {
       if (--natoms == 0)
         phase = 'E'; // end
       break;
-    } case 'E': {
-      std::istringstream is(line);
-      if (is >> dummy)
-        ERROR(str(boost::format("trailing characters after the atom data: %1%") % line));
-      break;
     } default:
       unreachable();
     }
   }
 
   // detect bonds
-  m->detectBonds();
+  m.detectBonds();
 
-  return m.release();
+  return is;
+}
+
+Molecule* Molecule::readXyzFile(const std::string &fname) { // reads a file with a single xyz section
+  // open file
+  std::ifstream file(fname, std::ios::in);
+  if (!file.is_open())
+    ERROR(str(boost::format("can't open the xyz file for reading: %1%") % fname));
+  // create
+  std::unique_ptr<Molecule> output(new Molecule(""));
+  // read
+  file >> *output.get();
+  // see if there's a trailing data
+  std::string dummy;
+  file >> dummy;
+  if (!dummy.empty())
+    ERROR(str(boost::format("trailing characters after the atom data: %1%") % dummy));
+  //
+  return output.release();
 }
 
 void Molecule::writeXyzFile(const std::string &fname) const {
+  // open file
   std::ofstream file(fname, std::ios::out);
+  if (!file.is_open())
+    ERROR(str(boost::format("can't open the xyz file for writing: %1%") % fname));
+  // write
   file << *this;
 }
 

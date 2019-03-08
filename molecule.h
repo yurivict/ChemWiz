@@ -211,6 +211,7 @@ public:
   Molecule(const std::string &newDescr);
   Molecule(const Molecule &other);
   ~Molecule();
+  void setDescr(const std::string &newDescr) {descr = newDescr;}
   void setIdx(const std::string &newIdx) {idx = newIdx;}
   unsigned numAtoms() const {return atoms.size();}
   void add(const Atom &a) { // doesn't detect bonds when one atom is added
@@ -293,11 +294,12 @@ public:
 #if defined(USE_OPENBABEL)
   static Molecule* createFromSMILES(const std::string &smiles, const std::string &opt);
 #endif
-  // write extarnal formats
+  // write external formats
   void writeXyzFile(const std::string &fname) const;
   // printing
   void prnCoords(std::ostream &os) const;
   void snapToGrid(const Vec3 &grid);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
+  friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule
 
