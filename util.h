@@ -45,5 +45,10 @@ public:
   }
 }; // OnExit
 
+inline bool realEof(std::ifstream &f) {
+  // to get a reliable reslt from eof() we need to peek() first
+  (void)f.peek();
+  return f.eof();
+}
 
 }; // Util
