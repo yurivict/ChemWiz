@@ -25,7 +25,6 @@
 #include "js-binding.h"
 #include "obj.h"
 #include "molecule.h"
-#include "calculators.h"
 #include "temp-file.h"
 #include "tm.h"
 #include "process.h"
@@ -40,7 +39,6 @@ static const char *TAG_Binary     = "Binary";
 static const char *TAG_Molecule   = "Molecule";
 static const char *TAG_Atom       = "Atom";
 static const char *TAG_TempFile   = "TempFile";
-static const char *TAG_CalcEngine = "CalcEngine";
 
 static void ckErr(js_State *J, int err) {
   if (err) {
@@ -144,10 +142,6 @@ static void atomFinalize(js_State *J, void *p) {
   // delete only unattached atoms, otherwise they are deteled by their Molecule object
   if (!a->molecule)
     delete a;
-}
-
-static void calcEngineFinalize(js_State *J, void *p) {
-  delete (CalcEngine*)p;
 }
 
 static void tempFileFinalize(js_State *J, void *p) {
@@ -902,66 +896,6 @@ static void init(js_State *J) {
 
 } // JsTempFile
 
-namespace JsCalcEngine {
-
-static void xnewo(js_State *J, CalcEngine *ce) {
-  js_getglobal(J, TAG_CalcEngine);
-  js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_CalcEngine, ce, calcEngineFinalize);
-}
-
-static void xnew(js_State *J) {
-  AssertNargs(1)
-
-  if (auto e = CalcEngine::create(GetArgString(1)))
-    Return(CalcEngine, new Calculators::engines::Erkale);
-  else
-    ERROR(str(boost::format("unknown calc-engine '%1%' requested") % GetArgString(1)));
-}
-
-namespace prototype {
-
-static void str(js_State *J) {
-  AssertNargs(0)
-  auto f = GetArg(CalcEngine, 0);
-  ReturnString(J, str(boost::format("calc-engine{%1%}") % f->kind()));
-}
-
-static void kind(js_State *J) {
-  AssertNargs(0)
-  ReturnString(J, GetArg(CalcEngine, 0)->kind());
-}
-
-static void calcEnergy(js_State *J) {
-  AssertNargsRange(1,2)
-  ReturnFloat(J, GetArg(CalcEngine, 0)->calcEnergy(*GetArg(Molecule, 1),  GetNArgs() == 2 ? GetArgSSMap(2) : Calculators::Params()));
-}
-
-static void calcOptimized(js_State *J) {
-  AssertNargsRange(1,2)
-  Return(Molecule, GetArg(CalcEngine, 0)->calcOptimized(*GetArg(Molecule, 1),  GetNArgs() == 2 ? GetArgSSMap(2) : Calculators::Params()));
-}
-
-}
-
-static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_CalcEngine);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(CalcEngine)
-  js_getglobal(J, TAG_CalcEngine);
-  js_getproperty(J, -1, "prototype");
-  StackPopPrevious()
-  { // methods
-    ADD_METHOD_CPP(CalcEngine, str, 0)
-    ADD_METHOD_CPP(CalcEngine, kind, 0)
-    ADD_METHOD_CPP(CalcEngine, calcEnergy, 2/*1..2*/)
-    ADD_METHOD_CPP(CalcEngine, calcOptimized, 2/*1..2*/)
-  }
-  js_pop(J, 2);
-  AssertStack(0);
-}
-
-} // JsCalcEngine
 
 //
 // exported functions
@@ -1444,7 +1378,6 @@ void registerFunctions(js_State *J) {
   JsAtom::init(J);
   JsMolecule::init(J);
   JsTempFile::init(J);
-  JsCalcEngine::init(J);
 
 #define ADD_JS_FUNCTION(name, num) \
   js_newcfunction(J, JsBinding::name, #name, num); \
