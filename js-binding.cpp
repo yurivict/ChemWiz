@@ -1590,6 +1590,11 @@ void registerFunctions(js_State *J) {
       });
       return [mi, mv]
     })
+    ADD_NS_FUNCTION_JS (Arrayx, removeEmpty, function(arr) {
+      return arr.filter(function (e) {
+        return e != ""
+      })
+    })
   END_NAMESPACE(Arrayx)
 
 #undef BEGIN_NAMESPACE

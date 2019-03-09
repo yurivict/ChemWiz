@@ -12,14 +12,6 @@ var numCPUs = System.numCPUs()
 // utils
 //
 
-function arrRmEmpty(arr) {
-  var res = []
-  for (var i = 0; i < arr.length; i++)
-    if (arr[i] != "")
-      res.push(arr[i])
-  return res
-}
-
 function runProcess(runDir) {
   if (numCPUs == 1)
     return system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
@@ -83,7 +75,7 @@ function parseCoordsSection(lines, lno, m) {
     xthrow("coordinates format error (dash separators)")
   var mo = new Molecule("")
   for (lno++; lines[lno] != ""; lno++) {
-    var cols = arrRmEmpty(lines[lno].split(' '))
+    var cols = Arrayx.removeEmpty(lines[lno].split(' '))
     if (cols.length != 6)
       xthrow("coordinates format error (expected 6 columns, found "+cols.length+", line='"+lines[lno]+"')")
     mo.addAtom(new Atom(cols[1], [cols[3], cols[4], cols[5]]))
