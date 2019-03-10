@@ -21,7 +21,7 @@ function paramsToErkaleParams(engParams) {
       erkParams["ConvThr"] = engParams["precision"]
     else if (key == "basis")
       erkParams["Basis"] = engParams["basis"]
-    else
+    else if (!CalcUtils.isValidParam(key))
       xthrow("unexpected key '"+key+"' found in params passed to the '"+name+"' calc engine")
   })
   return erkParams

@@ -6,7 +6,8 @@ var all_tests = ["xyz",
                  "mat3-ops", "mat3-rotate",
                  "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
                  "web-ui-http", "web-ui-https", "web-ui-url",
-                 "gzip", "mmtf"
+                 "gzip", "mmtf",
+                 "calc-erkale"
                 ]
 
 var nSucc = 0
