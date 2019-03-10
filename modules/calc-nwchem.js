@@ -152,24 +152,23 @@ function extractEnergyFromOutput(outputLines) {
 // export: creates the instance of the NWChem calculation module
 //
 exports.create = function() {
-  var mod = {}
-  mod.toString = function() {return name+" calc module"}
-  // iface
-  mod.kind = function() {return name}
-  mod.calcEnergy = function(m, params) {
-    return runCalcEngine("energy", m, params, function(runDir, outputLines) {
-      return extractEnergyFromOutput(outputLines)
-    })
+  return {
+    toString: function() {return name+" calc module"},
+    kind: function() {return name},
+    calcEnergy: function(m, params) {
+      return runCalcEngine("energy", m, params, function(runDir, outputLines) {
+        return extractEnergyFromOutput(outputLines)
+      })
+    },
+    calcOptimized: function(m, params) {
+      return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+        return parseLastCoordSection(outputLines, m)
+      })
+    },
+    calcOptimizedWithSteps: function(m, params) {
+      return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+        return parseAllCoordSections(lines, m)
+      })
+    }
   }
-  mod.calcOptimized = function(m, params) {
-    return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
-      return parseLastCoordSection(outputLines, m)
-    })
-  }
-  mod.calcOptimizedWithSteps = function(m, params) {
-    return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
-      return parseAllCoordSections(lines, m)
-    })
-  }
-  return mod
 }

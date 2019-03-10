@@ -123,24 +123,23 @@ function findErrors(lines) {
 //
 
 exports.create = function() {
-  var mod = {}
-  mod.toString = function() {return name+" calc module"}
-  // iface
-  mod.kind = function() {return name}
-  mod.calcEnergy = function(m, params) {
-    return runCalcEngine("energy", m, params, executableEnergy, function(runDir, outputLines) {
-      return extractEnergyFromOutput(outputLines)
-    })
+  return {
+    toString: function() {return name+" calc module"},
+    kind: function() {return name},
+    calcEnergy: function(m, params) {
+      return runCalcEngine("energy", m, params, executableEnergy, function(runDir, outputLines) {
+        return extractEnergyFromOutput(outputLines)
+      })
+    },
+    calcOptimized: function(m, params) {
+      return runCalcEngine("optimize", m, params, executableGeomOpt, function(runDir, outputLines) {
+        return Moleculex.fromXyzOne(runDir+"/optimized.xyz")
+      })
+    },
+    calcOptimizedWithSteps: function(m, params) {
+      return runCalcEngine("optimize", m, params, executableGeomOpt, function(runDir, outputLines) {
+        return Moleculex.fromXyzMany(runDir+"/optimized.xyz")
+      })
+    }
   }
-  mod.calcOptimized = function(m, params) {
-    return runCalcEngine("optimize", m, params, executableGeomOpt, function(runDir, outputLines) {
-      return Moleculex.fromXyzOne(runDir+"/optimized.xyz")
-    })
-  }
-  mod.calcOptimizedWithSteps = function(m, params) {
-    return runCalcEngine("optimize", m, params, executableGeomOpt, function(runDir, outputLines) {
-      return Moleculex.fromXyzMany(runDir+"/optimized.xyz")
-    })
-  }
-  return mod
 }
