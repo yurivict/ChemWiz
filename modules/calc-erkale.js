@@ -32,7 +32,7 @@ function defaultParams(erkParams) {
     erkParams.Basis = deftBasis
 }
 
-function formRunfileForOptimize(erkParams) {
+function formRunfile(erkParams) {
   var runfile = ""
   runfile += "System "+inputXyzFile+"\n"
   runfile += "Method lda_x-lda_c_vwn\n"
@@ -54,7 +54,7 @@ function runCalcEngine(rname, m, params, executable, fnReturn) {
     // write molecule in the xyz format
     File.write(m.toXyz(), runDir+"/"+inputXyzFile)
     // write the runfile
-    File.write(formRunfileForOptimize(erkParams), runDir+"/runfile")
+    File.write(formRunfile(erkParams), runDir+"/runfile")
     // run the process
     var out = system("cd "+runDir+" && "+executable+" runfile 2>&1 | tee outp")
   } else {
