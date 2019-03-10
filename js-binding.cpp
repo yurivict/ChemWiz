@@ -1019,7 +1019,7 @@ static void wallclock(js_State *J) {
   js_pushnumber(J, Tm::wallclock());
 }
 
-static void currentDateTimeStr(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
+static void currentDateTimeToSec(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
   AssertNargs(0)
   time_t     now = time(0);
   struct tm  tstruct;
@@ -1027,6 +1027,22 @@ static void currentDateTimeStr(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
   tstruct = *localtime(&now);
   strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
   ReturnString(J, buf);
+}
+
+static void currentDateTimeToMs(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
+  AssertNargs(0)
+
+  timeval curTime;
+  gettimeofday(&curTime, NULL);
+
+  struct tm  tstruct;
+  char       bufs[80], bufms[80];
+
+  tstruct = *localtime(&curTime.tv_sec);
+  strftime(bufs, sizeof(bufs), "%Y-%m-%d.%X", &tstruct);
+  sprintf(bufms, "%s.%03ld", bufs, curTime.tv_usec/1000);
+
+  ReturnString(J, bufms);
 }
 
 } // JsTime
@@ -1409,10 +1425,11 @@ void registerFunctions(js_State *J) {
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
   BEGIN_NAMESPACE(Time)
-    ADD_NS_FUNCTION_CPP(Time, start,              JsTime::start, 0)
-    ADD_NS_FUNCTION_CPP(Time, now,                JsTime::now, 0)
-    ADD_NS_FUNCTION_CPP(Time, wallclock,          JsTime::wallclock, 0)
-    ADD_NS_FUNCTION_CPP(Time, currentDateTimeStr, JsTime::currentDateTimeStr, 0)
+    ADD_NS_FUNCTION_CPP(Time, start,                JsTime::start, 0)
+    ADD_NS_FUNCTION_CPP(Time, now,                  JsTime::now, 0)
+    ADD_NS_FUNCTION_CPP(Time, wallclock,            JsTime::wallclock, 0)
+    ADD_NS_FUNCTION_CPP(Time, currentDateTimeToSec, JsTime::currentDateTimeToSec, 0)
+    ADD_NS_FUNCTION_CPP(Time, currentDateTimeToMs,  JsTime::currentDateTimeToMs, 0)
     ADD_NS_FUNCTION_JS (Time, timeTheCode, function(name, func) {
       var t1 = Time.now();
       func();

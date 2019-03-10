@@ -7,7 +7,7 @@ exports.createRunDir = function(ename, rname, params) {
     return runsDir+'/'+ename+"/"+timestamp+"-"+rname
   }
   if (!params.reprocess) {
-    var timestamp = Time.currentDateTimeStr()
+    var timestamp = Time.currentDateTimeToMs()
     var fullDir = formDirName(runsDir, timestamp, rname)
     if (File.ckdir(fullDir))
       throw "run directory for a new process '"+params.reprocess+"' already exists"
