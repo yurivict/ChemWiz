@@ -4,7 +4,10 @@ var CalcUtils = require('calc-utils')
 
 var name = "NWChem"
 var executable = "nwchem"
-var deftBasis = "6-311G*"
+//var deftBasis = "6-311G*"
+var deftBasis = "3-21G"
+// files
+var inputXyzFile = "m.xyz"
 
 var numCPUs = System.numCPUs()
 
@@ -27,12 +30,12 @@ function xthrow(msg) {
 // input
 //
 
-function formInpForOptimize(m, params) {
+function formInp(m, op, params) {
   var inp = ""
   inp += 'title "todo-title"\n'
   inp += 'echo\n'
   inp += 'geometry units angstroms\n'
-  inp += m.toXyzCoords()
+  inp += ' load '+inputXyzFile+'\n'
   inp += 'end\n'
   inp += 'basis\n'
   for (var elts = m.allElements(), i = 0; i < elts.length; i++)
@@ -42,7 +45,12 @@ function formInpForOptimize(m, params) {
   if (params.precision != undefined)
     inp += '  thresh '+params.precision+'\n'
   inp += 'end\n'
-  inp += 'task scf optimize\n'
+  if (op == "optimize")
+    inp += 'task scf optimize\n'
+  else if (op == "energy")
+    inp += 'task scf energy\n'
+  else
+    xthrow("unknown op '"+op+"'")
   return inp
 }
 
@@ -108,6 +116,38 @@ function parseAllCoordSections(lines, m) {
   return mols
 }
 
+function runCalcEngine(rname, m, params, fnReturn) {
+  var runDir = CalcUtils.createRunDir(name, "energy", params)
+  if (!params.reprocess) {
+    // write molecule in the xyz format
+    File.write(m.toXyz(), runDir+"/"+inputXyzFile)
+    // write the inp file
+    File.write(formInp(m, rname, params), runDir+"/inp")
+    // run the process
+    var out = runProcess(runDir)
+  } else {
+    var out = File.read(runDir+"/outp")
+  }
+  // process output
+  var lines = out.split('\n')
+  var err = findErrors(lines)
+  if (err != undefined)
+    xthrow(err)
+  // call retyurn filter and return the value
+  return fnReturn(runDir, lines)
+}
+
+function extractEnergyFromOutput(outputLines) {
+  for (var i = 0; i < outputLines.length; i++)
+    if (outputLines[i].indexOf("Final RHF  results") >= 0)
+      for (var j = i+1; j < outputLines.length; j++)
+        if (outputLines[j].indexOf("Total SCF energy =") >= 0) {
+          var split = outputLines[j].split(' ')
+          return split[split.length-1]
+        }
+  xthrow("can't find the energy value in the output file")
+}
+
 //
 // export: creates the instance of the NWChem calculation module
 //
@@ -117,39 +157,19 @@ exports.create = function() {
   // iface
   mod.kind = function() {return name}
   mod.calcEnergy = function(m, params) {
-    throw "TODO NWChem.calcEnergy"
+    return runCalcEngine("energy", m, params, function(runDir, outputLines) {
+      return extractEnergyFromOutput(outputLines)
+    })
   }
   mod.calcOptimized = function(m, params) {
-    var runDir = CalcUtils.createRunDir(name, "optimize", params)
-    if (!params.reprocess) {
-      File.write(formInpForOptimize(m, params), runDir+"/inp")
-      // run the process
-      var out = runProcess(runDir)
-    } else {
-      var out = File.read(runDir+"/outp")
-    }
-    // process output
-    var lines = out.split('\n')
-    var err = findErrors(lines)
-    if (err != undefined)
-      xthrow(err)
-    return parseLastCoordSection(lines, m)
+    return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+      return parseLastCoordSection(outputLines, m)
+    })
   }
   mod.calcOptimizedWithSteps = function(m, params) {
-    var runDir = CalcUtils.createRunDir(name, "optimize", params)
-    if (!params.reprocess) {
-      File.write(formInpForOptimize(m, params), runDir+"/inp")
-      // run the process
-      var out = runProcess(runDir)
-    } else {
-      var out = File.read(runDir+"/outp")
-    }
-    // process output
-    var lines = out.split('\n')
-    var err = findErrors(lines)
-    if (err != undefined)
-      xthrow(err)
-    return parseAllCoordSections(lines, m)
+    return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+      return parseAllCoordSections(lines, m)
+    })
   }
   return mod
 }
