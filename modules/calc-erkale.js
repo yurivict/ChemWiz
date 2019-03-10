@@ -138,7 +138,7 @@ exports.create = function() {
     },
     calcOptimizedWithSteps: function(m, params) {
       return runCalcEngine("optimize", m, params, executableGeomOpt, function(runDir, outputLines) {
-        return Moleculex.fromXyzMany(runDir+"/optimized.xyz")
+        return Moleculex.fromXyzMany(runDir+"/optimize.xyz")
       })
     }
   }
