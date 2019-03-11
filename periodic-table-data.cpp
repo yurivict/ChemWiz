@@ -19,8 +19,8 @@ PeriodicTableData::PeriodicTableData() {
   auto parsed = json::parse(file);
   auto elts = parsed["elements"];
   std::cout << "PeriodicTableData::PeriodicTableData nElts=" << elts.size() << std::endl;
-  data.resize(1+elts.size());
-  unsigned eIdx = 1;
+  data.resize(elts.size());
+  unsigned eIdx = 0;
   for (auto e : elts) {
     auto &eData = data[eIdx++];
    eData.name         = e["name"];
@@ -33,4 +33,8 @@ PeriodicTableData::PeriodicTableData() {
 
 const PeriodicTableData& PeriodicTableData::get() {
   return singleInstance;
+}
+
+const PeriodicTableData::ElementData& PeriodicTableData::operator()(unsigned elt) const {
+  return data[elt-1];
 }

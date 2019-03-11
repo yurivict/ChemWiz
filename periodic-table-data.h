@@ -15,8 +15,9 @@ public: // data
     std::string    category;
   }; // ElementData
 private: // data
-  std::vector<ElementData> data; // by element
+  std::vector<ElementData> data; // by element, this array contains them in sequential order beginning with H at index 0
 public: // iface
   PeriodicTableData();
   static const PeriodicTableData& get();
+  const ElementData& operator()(unsigned elt) const;
 }; // PeriodicTableData
