@@ -167,7 +167,7 @@ exports.create = function() {
     },
     calcOptimizedWithSteps: function(m, params) {
       return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
-        return parseAllCoordSections(lines, m)
+        return parseAllCoordSections(outputLines, m)
       })
     }
   }
