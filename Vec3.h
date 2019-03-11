@@ -92,6 +92,13 @@ public:
     const Vec3 &i = *this;
     return Vec3(i(X)-v(X), i(Y)-v(Y), i(Z)-v(Z));
   }
+  Vec3& operator+=(const Vec3 &v) {
+    Vec3 &i = *this;
+    i(X) += v(X);
+    i(Y) += v(Y);
+    i(Z) += v(Z);
+    return *this;
+  }
   Vec3& operator-=(const Vec3 &v) {
     Vec3 &i = *this;
     i(X) -= v(X);
