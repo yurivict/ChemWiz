@@ -8,6 +8,7 @@ Program for manipulations with molecules and performing computations with them
 * C++ compiler (build)
 * MuJS: for running JavaScript code that is used for scripting (https://mujs.com/)
 * Boost: for some container types and string formatting (build: header-only library)
+* nlohmann-json: for parsing of the periodic table json, etc. (build: header-only library)
 * OpenSSL: for crypto used to access https:// URLs
 * OpenBLAS: used by the 'rmsd' code for matrix computations
 * (build-time headers-only) Cblas: headers used by the rmsd++ headers, actual functions come from OpenBlas
