@@ -3,7 +3,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include <iostream>
 #include <fstream>
 
 #include <stdlib.h>
@@ -18,7 +17,6 @@ PeriodicTableData::PeriodicTableData() {
     abort();
   auto parsed = json::parse(file);
   auto elts = parsed["elements"];
-  std::cout << "PeriodicTableData::PeriodicTableData nElts=" << elts.size() << std::endl;
   data.resize(elts.size());
   unsigned eIdx = 0;
   for (auto e : elts) {
