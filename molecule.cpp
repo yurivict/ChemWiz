@@ -4,6 +4,7 @@
 #include "Vec3.h"
 #include "Vec3-ext.h"
 #include "Mat3.h"
+#include "periodic-table-data.h"
 
 #include <stdio.h>
 
@@ -303,6 +304,19 @@ std::string Molecule::toString() const {
 void Molecule::prnCoords(std::ostream &os) const {
   for (auto &a : atoms)
     os << *a << std::endl;
+}
+
+Vec3 Molecule::centerOfMass() const {
+  const PeriodicTableData &ptd = PeriodicTableData::get();
+  Vec3 m(0,0,0);
+  double totalMass = 0;
+  for (auto a : atoms) {
+    auto M = ptd((unsigned)a->elt).atomic_mass;
+    m += a->pos*M;
+    totalMass += M;
+  }
+
+  return m/totalMass;
 }
 
 void Molecule::snapToGrid(const Vec3 &grid) {

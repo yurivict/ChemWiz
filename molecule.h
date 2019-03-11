@@ -299,6 +299,7 @@ public:
   void writeXyzFile(const std::string &fname) const;
   // printing
   void prnCoords(std::ostream &os) const;
+  Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
