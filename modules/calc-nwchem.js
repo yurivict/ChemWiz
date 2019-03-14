@@ -156,17 +156,17 @@ exports.create = function() {
     toString: function() {return name+" calc module"},
     kind: function() {return name},
     calcEnergy: function(m, params) {
-      return runCalcEngine("energy", m, params, function(runDir, outputLines) {
+      return runCalcEngine("energy", m, CalcUtils.argParams(params), function(runDir, outputLines) {
         return extractEnergyFromOutput(outputLines)
       })
     },
     calcOptimized: function(m, params) {
-      return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+      return runCalcEngine("optimize", m, CalcUtils.argParams(params), function(runDir, outputLines) {
         return parseLastCoordSection(outputLines, m)
       })
     },
     calcOptimizedWithSteps: function(m, params) {
-      return runCalcEngine("optimize", m, params, function(runDir, outputLines) {
+      return runCalcEngine("optimize", m, CalcUtils.argParams(params), function(runDir, outputLines) {
         return parseAllCoordSections(outputLines, m)
       })
     }

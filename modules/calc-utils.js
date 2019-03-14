@@ -1,6 +1,16 @@
 // module CalcUtils: common utility functions of all CalcXxx modules
 
 var runsDirSubdir = ".calc-runs"
+var deftPrecision = 0.001
+
+exports.deftParams = {precision: deftPrecision}
+
+exports.argParams = function(aparams) {
+  if (aparams == undefined)
+    return {precision: deftPrecision}
+  else
+    return aparams
+}
 
 exports.isValidParam = function(key) {
   if (key == "dir")
