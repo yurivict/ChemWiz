@@ -142,3 +142,10 @@ exports.interpolate = function(mols, npts, how) {
 
   return animMols
 }
+
+exports.findMolecularPlane = function(m) {
+  var dists = []
+  var hull = m.computeConvexHullFacets(dists)
+  var dmin = Arrayx.min(dists)
+  return hull[dmin[0]]
+}
