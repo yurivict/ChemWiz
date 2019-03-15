@@ -68,8 +68,8 @@ static void ckErr(js_State *J, int err) {
 #define GetArgInt32(n)           js_toint32(J, n)
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
-#define GetArgVec3(n)            objToVec3(J, n)
-#define GetArgMat3x3(n)          objToMat3x3(J, n)
+#define GetArgVec3(n)            objToVec3(J, n, __func__)
+#define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         elementFromString(GetArgString(n))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
@@ -185,11 +185,11 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   return mres;
 }
 
-static Vec3 objToVec3(js_State *J, int idx) {
+static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
-    js_typeerror(J, "Vec3: not an array");
+    js_typeerror(J, "Vec3: not an array in arg#%d of the function '%s'", idx, fname);
   if (js_getlength(J, idx) != 3)
-    js_typeerror(J, "Vec3: array size isn't 3 (len=%d)", js_getlength(J, idx));
+    js_typeerror(J, "Vec3: array size isn't 3 (len=%d) in arg#%d of the function '%s'", js_getlength(J, idx), idx, fname);
 
   Vec3 v;
 
@@ -216,17 +216,17 @@ static void objToVecVa(js_State *J, int idx, std::valarray<double> *va, unsigned
   }
 }
 
-static Mat3 objToMat3x3(js_State *J, int idx) {
+static Mat3 objToMat3x3(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
-    js_typeerror(J, "objToMat3x3: not an array");
+    js_typeerror(J, "objToMat3x3: not an array in arg#%d of the function '%s'", idx, fname);
   if (js_getlength(J, idx) != 3)
-    js_typeerror(J, "objToMat3x3: array size isn't 3 (len=%d)", js_getlength(J, idx));
+    js_typeerror(J, "objToMat3x3: array size isn't 3 (len=%d) in arg#%d of the function '%s'", js_getlength(J, idx), idx, fname);
 
   Mat3 m;
 
   for (unsigned i = 0; i < 3; i++) {
     js_getindex(J, idx, i);
-    m[i] = objToVec3(J, -1);
+    m[i] = objToVec3(J, -1, __func__);
     js_pop(J, 1);
   }
 
