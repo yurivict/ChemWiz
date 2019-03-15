@@ -1232,6 +1232,17 @@ static void snapToGrid(js_State *J) {
   ReturnVec(J, v);
 }
 
+static void project(js_State *J) {
+  AssertNargs(2)
+  ReturnVec(J, GetArgVec3(1).project(GetArgVec3(2)));
+}
+
+static void orthogonal(js_State *J) {
+  AssertNargs(2)
+  ReturnVec(J, GetArgVec3(1).orthogonal(GetArgVec3(2)));
+}
+
+
 } // JsVec3
 
 namespace JsMat3 {
@@ -1482,6 +1493,8 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, angleDeg,     JsVec3::angleDeg, 2)
     ADD_NS_FUNCTION_CPP(Vec3, rmsd,         JsVec3::rmsd, 2)
     ADD_NS_FUNCTION_CPP(Vec3, snapToGrid,   JsVec3::snapToGrid, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, project,      JsVec3::project, 1)
+    ADD_NS_FUNCTION_CPP(Vec3, orthogonal,   JsVec3::orthogonal, 2)
   END_NAMESPACE(Vec3)
   BEGIN_NAMESPACE(Mat3)
     ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
