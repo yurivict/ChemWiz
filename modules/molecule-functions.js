@@ -154,7 +154,7 @@ exports.findMolecularPlane = function(m, outOrth) {
     // pick some other vector from the hull, and return its orthogonal part
     var dmax = Arrayx.max(dists)
     var othr = hull[dmax[0]]
-    Vec3.normalize(Vec3.orthogonal(plane, othr)).forEach(function(e) {
+    Vec3.normalize(Vec3.orthogonal(othr, plane)).forEach(function(e) {
       outOrth.push(e)
     })
   }
