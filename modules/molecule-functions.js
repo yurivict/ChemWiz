@@ -143,9 +143,21 @@ exports.interpolate = function(mols, npts, how) {
   return animMols
 }
 
-exports.findMolecularPlane = function(m) {
+exports.findMolecularPlane = function(m, outOrth) {
+  // compute hull and dists
   var dists = []
   var hull = m.computeConvexHullFacets(dists)
   var dmin = Arrayx.min(dists)
-  return hull[dmin[0]]
+  var plane = hull[dmin[0]]
+  // optional orthogonal vector return
+  if (outOrth != undefined) {
+    // pick some other vector from the hull, and return its orthogonal part
+    var dmax = Arrayx.max(dists)
+    var othr = hull[dmax[0]]
+    Vec3.normalize(Vec3.orthogonal(plane, othr)).forEach(function(e) {
+      outOrth.push(e)
+    })
+  }
+  // molecular plane vector return
+  return plane
 }
