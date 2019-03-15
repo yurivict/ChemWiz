@@ -118,9 +118,6 @@ public:
     const Vec3 &i = *this;
     return Vec3(i(X)/d(X), i(Y)/d(Y), i(Z)/d(Z));
   }
-  Vec3 orthoComponentTo(const Vec3 &v) const { // v is assumed to be normalized
-    return *this - this->project(v);
-  }
   static bool is(Float f1, Float f2) {return std::abs(f1-f2) < 0.001;} // tests how close are numbers
 private:
   static Float sq(Float f) {return f*f;}
