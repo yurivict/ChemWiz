@@ -1,6 +1,6 @@
 // module AminoAcids
 
-var AcidsCodons = require('scripts/amino-acids-and-codons')
+var AcidsCodons = require('amino-acids-and-codons')
 
 var xyzPath = "molecules/Amino_Acids/";
 
