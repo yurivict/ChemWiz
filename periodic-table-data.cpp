@@ -9,7 +9,7 @@
 #include "periodic-table-data.h"
 #include "xerror.h"
 
-static PeriodicTableData singleInstance; // statically initialized instance
+PeriodicTableData PeriodicTableData::singleInstance; // statically initialized instance
 
 PeriodicTableData::PeriodicTableData() {
   using json = nlohmann::json;
@@ -33,10 +33,6 @@ PeriodicTableData::PeriodicTableData() {
     eData.symbol       = e["symbol"];
     symToElt[eData.symbol] = eIdx;
   }
-}
-
-const PeriodicTableData& PeriodicTableData::get() {
-  return singleInstance;
 }
 
 const PeriodicTableData::ElementData& PeriodicTableData::operator()(unsigned elt) const {

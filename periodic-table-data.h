@@ -19,9 +19,10 @@ public: // data
   std::map<std::string, unsigned> symToElt;
 private: // data
   std::vector<ElementData> data; // by element, this array contains them in sequential order beginning with H at index 0
+  static PeriodicTableData singleInstance; // statically initialized instance
 public: // iface
   PeriodicTableData();
-  static const PeriodicTableData& get();
+  static const PeriodicTableData& get() {return singleInstance;}
   const ElementData& operator()(unsigned elt) const;
   unsigned elementFromSymbol(const std::string &sym) const;
 }; // PeriodicTableData
