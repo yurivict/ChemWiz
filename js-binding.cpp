@@ -30,6 +30,7 @@
 #include "process.h"
 #include "web-io.h"
 #include "op-rmsd.h"
+#include "periodic-table-data.h"
 
 // types defined locally
 typedef std::vector<uint8_t> Binary;
@@ -71,7 +72,7 @@ static void ckErr(js_State *J, int err) {
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
 #define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
-#define GetArgElement(n)         elementFromString(GetArgString(n))
+#define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
@@ -460,7 +461,7 @@ static void xnewoZ(js_State *J, Atom *a) { // object or undefined when a==nulllp
 
 static void xnew(js_State *J) {
   AssertNargs(2)
-  Return(Atom, new Atom(elementFromString(GetArgString(1)), GetArgVec3(2)));
+  Return(Atom, new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
 }
 
 namespace prototype {

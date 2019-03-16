@@ -52,12 +52,13 @@ enum Element {
   As = 33,
   Se = 34,
   Br = 35,
-  Kr = 36
+  Kr = 36,
+  I  = 53,
+  Xe = 54
 };
 
 std::ostream& operator<<(std::ostream &os, Element e);
 std::istream& operator>>(std::istream &is, Element &e);
-Element elementFromString(const std::string &str);
 
 class Molecule;
 
@@ -89,11 +90,15 @@ public:
   static Float atomBondAvgRadius(Element elt) {
     // based on the paper Raji Heyrovska "Atomic Structures of all the Twenty Essential Amino Acids and a Tripeptide, with Bond Lengths as Sums of Atomic Covalent Radii"
     // tolerances will be added to account for ranges
-    if (elt == H) return 0.37;
-    if (elt == C) return 0.70;
-    if (elt == O) return 0.63;
-    if (elt == N) return 0.66;
-    if (elt == S) return 1.04;
+    if (elt == H)  return 0.37;
+    if (elt == C)  return 0.70;
+    if (elt == N)  return 0.66;
+    if (elt == O)  return 0.63;
+    if (elt == F)  return 0.70; // ad-hoc wrong
+    if (elt == S)  return 1.04;
+    if (elt == Cl) return 1.04; // ad-hoc wrong
+    if (elt == Br) return 1.04; // ad-hoc wrong
+    if (elt == I)  return 1.04; // ad-hoc wrong
     ERROR(str(boost::format("atomBondAvgRadius: unknown element %1%") % elt));
   }
   static Float atomBondAvgDistance(Element elt1, Element elt2) {

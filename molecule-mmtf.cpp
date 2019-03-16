@@ -1,6 +1,7 @@
 
 #include "molecule.h"
 #include "xerror.h"
+#include "periodic-table-data.h"
 
 #include <string>
 #include <memory>
@@ -12,6 +13,8 @@
 
 static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
   std::vector<Molecule*> res;
+
+  auto &ptd = PeriodicTableData::get();
 
   if (!sd.hasConsistentData(true))
     ERROR("MMTF doesn't have consisent data")
@@ -51,7 +54,7 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
           // TODO use occupancy: assert(mmtf::isDefaultValue(sd.occupancyList)); // use sd.occupancyList[atomIndex] if this fails, see PDB conversion example in the MMTF project how
 
           // create the atom object
-          std::unique_ptr<Atom> a(new Atom(elementFromString(group.elementList[ia]), Vec3(sd.xCoordList[atomIndex], sd.yCoordList[atomIndex], sd.zCoordList[atomIndex])));
+          std::unique_ptr<Atom> a(new Atom(Element(ptd.elementFromSymbol(group.elementList[ia])), Vec3(sd.xCoordList[atomIndex], sd.yCoordList[atomIndex], sd.zCoordList[atomIndex])));
           a->name = group.atomNameList[ia]; // meaningful name as related to the structure it is involved in
           if (mmtf::is_hetatm(group.chemCompType.c_str()))
             a->isHetAtm = true;
