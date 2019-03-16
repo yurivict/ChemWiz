@@ -749,6 +749,12 @@ static void centerOfMass(js_State *J) {
   ReturnVec(J, GetArg(Molecule, 0)->centerOfMass());
 }
 
+static void centerAt(js_State *J) {
+  AssertNargs(1)
+  GetArg(Molecule, 0)->centerAt(GetArgVec3(1));
+  ReturnVoid(J);
+}
+
 static void snapToGrid(js_State *J) {
   AssertNargs(1)
   GetArg(Molecule, 0)->snapToGrid(GetArgVec3(1));
@@ -791,6 +797,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findComponents, 0)
     ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 1)
     ADD_METHOD_CPP(Molecule, centerOfMass, 0)
+    ADD_METHOD_CPP(Molecule, centerAt, 1)
     ADD_METHOD_CPP(Molecule, snapToGrid, 1)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
