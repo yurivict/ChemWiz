@@ -2,7 +2,8 @@
 
 var CalcUtils = require('calc-utils')
 
-var name = "NWChem"
+var nameUpp = "NWChem"
+var nameLwr = "nwchem"
 var executable = "nwchem"
 //var deftBasis = "6-311G*"
 var deftBasis = "3-21G"
@@ -23,7 +24,7 @@ function runProcess(runDir) {
 }
 
 function xthrow(msg) {
-  throw "ERROR("+name+") "+msg
+  throw "ERROR("+nameUpp+") "+msg
 }
 
 //
@@ -117,7 +118,7 @@ function parseAllCoordSections(lines, m) {
 }
 
 function runCalcEngine(rname, m, params, fnReturn) {
-  var runDir = CalcUtils.createRunDir(name, "energy", params)
+  var runDir = CalcUtils.createRunDir(nameLwr, "energy", params)
   if (!params.reprocess) {
     // write molecule in the xyz format
     File.write(m.toXyz(), runDir+"/"+inputXyzFile)
@@ -153,8 +154,8 @@ function extractEnergyFromOutput(outputLines) {
 //
 exports.create = function() {
   return {
-    toString: function() {return name+" calc module"},
-    kind: function() {return name},
+    toString: function() {return nameUpp+" calc module"},
+    kind: function() {return nameLwr},
     calcEnergy: function(m, params) {
       return runCalcEngine("energy", m, CalcUtils.argParams(params), function(runDir, outputLines) {
         return extractEnergyFromOutput(outputLines)

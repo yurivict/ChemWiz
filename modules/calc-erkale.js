@@ -2,7 +2,8 @@
 
 var CalcUtils = require('calc-utils')
 
-var name = "erkale"
+var nameUpp = "Erkale"
+var nameLwr = "erkale"
 var deftBasis = "3-21G"
 // files
 var inputXyzFile = "m.xyz"
@@ -22,7 +23,7 @@ function paramsToErkaleParams(engParams) {
     else if (key == "basis")
       erkParams["Basis"] = engParams["basis"]
     else if (!CalcUtils.isValidParam(key))
-      xthrow("unexpected key '"+key+"' found in params passed to the '"+name+"' calc engine")
+      xthrow("unexpected key '"+key+"' found in params passed to the '"+nameUpp+"' calc engine")
   })
   return erkParams
 }
@@ -43,7 +44,7 @@ function formRunfile(erkParams) {
 }
 
 function runCalcEngine(rname, m, params, executable, fnReturn) {
-  var runDir = CalcUtils.createRunDir(name, rname, params)
+  var runDir = CalcUtils.createRunDir(nameLwr, rname, params)
 
   // params
   var erkParams = paramsToErkaleParams(params)
@@ -102,7 +103,7 @@ function arrRmEmpty(arr) {
 }
 
 function xthrow(msg) {
-  throw "ERROR("+name+") "+msg
+  throw "ERROR("+nameUpp+") "+msg
 }
 
 //
@@ -124,8 +125,8 @@ function findErrors(lines) {
 
 exports.create = function() {
   return {
-    toString: function() {return name+" calc module"},
-    kind: function() {return name},
+    toString: function() {return nameUpp+" calc module"},
+    kind: function() {return nameLwr},
     calcEnergy: function(m, params) {
       return runCalcEngine("energy", m, CalcUtils.argParams(params), executableEnergy, function(runDir, outputLines) {
         return extractEnergyFromOutput(outputLines)
