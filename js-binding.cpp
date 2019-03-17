@@ -1270,6 +1270,11 @@ static void identity(js_State *J) {
   ReturnMat(J, Mat3::identity());
 }
 
+static void transpose(js_State *J) {
+  AssertNargs(1)
+  ReturnMat(J, GetArgMat3x3(1).transpose());
+}
+
 static void plus(js_State *J) {
   AssertNargs(2)
   ReturnMat(J, GetArgMat3x3(1)+GetArgMat3x3(2));
@@ -1508,6 +1513,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Mat3, almostEquals, JsMat3::almostEquals, 3)
     ADD_NS_FUNCTION_CPP(Mat3, zero,         JsMat3::zero, 0)
     ADD_NS_FUNCTION_CPP(Mat3, identity,     JsMat3::identity, 0)
+    ADD_NS_FUNCTION_CPP(Mat3, transpose,    JsMat3::transpose, 1)
     ADD_NS_FUNCTION_CPP(Mat3, plus,         JsMat3::plus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, minus,        JsMat3::minus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, muln,         JsMat3::muln, 2)

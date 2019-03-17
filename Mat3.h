@@ -31,6 +31,10 @@ public:
     {return Vec3::almostEquals(m1[0], m2[0], eps) && Vec3::almostEquals(m1[1], m2[1], eps) && Vec3::almostEquals(m1[2], m2[2], eps);}
   static Mat3 zero() {return Mat3(Vec3(0,0,0), Vec3(0,0,0), Vec3(0,0,0));}
   static Mat3 identity() {return Mat3(Vec3(1,0,0), Vec3(0,1,0), Vec3(0,0,1));}
+  Mat3 transpose() const {
+    const auto &i = *this;
+    return Mat3(Vec3(i(1,1),i(2,1),i(3,1)), Vec3(i(1,2),i(2,2),i(3,2)), Vec3(i(1,3),i(2,3),i(3,3)));
+  }
   static Mat3 rotate(const Vec3 &r) {
     Float rLen = r.len();
     if (rLen == 0)
