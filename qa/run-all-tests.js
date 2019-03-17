@@ -7,7 +7,7 @@ var all_tests = ["xyz",
                  "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
                  "web-ui-http", "web-ui-https", "web-ui-url",
                  "gzip", "mmtf",
-                 "calc-erkale"
+                 "calc-erkale", "calc-nwchem"
                 ]
 
 var nSucc = 0
