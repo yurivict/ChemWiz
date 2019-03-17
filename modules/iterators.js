@@ -10,7 +10,7 @@ exports.angles = function(num, axis, orth, cb) { // 'num' specifies how many val
     // rotate around the main axis (front)
     fnRotateAroundAxis("F", Mat3.identity())
     // rotate around the main axis (back)
-    fnRotateAroundAxis("B", Mat3.muln(Mat3.rotate(orth), Math.PI));
+    fnRotateAroundAxis("B", Mat3.rotate(Vec3.muln(orth, Math.PI)));
     // orth rotations
     [-1,+1].forEach(function(a) {
       fnRotateAroundAxis("M0"+(a>0 ? '+'+a : a), Mat3.rotate(Vec3.muln(orth, a*Math.PI/2)))
