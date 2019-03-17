@@ -36,10 +36,11 @@ function defaultParams(erkParams) {
 function formRunfile(erkParams) {
   var runfile = ""
   runfile += "System "+inputXyzFile+"\n"
-  runfile += "Method lda_x-lda_c_vwn\n"
+  runfile += "Method lda_x-lda_c_vwn\n" // can also be HF
   Object.keys(erkParams).forEach(function(key) {
     runfile += key+" "+erkParams[key]+"\n"
   })
+  runfile += "SaveChk lda.chk\n" // based on section 5.1 SCF calculation
   return runfile
 }
 
