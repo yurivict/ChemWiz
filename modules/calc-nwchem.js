@@ -37,20 +37,32 @@ function formInp(m, op, params) {
   inp += 'echo\n'
   inp += 'geometry units angstroms\n'
   inp += ' load '+inputXyzFile+'\n'
+  inp += ' symmetry c1\n' // c1=no symmetry
   inp += 'end\n'
   inp += 'basis\n'
   for (var elts = m.allElements(), i = 0; i < elts.length; i++)
-    inp += ' '+elts[i]+' library '+deftBasis+'\n'
+    inp += ' '+elts[i]+' library '+(params.basis == undefined ? deftBasis : params.basis)+'\n'
   inp += 'end\n'
   inp += 'scf\n'
   if (params.precision != undefined)
     inp += '  thresh '+params.precision+'\n'
+  if (op == "energy-gradients") {
+    inp += '  singlet\n'
+    inp += '  rhf\n'
+  }
   inp += 'end\n'
   if (op == "optimize")
     inp += 'task scf optimize\n'
   else if (op == "energy")
     inp += 'task scf energy\n'
-  else
+  else if (op == "energy-gradients") {
+    // see http://www.nwchem-sw.org/index.php/Release66:TCE#Tensor_Contraction_Engine_Module:_CI.2C_MBPT.2C_and_CC
+    // see https://github.com/nwchemgit/nwchem/blob/master/QA/tests/tce_ccsd_gradient/h2o_ccsd.nw
+    inp += 'tce\n'
+    inp += '  ccsd\n'
+    inp += 'end\n'
+    inp += 'task tce gradient\n'
+  } else
     xthrow("unknown op '"+op+"'")
   return inp
 }
@@ -118,7 +130,7 @@ function parseAllCoordSections(lines, m) {
 }
 
 function runCalcEngine(rname, m, params, fnReturn) {
-  var runDir = CalcUtils.createRunDir(nameLwr, "energy", params)
+  var runDir = CalcUtils.createRunDir(nameLwr, rname, params)
   if (!params.reprocess) {
     // write molecule in the xyz format
     File.write(m.toXyz(), runDir+"/"+inputXyzFile)
@@ -156,10 +168,16 @@ exports.create = function() {
   return {
     toString: function() {return nameUpp+" calc module"},
     kind: function() {return nameLwr},
-    calcEnergy: function(m, params) {
-      return runCalcEngine("energy", m, CalcUtils.argParams(params), function(runDir, outputLines) {
-        return extractEnergyFromOutput(outputLines)
-      })
+    calcEnergy: function(m, params, outGradients) {
+      if (outGradients == undefined) {
+        return runCalcEngine("energy", m, CalcUtils.argParams(params), function(runDir, outputLines) {
+          return extractEnergyFromOutput(outputLines)
+        })
+      } else {
+        return runCalcEngine("energy-gradients", m, CalcUtils.argParams(params), function(runDir, outputLines) {
+          return extractEnergyFromOutput(outputLines)
+        })
+      }
     },
     calcOptimized: function(m, params) {
       return runCalcEngine("optimize", m, CalcUtils.argParams(params), function(runDir, outputLines) {
