@@ -2,12 +2,13 @@
 
 var runsDirSubdir = ".calc-runs"
 var deftPrecision = 0.001
+var deftParams = {precision: deftPrecision}
 
-exports.deftParams = {precision: deftPrecision}
+exports.deftParams = deftParams
 
 exports.argParams = function(aparams) {
   if (aparams == undefined)
-    return {precision: deftPrecision}
+    return deftParams
   else
     return aparams
 }
