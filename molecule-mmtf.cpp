@@ -22,7 +22,6 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
   int modelIndex = 0;
   int chainIndex = 0; // through index
   int groupIndex = 0; // through index
-  int atomIndex = 0;  // through index
 
   // traverse models
   for (int im = 0; im < sd.numModels; im++, modelIndex++) {
@@ -34,9 +33,9 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
         const mmtf::GroupType& group = sd.groupList[sd.groupTypeList[groupIndex]];
         int groupAtomCount = group.atomNameList.size();
         // traverse ATOMs or HETATMs
-        for (int ia = 0; ia < groupAtomCount; ia++, atomIndex++) {
-          // Atom serial
-          assert(mmtf::isDefaultValue(sd.atomIdList) || sd.atomIdList[atomIndex] == atomIndex+1); // how to handle weird (non-sequential) numbers?
+        for (int ia = 0; ia < groupAtomCount; ia++) {
+          int atomId = sd.atomIdList[ia]; // through index
+
             // serial is atomIndex+1
             // otherwise, it is sd.atomIdList[atomIndex], XXX how should we use it?
           // Group name
@@ -54,7 +53,7 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
           // TODO use occupancy: assert(mmtf::isDefaultValue(sd.occupancyList)); // use sd.occupancyList[atomIndex] if this fails, see PDB conversion example in the MMTF project how
 
           // create the atom object
-          std::unique_ptr<Atom> a(new Atom(Element(ptd.elementFromSymbol(group.elementList[ia])), Vec3(sd.xCoordList[atomIndex], sd.yCoordList[atomIndex], sd.zCoordList[atomIndex])));
+          std::unique_ptr<Atom> a(new Atom(Element(ptd.elementFromSymbol(group.elementList[ia])), Vec3(sd.xCoordList[atomId-1], sd.yCoordList[atomId-1], sd.zCoordList[atomId-1])));
           a->name = group.atomNameList[ia]; // meaningful name as related to the structure it is involved in
           if (mmtf::is_hetatm(group.chemCompType.c_str()))
             a->isHetAtm = true;
