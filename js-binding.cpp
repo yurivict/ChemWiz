@@ -1140,18 +1140,20 @@ static void readPdbFile(js_State *J) {
 #endif
 
 #if defined(USE_MMTF)
-static void readMmtfFile(js_State *J) {
-  AssertNargs(1)
-  auto mols = Molecule::readMmtfFile(GetArgString(1));
-  for (auto m : mols)
-    JsMolecule::xnewo(J, m);
-}
+namespace Mmtf {
+  static void readFile(js_State *J) {
+    AssertNargs(1)
+    auto mols = Molecule::readMmtfFile(GetArgString(1));
+    for (auto m : mols)
+      JsMolecule::xnewo(J, m);
+  }
 
-static void readMmtfBuffer(js_State *J) {
-  AssertNargs(1)
-  auto mols = Molecule::readMmtfBuffer(GetArg(Binary, 1));
-  for (auto m : mols)
-    JsMolecule::xnewo(J, m);
+  static void readBuffer(js_State *J) {
+    AssertNargs(1)
+    auto mols = Molecule::readMmtfBuffer(GetArg(Binary, 1));
+    for (auto m : mols)
+      JsMolecule::xnewo(J, m);
+  }
 }
 #endif
 
@@ -1482,8 +1484,10 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(readPdbFile, 1)
 #endif
 #if defined(USE_MMTF)
-  ADD_JS_FUNCTION(readMmtfFile, 1)
-  ADD_JS_FUNCTION(readMmtfBuffer, 1)
+  BEGIN_NAMESPACE(Mmtf)
+    ADD_NS_FUNCTION_CPP(Mmtf, readFile,   Mmtf::readFile, 1)
+    ADD_NS_FUNCTION_CPP(Mmtf, readBuffer, Mmtf::readBuffer, 1)
+  END_NAMESPACE(Mmtf)
 #endif
 
   //
