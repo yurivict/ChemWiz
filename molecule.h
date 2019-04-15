@@ -213,6 +213,8 @@ public:
   std::string        idx;
   std::string        descr;
   std::vector<Atom*> atoms; // own atoms here
+  unsigned           nChains; // zero when the object doesn't represent chains
+  unsigned           nGroups; // zero when the object doesn't have groups defined
   Molecule(const std::string &newDescr);
   Molecule(const Molecule &other);
   ~Molecule();
@@ -241,6 +243,8 @@ public:
     for (auto a : atoms)
       a->applyMatrix(m);
   }
+  unsigned numChains() const {return nChains;}
+  unsigned numGroups() const {return nGroups;}
   std::vector<std::vector<Atom*>> findComponents() const;
   std::vector<Vec3> computeConvexHullFacets(std::vector<double> *withFurthestdist) const; // in molecule-qhull.cpp
   Atom* findFirst(Element elt) {

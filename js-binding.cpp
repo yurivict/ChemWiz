@@ -656,6 +656,16 @@ static void addAtom(js_State *J) {
   ReturnVoid(J);
 }
 
+static void numChains(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Molecule, 0)->numChains());
+}
+
+static void numGroups(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Molecule, 0)->numGroups());
+}
+
 static void addMolecule(js_State *J) {
   AssertNargs(1)
   GetArg(Molecule, 0)->add(*GetArg(Molecule, 1));
@@ -779,6 +789,8 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, getAtom, 1)
     ADD_METHOD_CPP(Molecule, getAtoms, 0)
     ADD_METHOD_CPP(Molecule, addAtom, 1)
+    ADD_METHOD_CPP(Molecule, numChains, 0)
+    ADD_METHOD_CPP(Molecule, numGroups, 0)
     ADD_METHOD_JS (Molecule, findAtoms, function(filter) {return this.getAtoms().filter(filter)})
     ADD_METHOD_JS (Molecule, transform, function(rot,shift) {
       for (var i = 0; i < this.numAtoms(); i++) {

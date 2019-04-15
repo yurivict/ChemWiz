@@ -28,8 +28,13 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
     std::unique_ptr<Molecule> m(new Molecule("")); // molecule per model
     // traverse chains
     for (int ic = 0; ic < sd.chainsPerModel[modelIndex]; ic++, chainIndex++) {
+      // increase chain count in the molecule
+      m->nChains++;
       // traverse groups
       for (int ig = 0; ig < sd.groupsPerChain[chainIndex]; ig++, groupIndex++) {
+        // increase group count in the molecule
+        m->nGroups++;
+        //
         const mmtf::GroupType& group = sd.groupList[sd.groupTypeList[groupIndex]];
         int groupAtomCount = group.atomNameList.size();
         // traverse ATOMs or HETATMs

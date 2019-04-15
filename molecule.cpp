@@ -107,11 +107,19 @@ std::ostream& operator<<(std::ostream &os, const Atom &a) {
 
 /// Molecule
 
-Molecule::Molecule(const std::string &newDescr) : descr(newDescr) {
+Molecule::Molecule(const std::string &newDescr)
+: descr(newDescr),
+  nChains(0),
+  nGroups(0)
+{
   //std::cout << "Molecule::Molecule(copy) " << this << std::endl;
 }
 
-Molecule::Molecule(const Molecule &other) : descr(other.descr) {
+Molecule::Molecule(const Molecule &other)
+: descr(other.descr),
+  nChains(other.nChains),
+  nGroups(other.nGroups)
+{
   //std::cout << "Molecule::Molecule() " << this << std::endl;
   for (auto a : other.atoms)
     atoms.push_back((new Atom(*a))->setMolecule(this));
