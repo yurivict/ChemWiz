@@ -1154,6 +1154,15 @@ static void writeXyzFile(js_State *J) {
   ReturnVoid(J);
 }
 
+namespace Pdb {
+static void readBuffer(js_State *J) {
+  AssertNargs(1)
+  auto mols = Molecule::readPdbBuffer(GetArgString(1));
+  for (auto m : mols)
+    JsMolecule::xnewo(J, m);
+}
+}
+
 #if defined(USE_DSRPDB)
 static void readPdbFile(js_State *J) {
   AssertNargs(1)
@@ -1504,6 +1513,9 @@ void registerFunctions(js_State *J) {
   // Read/Write functions
   //
   ADD_JS_FUNCTION(writeXyzFile, 2)
+  BEGIN_NAMESPACE(Pdb)
+    ADD_NS_FUNCTION_CPP(Pdb, readBuffer,  Pdb::readBuffer, 1)
+  END_NAMESPACE(Pdb)
 #if defined(USE_DSRPDB)
   ADD_JS_FUNCTION(readPdbFile, 1)
 #endif
