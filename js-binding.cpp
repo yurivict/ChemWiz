@@ -563,6 +563,16 @@ static void snapToGrid(js_State *J) {
   ReturnVoid(J);
 }
 
+static void getChain(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Atom, 0)->chain);
+}
+
+static void getGroup(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Atom, 0)->group);
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -591,6 +601,8 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
     ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
     ADD_METHOD_CPP(Atom, snapToGrid, 1)
+    ADD_METHOD_CPP(Atom, getChain, 0)
+    ADD_METHOD_CPP(Atom, getGroup, 0)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
     ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})

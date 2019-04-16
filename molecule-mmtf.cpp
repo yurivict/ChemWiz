@@ -63,6 +63,10 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
           if (mmtf::is_hetatm(group.chemCompType.c_str()))
             a->isHetAtm = true;
 
+          // set chain/group
+          a->chain = m->nChains;
+          a->group = m->nGroups;
+
           // add atom to molecule
           m->add(a.release());
         } // atom

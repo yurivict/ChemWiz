@@ -68,13 +68,16 @@ public:
   Element            elt;
   Vec3               pos;
   bool               isHetAtm; // what exactly is this?
-  std::string        name; // atom can be given a name, see group.atomNameList[] in MMTF spec
-  std::vector<Atom*> bonds; // all bonds are listed
+  std::string        name;     // atom can be given a name, see group.atomNameList[] in MMTF spec
+  std::vector<Atom*> bonds;    // all bonds are listed
+  unsigned           chain;    // group number, if available
+  unsigned           group;    // group number, if available
   void              *obj;
-  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), isHetAtm(false), obj(nullptr) {
+  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), isHetAtm(false), chain(0), group(0), obj(nullptr) {
     //std::cout << "Atom::Atom " << this << std::endl;
   }
-  Atom(const Atom &other) : molecule(nullptr), elt(other.elt), pos(other.pos), isHetAtm(other.isHetAtm), obj(nullptr) { // all but bonds and obj
+  Atom(const Atom &other)
+  : molecule(nullptr), elt(other.elt), pos(other.pos), isHetAtm(other.isHetAtm), chain(other.chain), group(other.group), obj(nullptr) { // all but bonds and obj
     //std::cout << "Atom::Atom(copy) " << this << std::endl;
   }
   ~Atom() {
