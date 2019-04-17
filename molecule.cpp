@@ -31,6 +31,22 @@ std::istream& operator>>(std::istream &is, Element &e) {
 
 /// Atom
 
+std::ostream& operator<<(std::ostream &os, const SecondaryStructureKind &secStr) {
+  switch (secStr) {
+  case PiHelix:    os << "HELIX";        break;
+  case Bend:       os << "BEND";         break;
+  case AlphaHelix: os << "ALPHA_HELIX";  break;
+  case Extended:   os << "EXTENDED";     break;
+  case Helix3_10:  os << "HELIX_3_10";   break;
+  case Bridge:     os << "BRIDGE";       break;
+  case Turn:       os << "TURN";         break;
+  case Coil:       os << "COIL";         break;
+  case Undefined:  os << "UNDEFINED";    break;
+  default:         assert(0); // bogus value
+  }
+  return os;
+}
+
 bool Atom::isEqual(const Atom &other) const {
   return elt == other.elt &&
          pos == other.pos;

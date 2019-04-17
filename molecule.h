@@ -62,6 +62,10 @@ std::istream& operator>>(std::istream &is, Element &e);
 
 class Molecule;
 
+// define SecondaryStructureKind values to be the same as in the secStructList of MMTF because for now they mostly come from there
+enum SecondaryStructureKind {Undefined = -1, PiHelix = 0, Bend = 1, AlphaHelix = 2, Extended = 3, Helix3_10 = 4, Bridge = 5, Turn = 6, Coil = 7};
+std::ostream& operator<<(std::ostream &os, const SecondaryStructureKind &secStr);
+
 class Atom : public Obj {
 public:
   Molecule          *molecule; // Atom can only belong to one molecule
@@ -70,14 +74,15 @@ public:
   bool               isHetAtm; // what exactly is this?
   std::string        name;     // atom can be given a name, see group.atomNameList[] in MMTF spec
   std::vector<Atom*> bonds;    // all bonds are listed
-  unsigned           chain;    // group number, if available
+  unsigned           chain;    // chain number, if available
   unsigned           group;    // group number, if available
+  SecondaryStructureKind secStructKind; // defined per-group, but we don't have group objects
   void              *obj;
-  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), isHetAtm(false), chain(0), group(0), obj(nullptr) {
+  Atom(Element newElt, const Vec3 &newPos) : molecule(nullptr), elt(newElt), pos(newPos), isHetAtm(false), chain(0), group(0), secStructKind(Undefined), obj(nullptr) {
     //std::cout << "Atom::Atom " << this << std::endl;
   }
   Atom(const Atom &other)
-  : molecule(nullptr), elt(other.elt), pos(other.pos), isHetAtm(other.isHetAtm), chain(other.chain), group(other.group), obj(nullptr) { // all but bonds and obj
+  : molecule(nullptr), elt(other.elt), pos(other.pos), isHetAtm(other.isHetAtm), chain(other.chain), group(other.group), secStructKind(other.secStructKind), obj(nullptr) { // all but bonds and obj
     //std::cout << "Atom::Atom(copy) " << this << std::endl;
   }
   ~Atom() {

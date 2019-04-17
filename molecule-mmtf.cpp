@@ -14,6 +14,8 @@
 static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
   std::vector<Molecule*> res;
 
+  assert(sd.secStructList.empty() || sd.secStructList.size() == sd.numGroups);
+
   auto &ptd = PeriodicTableData::get();
 
   if (!sd.hasConsistentData(true))
@@ -63,9 +65,11 @@ static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
           if (mmtf::is_hetatm(group.chemCompType.c_str()))
             a->isHetAtm = true;
 
-          // set chain/group
+          // set chain/group/secStructKind
           a->chain = m->nChains;
           a->group = m->nGroups;
+          if (!sd.secStructList.empty())
+            a->secStructKind = (SecondaryStructureKind)sd.secStructList[a->group - 1];
 
           // add atom to molecule
           m->add(a.release());

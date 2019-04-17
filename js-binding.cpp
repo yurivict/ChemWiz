@@ -573,6 +573,18 @@ static void getGroup(js_State *J) {
   ReturnUnsigned(J, GetArg(Atom, 0)->group);
 }
 
+static void getSecStruct(js_State *J) {
+  AssertNargs(0)
+  ReturnUnsigned(J, GetArg(Atom, 0)->secStructKind);
+}
+
+static void getSecStructStr(js_State *J) {
+  AssertNargs(0)
+  std::ostringstream ss;
+  ss << GetArg(Atom, 0)->secStructKind;
+  ReturnString(J, ss.str());
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -603,6 +615,8 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Atom, snapToGrid, 1)
     ADD_METHOD_CPP(Atom, getChain, 0)
     ADD_METHOD_CPP(Atom, getGroup, 0)
+    ADD_METHOD_CPP(Atom, getSecStruct, 0)
+    ADD_METHOD_CPP(Atom, getSecStructStr, 0)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
     ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
