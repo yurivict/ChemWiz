@@ -26,6 +26,7 @@
 #include "obj.h"
 #include "molecule.h"
 #include "temp-file.h"
+#include "structure-db.h"
 #include "tm.h"
 #include "process.h"
 #include "web-io.h"
@@ -35,11 +36,12 @@
 // types defined locally
 typedef std::vector<uint8_t> Binary;
 
-static const char *TAG_Obj        = "Obj";
-static const char *TAG_Binary     = "Binary";
-static const char *TAG_Molecule   = "Molecule";
-static const char *TAG_Atom       = "Atom";
-static const char *TAG_TempFile   = "TempFile";
+static const char *TAG_Obj         = "Obj";
+static const char *TAG_Binary      = "Binary";
+static const char *TAG_Molecule    = "Molecule";
+static const char *TAG_Atom        = "Atom";
+static const char *TAG_TempFile    = "TempFile";
+static const char *TAG_StructureDb = "StructureDb";
 
 static void ckErr(js_State *J, int err) {
   if (err) {
@@ -948,6 +950,74 @@ static void init(js_State *J) {
 
 } // JsTempFile
 
+namespace JsStructureDb {
+
+static void xnewo(js_State *J, StructureDb *f) {
+  js_getglobal(J, TAG_StructureDb);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_StructureDb, f, tempFileFinalize);
+}
+
+static void xnew(js_State *J) {
+  AssertNargs(0)
+  Return(StructureDb, new StructureDb);
+}
+
+namespace prototype {
+
+static void str(js_State *J) {
+  AssertNargs(0)
+  auto sdb = GetArg(StructureDb, 0);
+  ReturnString(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+}
+
+static void toString(js_State *J) {
+  AssertNargs(0)
+  auto sdb = GetArg(StructureDb, 0);
+  ReturnString(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+}
+
+static void add(js_State *J) {
+  AssertNargs(2)
+  GetArg(StructureDb, 0)->add(GetArg(Molecule, 1), GetArgString(2));
+  ReturnVoid(J);
+}
+
+static void find(js_State *J) {
+  AssertNargs(1)
+  ReturnString(J, GetArg(StructureDb, 0)->find(GetArg(Molecule, 1)));
+}
+
+static void moleculeSignature(js_State *J) {
+  AssertNargs(1)
+  /*XXX StructureDb::moleculeSignature is static, and "this" argument isn't used*/
+  auto signature = StructureDb::computeMoleculeSignature(GetArg(Molecule, 1));
+  std::ostringstream ss;
+  ss << signature;
+  ReturnString(J, ss.str());
+}
+
+}
+
+static void init(js_State *J) {
+  InitObjectRegistry(J, TAG_StructureDb);
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(StructureDb)
+  js_getglobal(J, TAG_StructureDb);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious()
+  { // methods
+    ADD_METHOD_CPP(StructureDb, str, 0)
+    ADD_METHOD_CPP(StructureDb, toString, 0)
+    ADD_METHOD_CPP(StructureDb, add, 2)
+    ADD_METHOD_CPP(StructureDb, find, 1)
+    ADD_METHOD_CPP(StructureDb, moleculeSignature, 1)
+  }
+  js_pop(J, 2);
+  AssertStack(0);
+}
+
+} // JsStructureDb
 
 //
 // exported functions
@@ -1473,6 +1543,7 @@ void registerFunctions(js_State *J) {
   JsAtom::init(J);
   JsMolecule::init(J);
   JsTempFile::init(J);
+  JsStructureDb::init(J);
 
 #define ADD_JS_FUNCTION(name, num) \
   js_newcfunction(J, JsBinding::name, #name, num); \
