@@ -9,7 +9,11 @@ function codeToName(code) {
 }
 
 function codeToFile(code) {
-  return xyzPath+"L-"+codeToName(code)+".xyz"
+  if (code != 'G') {
+    return xyzPath+"L-"+codeToName(code).replace(' ', '_')+".xyz"
+  } else { // Glycine doesn't have D- and L- forms - they are the same
+    return xyzPath+codeToName(code).replace(' ', '_')+".xyz"
+  }
 }
 
 function decodePeptide(peptide, f) {
