@@ -161,3 +161,22 @@ exports.findMolecularPlane = function(m, outOrth) {
   // molecular plane vector return
   return plane
 }
+
+
+//
+// AaCore functions
+//
+
+exports.characterizeAaCore = function(aaCore) {
+  var tailN = aaCore["Hn2"] == null;
+  var tailC = aaCore["Ho"] == null;
+  if (!tailN && !tailC)
+    return "mid"
+  if (tailN && tailC)
+    return "single"
+  if (tailN)
+    return "N-term"
+  if (tailC)
+    return "C-term"
+}
+
