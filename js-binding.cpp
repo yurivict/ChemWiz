@@ -818,7 +818,6 @@ static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
   js_newobject(J);
   addFld ("N",       aaCore.N);
   addFld ("Hn1",     aaCore.Hn1);
-  addFld ("Hn1",     aaCore.Hn1);
   addFldZ("Hn2",     aaCore.Hn2);
   addFld ("Cmain",   aaCore.Cmain);
   addFld ("Hc",      aaCore.Hc);
