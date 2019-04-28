@@ -800,6 +800,57 @@ static void snapToGrid(js_State *J) {
   ReturnVoid(J);
 }
 
+namespace helpers {
+
+static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
+  auto addFld = [J](const char *fld, Atom *atom) {
+    JsAtom::xnewo(J, atom);
+    js_setproperty(J, -2, fld);
+  };
+  auto addFldZ = [J, addFld](const char *fld, Atom *atom) { // can be null (optional fields)
+    if (atom)
+      addFld(fld, atom);
+    else {
+      js_pushnull(J);
+      js_setproperty(J, -2, fld);
+    }
+  };
+  js_newobject(J);
+  addFld ("N",       aaCore.N);
+  addFld ("Hn1",     aaCore.Hn1);
+  addFld ("Hn1",     aaCore.Hn1);
+  addFldZ("Hn2",     aaCore.Hn2);
+  addFld ("Cmain",   aaCore.Cmain);
+  addFld ("Hc",      aaCore.Hc);
+  addFld ("Coo",     aaCore.Coo);
+  addFld ("O2",      aaCore.O2);
+  addFldZ("O1",      aaCore.O1);
+  addFldZ("Ho",      aaCore.Ho);
+  addFld ("payload", aaCore.payload);
+}
+
+} // helpers
+
+static void findAaCore1(js_State *J) {
+  AssertNargs(0)
+  auto aaCore = GetArg(Molecule, 0)->findAaCore1();
+  if (aaCore.Cmain)
+    helpers::pushAaCoreAsJsObject(J, GetArg(Molecule, 0)->findAaCore1());
+  else
+    js_pushnull(J); // null is returned when it is not found
+}
+
+static void findAaCores(js_State *J) {
+  AssertNargs(0)
+  // return array
+  js_newarray(J);
+  unsigned idx = 0;
+  for (auto &aaCore : GetArg(Molecule, 0)->findAaCores()) {
+    helpers::pushAaCoreAsJsObject(J, aaCore);
+    js_setindex(J, -2, idx++);
+  }
+}
+
 } // prototype
 
 static void init(js_State *J) {
@@ -840,6 +891,8 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, centerOfMass, 0)
     ADD_METHOD_CPP(Molecule, centerAt, 1)
     ADD_METHOD_CPP(Molecule, snapToGrid, 1)
+    ADD_METHOD_CPP(Molecule, findAaCore1, 0)
+    ADD_METHOD_CPP(Molecule, findAaCores, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();

@@ -208,6 +208,37 @@ public:
       ERROR(str(boost::format("filterBonds1: no %1%->%2% bond found when one is expected") % elt % bondElt));
     return res;
   }
+  std::array<Atom*,2> filterBonds2(Element bondElt) const {
+    Atom* res1 = nullptr;
+    Atom* res2 = nullptr;
+    for (auto a : bonds)
+      if (a->elt == bondElt) {
+        if (res2)
+          ERROR(str(boost::format("filterBonds1: duplicate %1%->%2% bond when only one is expected") % elt % bondElt));
+        if (!res1)
+          res1 = a;
+        else
+          res2 = a;
+      }
+    if (!res2)
+      ERROR(str(boost::format("filterBonds1: no %1%->%2% bond found when one is expected") % elt % bondElt));
+    return {res1, res2};
+  }
+  Atom* filterBonds1excl(Element bondElt, Atom *excl) const {
+    Atom* res = nullptr;
+    for (auto a : bonds) {
+      if (a == excl)
+        continue;
+      if (a->elt == bondElt) {
+        if (res)
+          ERROR(str(boost::format("filterBonds1: duplicate %1%->%2% bond when only one is expected") % elt % bondElt));
+        res = a;
+      }
+    }
+    if (!res)
+      ERROR(str(boost::format("filterBonds1: no %1%->%2% bond found when one is expected") % elt % bondElt));
+    return res;
+  }
   void centerAt(const Vec3 &pt) {
     pos -= pt;
   }
@@ -217,6 +248,19 @@ public:
 }; // Atom
 
 class Molecule : public Obj {
+public: // structs
+  struct AaCore {
+    Atom    *N;
+    Atom    *Hn1;       // mandatory
+    Atom    *Hn2;       // optional, missing when bonded at N
+    Atom    *Cmain;     // main carbon
+    Atom    *Hc;        // H near Cmain
+    Atom    *Coo;       // oxygen-connected carbon
+    Atom    *O2;        // O with the double bond
+    Atom    *O1;        // O in the backbone OH (optional, missing when bonded at C)
+    Atom    *Ho;        // H in H group (optional, missing when bonded at C)
+    Atom    *payload;   // the first atom of the rest of the amino acid
+  }; // AaCore
 public:
   std::string        idx;
   std::string        descr;
@@ -267,6 +311,8 @@ public:
         return *i;
     return nullptr;
   }
+  AaCore findAaCore1();  // finds a single AaCore, fails when AA core is missing or it has multiple AA cores
+  std::vector<AaCore> findAaCores();  // finds all AA cores
   std::array<Atom*,3> findAaNterm();
   std::array<Atom*,5> findAaCterm();
   std::vector<Atom*> findAaLast();
@@ -319,6 +365,7 @@ public:
   void prnCoords(std::ostream &os) const;
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
+  bool findAaCore(Atom *O2anchor, AaCore &aaCore);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule

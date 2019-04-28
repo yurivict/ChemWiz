@@ -177,6 +177,32 @@ std::vector<std::vector<Atom*>> Molecule::findComponents() const {
   return res;
 }
 
+Molecule::AaCore Molecule::findAaCore1() { // finds a single AaCore, fails when AA core is missing or it has multiple AA cores
+  AaCore aaCore;
+  bool   aaCoreFound = false;
+  // begin from O2, use it as an anchor because it is always present
+  for (auto aO2 : atoms)
+    if (aO2->elt == O && aO2->isBonds(C, 1)) {
+      bool aaCoreFoundNew = findAaCore(aO2, aaCore);
+      if (aaCoreFoundNew && aaCoreFound)
+        ERROR("multiple AA cores in a molecule when findAaCore1() expects only one core")
+
+      aaCoreFound = aaCoreFoundNew;
+    }
+  return aaCoreFound ? aaCore : AaCore({});
+}
+
+std::vector<Molecule::AaCore> Molecule::findAaCores() {  // finds all AA cores
+  std::vector<AaCore> aaCores;
+  AaCore aaCore;
+  // begin from O2, use it as an anchor because it is always present
+  for (auto aO2 : atoms)
+    if (aO2->elt == O && aO2->isBonds(C, 1))
+      if (findAaCore(aO2, aaCore))
+        aaCores.push_back(aaCore);
+  return aaCores;
+}
+
 std::array<Atom*,3> Molecule::findAaNterm() { // expects that the molecule has an open N-term in the beginning
   auto atomN = findFirst(N); // heuristic step
   assert(atomN->isBonds(C,1, H,2));
@@ -321,6 +347,49 @@ Vec3 Molecule::centerOfMass() const {
 void Molecule::snapToGrid(const Vec3 &grid) {
   for (auto a : atoms)
     a->snapToGrid(grid);
+}
+
+bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
+  // TODO Proline is different - the group includes a 5-cycle
+  // begin from O2, use it as an anchor because it is always present
+  auto aCoo = O2anchor->bonds[0];
+  Atom *aO1 = nullptr;
+  Atom *aHo = nullptr;
+  if (aCoo->isBonds(O,2, C,1)) { // carbon end it free: O2 + OH (free tail) + C
+    aO1 = aCoo->filterBonds1excl(O, O2anchor);
+    if (aO1->isBonds(C,1, H,1))
+      aHo = aO1->filterBonds1(H);
+    else
+      return false; // wrong aO1 connections
+  } else if (!aCoo->isBonds(O,1, C,1, N,1)) // carbon end is connected: O2 + N (connected) + C
+    return false; // not an AA oxygen
+  Atom *aCmain = aCoo->filterBonds1(C);
+  if (!(aCmain->isBonds(C,2, N,1, H,1) || aCmain->isBonds(C,1, N,1, H,2))) // the first payload atom is either C, or H (only in Glycine)
+    return false; // wrong aCmain bonds
+  Atom *aHc = aCmain->filterBonds(H)[0]; // could be 1 or two hydrogens
+  Atom *aN = aCmain->filterBonds1(N);
+  Atom* aHn1;
+  Atom* aHn2 = nullptr;
+  if (aN->isBonds(C,1, H,2)) { // tail N has 2 hydrogens
+    auto aaHn2 = aN->filterBonds2(H);
+    aHn1 = aaHn2[0];
+    aHn2 = aaHn2[1];
+  } else if (aN->isBonds(C,2, H,1)) { // connected N
+    aHn1 = aN->filterBonds1(H);
+  } else
+    return false; // wrong aN bonds
+
+  Atom *aPayload = nullptr;
+  for (auto a : aCmain->bonds)
+    if (a != aN && a != aCoo && a != aHc) {
+      aPayload = a;
+      break;
+    }
+  assert(aPayload);
+
+  // found
+  aaCore = {aN, aHn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
+  return true;
 }
 
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {
