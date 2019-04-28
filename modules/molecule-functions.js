@@ -168,8 +168,8 @@ exports.findMolecularPlane = function(m, outOrth) {
 //
 
 exports.characterizeAaCore = function(aaCore) {
-  var tailN = aaCore["Hn2"] == null;
-  var tailC = aaCore["Ho"] == null;
+  var tailN = aaCore["Hn2"] != null;
+  var tailC = aaCore["Ho"] != null;
   if (!tailN && !tailC)
     return "mid"
   if (tailN && tailC)
