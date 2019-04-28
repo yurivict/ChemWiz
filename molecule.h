@@ -156,16 +156,16 @@ public:
         return a;
     unreachable();
   }
-  bool isBonds(Element E, unsigned cnt) const {
+  bool isBonds(Element E, unsigned cnt, unsigned cntOthr = 0) const {
     unsigned cnt1 = 0, cntOther = 0;
     for (auto a : bonds)
       if (a->elt == E)
         cnt1++;
       else
         cntOther++;
-    return cnt1 == cnt && cntOther == 0;
+    return cnt1 == cnt && cntOther == cntOthr;
   }
-  bool isBonds(Element E1, unsigned cnt1, Element E2, unsigned cnt2) const {
+  bool isBonds(Element E1, unsigned cnt1, Element E2, unsigned cnt2, unsigned cntOthr = 0) const {
     unsigned cnt[2] = {0,0}, cntOther = 0;
     for (auto a : bonds)
       if (a->elt == E1)
@@ -174,9 +174,9 @@ public:
         cnt[1]++;
       else
         cntOther++;
-    return cnt[0] == cnt1 && cnt[1] == cnt2 && cntOther == 0;
+    return cnt[0] == cnt1 && cnt[1] == cnt2 && cntOther == cntOthr;
   }
-  bool isBonds(Element E1, unsigned cnt1, Element E2, unsigned cnt2, Element E3, unsigned cnt3) const {
+  bool isBonds(Element E1, unsigned cnt1, Element E2, unsigned cnt2, Element E3, unsigned cnt3, unsigned cntOthr = 0) const {
     unsigned cnt[3] = {0,0,0}, cntOther = 0;
     for (auto a : bonds)
       if (a->elt == E1)
@@ -187,7 +187,7 @@ public:
         cnt[2]++;
       else
         cntOther++;
-    return cnt[0] == cnt1 && cnt[1] == cnt2 && cnt[2] == cnt3 && cntOther == 0;
+    return cnt[0] == cnt1 && cnt[1] == cnt2 && cnt[2] == cnt3 && cntOther == cntOthr;
   }
   std::vector<Atom*> filterBonds(Element bondElt) const {
     std::vector<Atom*> res;
