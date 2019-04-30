@@ -24,7 +24,9 @@ public:
 #include <cstdlib>
 #include <iostream>
 
-#define ERROR(msg...) {std::cerr << msg << std::endl; std::exit(1);}
+#include <rang.hpp>
+
+#define ERROR(msg...) {std::cerr << ::rang::fg::red << msg << ::rang::style::reset << std::endl; std::exit(1);}
 
 #endif
 

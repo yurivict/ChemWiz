@@ -6,6 +6,7 @@
 #include "tm.h"
 
 #include <mujs.h>
+#include <rang.hpp>
 
 #include <iostream>
 
@@ -52,6 +53,9 @@ static int main_guarded(int argc, char* argv[]) {
   } else {
     ERROR("Failed to create the JavaScript interpreter")
   }
+
+  if (errs)
+    std::cerr << rang::fg::red << "The process finished with errors!" << rang::style::reset << std::endl;
 
   return !errs ? 0 : 1;
 }
