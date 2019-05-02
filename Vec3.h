@@ -61,6 +61,9 @@ public:
     os << "{" << v(X) << "," << v(Y) << "," << v(Z) << "}";
     return os;
   }
+  Vec3 operator+() const {
+    return *this;
+  }
   Vec3 operator-() const {
     const Vec3 &i = *this;
     return Vec3(-i(X), -i(Y), -i(Z));
