@@ -192,6 +192,28 @@ Molecule::AaCore Molecule::findAaCore1() { // finds a single AaCore, fails when 
   return aaCoreFound ? aaCore : AaCore({});
 }
 
+Molecule::AaCore Molecule::findAaCoreFirst() {
+  for (auto aO2 : atoms)
+    if (aO2->elt == O && aO2->isBonds(C, 1)) {
+      AaCore aaCore;
+      if (findAaCore(aO2, aaCore))
+        return aaCore;
+    }
+  ERROR("no AA core found in the molecule when findAaCoreFirst() expects at least one AA core")
+}
+
+Molecule::AaCore Molecule::findAaCoreLast() {
+  for (auto i = atoms.rbegin(); i != atoms.rend(); i++) {
+    auto aO2 = *i;
+    if (aO2->elt == O && aO2->isBonds(C, 1)) {
+      AaCore aaCore;
+      if (findAaCore(aO2, aaCore))
+        return aaCore;
+    }
+  }
+  ERROR("no AA core found in the molecule when findAaCoreLast() expects at least one AA core")
+}
+
 std::vector<Molecule::AaCore> Molecule::findAaCores() {  // finds all AA cores
   std::vector<AaCore> aaCores;
   AaCore aaCore;
@@ -201,56 +223,6 @@ std::vector<Molecule::AaCore> Molecule::findAaCores() {  // finds all AA cores
       if (findAaCore(aO2, aaCore))
         aaCores.push_back(aaCore);
   return aaCores;
-}
-
-std::array<Atom*,3> Molecule::findAaNterm() { // expects that the molecule has an open N-term in the beginning
-  auto atomN = findFirst(N); // heuristic step
-  assert(atomN->isBonds(C,1, H,2));
-  auto atomCprime = atomN->filterBonds1(C);
-  // find next C on the backbone
-  Atom *atomCnext = nullptr;
-  for (auto a : atomCprime->bonds) // XXX no error checking
-    if (a->elt == C && (a->isBonds(C,1, O,2) || a->isBonds(C,1, O,1, N,1))) {
-      atomCnext = a;
-      break;
-    }
-  // find the C-end of this AA, it is either an oxygen inside the AA (C-term), or 
-  if (atomCnext->isBonds(C,1, O,2)) {
-    for (auto a : atomCnext->bonds)
-      if (a != atomCprime && !a->isBonds(C,1))
-        return {{atomN, atomN->findFirstBond(H), a/*oxygen of the open C-term*/}};
-  } else if (atomCnext->isBonds(C,1, O,1, N,1)) {
-    return {{atomN, atomN->findFirstBond(H), atomCnext->filterBonds1(N) /*nitrogen in the next AA in the chain*/}};
-  }
-  unreachable(); // no other situation is possible
-}
-
-std::array<Atom*,5> Molecule::findAaCterm() { // expects that the molecule has an open C-term in the end
-  auto atomC = findLast(C); // heuristic step
-  assert(atomC->isBonds(C,1, O,2));
-  auto atomCprime = atomC->filterBonds1(C);
-  auto atomN = atomCprime->filterBonds1(N);
-  auto atomCoo = atomC->filterBonds(O);
-  // returns: {C-term, Oxygen with double-link, Oxygen in OH, H in OH, N}
-  if (atomCoo[0]->isBonds(C,1, H,1))
-    return {{atomC, atomCoo[1], atomCoo[0], atomCoo[0]->findFirstBond(H), atomN}};
-  else
-    return {{atomC, atomCoo[0], atomCoo[1], atomCoo[1]->findFirstBond(H), atomN}};
-}
-
-std::vector<Atom*> Molecule::findAaLast() {
-  auto cterm = findAaCterm();
-  auto atomN = cterm[4];
-  auto found = std::find(atoms.rbegin(), atoms.rend(), atomN);
-  assert(found != atoms.rend());
-  std::vector<Atom*> res;
-  while (true) {
-    res.push_back(*found);
-    if (found == atoms.rbegin())
-      break;
-    found--;
-  }
-  return res;
 }
 
 void Molecule::detectBonds() {
@@ -287,37 +259,30 @@ bool Molecule::isEqual(const Molecule &other) const {
 void Molecule::appendAsAminoAcidChain(Molecule &aa) { // ASSUME that aa is an amino acid XXX alters aa
   auto &me = *this;
   // find C/N terms
-  auto meCterm = me.findAaCterm();
-  auto aaNterm = aa.findAaNterm();
+  auto meAaCoreCterm = me.findAaCoreLast();
+  auto aaAaCoreNterm = aa.findAaCoreFirst();
   // center them both at the junction point
-  me.centerAt(meCterm[2/*O that will be deleted*/]->pos);
-  aa.centerAt(aaNterm[0/*N that is kept*/]->pos);
+  me.centerAt(meAaCoreCterm.O1->pos);
+  aa.centerAt(aaAaCoreNterm.N->pos);
   if (true) { // rotate
     // determine directions along the AAs
-    auto meAlong = (meCterm[2/*oxygen from OH-group*/]->pos - meCterm[4/*N*/]->pos).normalize();
-    auto aaAlong = (aaNterm[2/*oxygen from OH-group*/]->pos - aaNterm[0/*N*/]->pos).normalize();
-    auto aaCterm = aa.findAaCterm();
-    auto meDblO = (meCterm[1]->pos - meCterm[0]->pos).orthogonal(meAlong).normalize();
-    auto aaDblO = (aaCterm[1]->pos - aaCterm[0]->pos).orthogonal(aaAlong).normalize();
+    auto meAlong = (meAaCoreCterm.O1->pos - meAaCoreCterm.N->pos).normalize();
+    auto aaAlong = (aaAaCoreNterm.O1->pos - aaAaCoreNterm.N->pos).normalize();
+    auto aaAaCoreCterm = aa.findAaCoreLast();
+    auto meDblO = (meAaCoreCterm.O2->pos - meAaCoreCterm.Coo->pos).orthogonal(meAlong).normalize();
+    auto aaDblO = (aaAaCoreCterm.O2->pos - aaAaCoreCterm.Coo->pos).orthogonal(aaAlong).normalize();
     assert(meDblO.isOrthogonal(meAlong));
     assert(aaDblO.isOrthogonal(aaAlong));
     aa.applyMatrix(Vec3Extra::rotateCornerToCorner(meAlong,meDblO, aaAlong,-aaDblO));
-    assert((meCterm[2/*oxygen from OH-group*/]->pos - meCterm[4/*N*/]->pos).isParallel((aaNterm[2/*oxygen from OH-group*/]->pos - aaNterm[0/*N*/]->pos)));
-    //std::cout << "Molecule::appendAsAminoAcidChain >>>" << std::endl;
-    //std::cout << "Molecule::appendAsAminoAcidChain: meAlong=" << (meCterm[2/*oxygen from OH-group*/]->pos - meCterm[4/*N*/]->pos).normalize() << std::endl;
-    //std::cout << "Molecule::appendAsAminoAcidChain: aaAlong=" << (aaNterm[2/*oxygen from OH-group*/]->pos - aaNterm[0/*N*/]->pos).normalize() << std::endl;
-    //std::cout << "Molecule::appendAsAminoAcidChain: OLD(aa) atomN={" << *aaNterm[0/*N*/] << "} atomO={" << *aaNterm[2/*oxygen from OH-group*/] << "}" << std::endl;
+    assert((meAaCoreCterm.O1->pos - meAaCoreCterm.N->pos).isParallel((aaAaCoreNterm.O1->pos - aaAaCoreNterm.N->pos)));
   }
   // remove atoms
-  me.removeAtEnd(meCterm[2/*O*/]);
-  me.removeAtEnd(meCterm[3/*H*/]);
-  aa.removeAtBegin(aaNterm[1]);
+  me.removeAtEnd(meAaCoreCterm.O1);
+  me.removeAtEnd(meAaCoreCterm.Ho);
+  aa.removeAtBegin(aaAaCoreNterm.HCn1->elt == H ? aaAaCoreNterm.HCn1 : aaAaCoreNterm.Hn2); // ad-hoc choice - HCn1 and Hn2 are chosen aritrarily in 'findAaCore'
   // append
   add(aa);
-  auto meCtermNew = me.findAaCterm();
-  //std::cout << "Molecule::appendAsAminoAcidChain: meAlongNew=" << (meCtermNew[2/*oxygen from OH-group*/]->pos - meCtermNew[4/*N*/]->pos).normalize() << std::endl;
-  //std::cout << "Molecule::appendAsAminoAcidChain: NEW atomN={" << *meCtermNew[4/*N*/] << "} atomO={" << *meCtermNew[2/*oxygen from OH-group*/] << "}" << std::endl;
-  //std::cout << "Molecule::appendAsAminoAcidChain <<<" << std::endl;
+  //auto meAaCoreCtermNew = me.findAaCoreLast();
 }
 
 std::string Molecule::toString() const {
@@ -363,22 +328,15 @@ bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
       return false; // wrong aO1 connections
   } else if (!aCoo->isBonds(O,1, C,1, N,1)) // carbon end is connected: O2 + N (connected) + C
     return false; // not an AA oxygen
+
+  // Cmain
   Atom *aCmain = aCoo->filterBonds1(C);
   if (!(aCmain->isBonds(C,2, N,1, H,1) || aCmain->isBonds(C,1, N,1, H,2))) // the first payload atom is either C, or H (only in Glycine)
     return false; // wrong aCmain bonds
   Atom *aHc = aCmain->filterBonds(H)[0]; // could be 1 or two hydrogens
   Atom *aN = aCmain->filterBonds1(N);
-  Atom* aHn1;
-  Atom* aHn2 = nullptr;
-  if (aN->isBonds(C,1, H,2)) { // tail N has 2 hydrogens
-    auto aaHn2 = aN->filterBonds2(H);
-    aHn1 = aaHn2[0];
-    aHn2 = aaHn2[1];
-  } else if (aN->isBonds(C,2, H,1)) { // connected N
-    aHn1 = aN->filterBonds1(H);
-  } else
-    return false; // wrong aN bonds
 
+  // find the payload atom
   Atom *aPayload = nullptr;
   for (auto a : aCmain->bonds)
     if (a != aN && a != aCoo && a != aHc) {
@@ -387,8 +345,45 @@ bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
     }
   assert(aPayload);
 
+  // what is connected to N?
+  Atom* aHCn1;
+  Atom* aHn2 = nullptr;
+  Atom *aCproline;
+  if (aN->isBonds(C,1, H,2)) { // tail N has 2 hydrogens: tail
+    auto aaHn2 = aN->filterBonds2(H);
+    aHCn1 = aaHn2[0];
+    aHn2 = aaHn2[1];
+    assert(aHn2->elt == H);
+  } else if (aN->isBonds(C,2, H,1)) { // connected N or proline (disconnected)
+    aHCn1 = aN->filterBonds1(H); // inner H
+    if (aPayload->isBonds(C,2, H,2) && (aCproline = aN->filterBonds1excl(C, aCmain))->isBonds(N,1, C,1, H,2) && aCproline->filterBonds1(C) == aPayload->filterBonds1excl(C, aCmain)) { // is proline
+      std::cout << "-- prolin (1)" << std::endl;
+      aHCn1 = aCproline; // inner C in proline
+      aHn2 = aN->filterBonds1(H); // connectable H
+      assert(aHn2->elt == H);
+    }
+  } else if (aN->isBonds(C,3)) { // possibly connected proline
+    for (auto a : aN->bonds)
+      if (a != aCmain && (aCproline = a->filterBonds1(C)) == aPayload->filterBonds1excl(C, aCmain)) { // is connected proline
+        std::cout << "-- prolin (2)" << std::endl;
+        aHCn1 = aCproline; // inner C in proline
+        break;
+      }
+  } else
+    return false; // wrong aN bonds
+
+  assert(aN->elt == N);
+  assert(aHCn1->elt == C || aHCn1->elt == H);
+  assert(!aHn2 || aHn2->elt == H);
+  assert(aCmain->elt == C);
+  assert(aHc->elt == H);
+  assert(aCoo->elt == C);
+  assert(O2anchor->elt == O);
+  assert(!aO1 || aO1->elt == O);
+  assert(!aHo || aHo->elt == H);
+
   // found
-  aaCore = {aN, aHn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
+  aaCore = {aN, aHCn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
   return true;
 }
 

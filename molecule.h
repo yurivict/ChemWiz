@@ -251,14 +251,14 @@ class Molecule : public Obj {
 public: // structs
   struct AaCore {
     Atom    *N;
-    Atom    *Hn1;       // mandatory
-    Atom    *Hn2;       // optional, missing when bonded at N
+    Atom    *HCn1;      // mandatory (inner element of the AaCore), H in most cases, C in case of proline, the only exception
+    Atom    *Hn2;       // optional (connectable element), missing when bonded at N
     Atom    *Cmain;     // main carbon
     Atom    *Hc;        // H near Cmain
     Atom    *Coo;       // oxygen-connected carbon
     Atom    *O2;        // O with the double bond
     Atom    *O1;        // O in the backbone OH (optional, missing when bonded at C)
-    Atom    *Ho;        // H in H group (optional, missing when bonded at C)
+    Atom    *Ho;        // H in OH group (optional, missing when bonded at C)
     Atom    *payload;   // the first atom of the rest of the amino acid
   }; // AaCore
 public:
@@ -312,10 +312,9 @@ public:
     return nullptr;
   }
   AaCore findAaCore1();  // finds a single AaCore, fails when AA core is missing or it has multiple AA cores
+  AaCore findAaCoreFirst();
+  AaCore findAaCoreLast();
   std::vector<AaCore> findAaCores();  // finds all AA cores
-  std::array<Atom*,3> findAaNterm();
-  std::array<Atom*,5> findAaCterm();
-  std::vector<Atom*> findAaLast();
   void detectBonds();
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   // high-level append

@@ -705,27 +705,6 @@ static void appendAminoAcid(js_State *J) {
   GetArg(Molecule, 0)->appendAsAminoAcidChain(aa);
 }
 
-static void findAaCterm(js_State *J) {
-  AssertNargs(0)
-  auto m = GetArg(Molecule, 0);
-  auto Cterm = m->findAaCterm();
-  returnArrayOfUserData<std::array<Atom*,5>, void(*)(js_State*,Atom*)>(J, Cterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
-static void findAaNterm(js_State *J) {
-  AssertNargs(0)
-  auto m = GetArg(Molecule, 0);
-  auto Nterm = m->findAaNterm();
-  returnArrayOfUserData<std::array<Atom*,3>, void(*)(js_State*,Atom*)>(J, Nterm, TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
-static void findAaLast(js_State *J) {
-  AssertNargs(0)
-  auto m = GetArg(Molecule, 0);
-  auto aa = m->findAaLast();
-  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, aa, TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
 static void detectBonds(js_State *J) {
   AssertNargs(0)
   GetArg(Molecule, 0)->detectBonds();
@@ -817,7 +796,7 @@ static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
   };
   js_newobject(J);
   addFld ("N",       aaCore.N);
-  addFld ("Hn1",     aaCore.Hn1);
+  addFld ("HCn1",    aaCore.HCn1);
   addFldZ("Hn2",     aaCore.Hn2);
   addFld ("Cmain",   aaCore.Cmain);
   addFld ("Hc",      aaCore.Hc);
@@ -828,15 +807,28 @@ static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
   addFld ("payload", aaCore.payload);
 }
 
+static void pushAaCoreAsJsObjectZ(js_State *J, const Molecule::AaCore &aaCore) {
+  if (aaCore.Cmain)
+    pushAaCoreAsJsObject(J, aaCore);
+  else
+    js_pushnull(J); // null is returned when it is not found
+}
+
 } // helpers
 
 static void findAaCore1(js_State *J) {
   AssertNargs(0)
-  auto aaCore = GetArg(Molecule, 0)->findAaCore1();
-  if (aaCore.Cmain)
-    helpers::pushAaCoreAsJsObject(J, GetArg(Molecule, 0)->findAaCore1());
-  else
-    js_pushnull(J); // null is returned when it is not found
+  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCore1());
+}
+
+static void findAaCoreFirst(js_State *J) {
+  AssertNargs(0)
+  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCoreFirst());
+}
+
+static void findAaCoreLast(js_State *J) {
+  AssertNargs(0)
+  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCoreLast());
 }
 
 static void findAaCores(js_State *J) {
@@ -878,9 +870,6 @@ static void init(js_State *J) {
     })
     ADD_METHOD_CPP(Molecule, addMolecule, 1)
     ADD_METHOD_CPP(Molecule, appendAminoAcid, 1)
-    ADD_METHOD_CPP(Molecule, findAaCterm, 0)
-    ADD_METHOD_CPP(Molecule, findAaNterm, 0)
-    ADD_METHOD_CPP(Molecule, findAaLast, 0)
     ADD_METHOD_CPP(Molecule, detectBonds, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
@@ -891,6 +880,8 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, centerAt, 1)
     ADD_METHOD_CPP(Molecule, snapToGrid, 1)
     ADD_METHOD_CPP(Molecule, findAaCore1, 0)
+    ADD_METHOD_CPP(Molecule, findAaCoreFirst, 0)
+    ADD_METHOD_CPP(Molecule, findAaCoreLast, 0)
     ADD_METHOD_CPP(Molecule, findAaCores, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
