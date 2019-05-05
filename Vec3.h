@@ -109,15 +109,15 @@ public:
     i(Z) -= v(Z);
     return *this;
   }
-  Vec3 project(const Vec3 &dir) const { // dir is assimed to be a normal vector or zero vector
+  Vec3 project(const Vec3 &dir) const { // dir is assumed to be a normal vector or zero vector
     return dir*((*this)*dir);
   }
-  Vec3 orthogonal(const Vec3 &dir) const { // dir is assimed to be a normal vector or zero vector
+  Vec3 orthogonal(const Vec3 &dir) const { // dir is assumed to be a normal vector or zero vector
     return *this - project(dir);
   }
   bool isParallel(const Vec3 &other) const {return is(normalize()*other.normalize(), 1);}
   bool isOrthogonal(const Vec3 &other) const {return is(cross(other).len2(), 1);}
-  Vec3 divOneByOne(const Vec3 &d) const { // dir is assimed to be a normal vector or zero vector
+  Vec3 divOneByOne(const Vec3 &d) const { // dir is assumed to be a normal vector or zero vector
     const Vec3 &i = *this;
     return Vec3(i(X)/d(X), i(Y)/d(Y), i(Z)/d(Z));
   }
