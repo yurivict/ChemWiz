@@ -36,3 +36,29 @@ Mat3 Vec3Extra::rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 
   return rotateBetweenVectors(m1prime,n1,n2)*R2;
 }
 
+Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) {
+  // axis:       the axis of rotation
+  // far1, far2: two vector outgoing from the far end of the 'axis'
+  // near:       one vector outgoing from the near end of the 'axis', originally towards the right direction
+
+  // Returns: the angle of rotation across the axis that leads to the configuration given by the arguments
+
+  // compute values
+  auto axisNorm = axis.normalize();
+  auto farCross = far2.cross(far1);
+
+  // checks
+  assert(!far1.isParallel(far2));
+  assert(!farCross.isParallel(axis)); // orthogonal "far" plane can't define the rotation direction
+  assert(!near.isParallel(axis));
+
+  // normalized orthogonal projection of the "near" vector
+  auto nearRight = near.orthogonal(axisNorm).normalize();
+
+  // normalized orthogonal projection of the "far" plane
+  auto farUp = farCross.orthogonal(axisNorm).normalize();
+
+  // the angle is zero when nearRight points "right" and farUp points "up", compute what the angle is
+  return Vec3::radToDeg(std::asin(nearRight*farUp));
+}
+
