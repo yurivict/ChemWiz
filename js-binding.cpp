@@ -1414,6 +1414,11 @@ static void orthogonal(js_State *J) {
   ReturnVec(J, GetArgVec3(1).orthogonal(GetArgVec3(2)));
 }
 
+static void rotateCornerToCorner(js_State *J) {
+  AssertNargs(4)
+  ReturnMat(J, Vec3Extra::rotateCornerToCorner(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
+}
+
 static void angleAxis2x1(js_State *J) {
   AssertNargs(4)
   ReturnFloat(J, Vec3Extra::angleAxis2x1(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
@@ -1683,6 +1688,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, project,      JsVec3::project, 1)
     ADD_NS_FUNCTION_CPP(Vec3, orthogonal,   JsVec3::orthogonal, 2)
     // -ext methods
+    ADD_NS_FUNCTION_CPP(Vec3, rotateCornerToCorner, JsVec3::rotateCornerToCorner, 4)
     ADD_NS_FUNCTION_CPP(Vec3, angleAxis2x1, JsVec3::angleAxis2x1, 4)
   END_NAMESPACE(Vec3)
   BEGIN_NAMESPACE(Mat3)
