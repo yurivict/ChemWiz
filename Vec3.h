@@ -123,7 +123,7 @@ public:
   }
   static bool is(Float f1, Float f2) {return std::abs(f1-f2) < 0.001;} // tests how close are numbers
   static Float radToDeg(Float r) {return r/M_PI*180;}
-  static Float degToRad(Float r) {return r/180*M_PI;}
+  static Float degToRad(Float d) {return d/180*M_PI;}
 private:
   static Float sq(Float f) {return f*f;}
 };
