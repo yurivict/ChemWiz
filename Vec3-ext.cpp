@@ -63,7 +63,7 @@ Float Vec3Extra::angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &nea
   return Vec3::radToDeg(a);
 }
 
-Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) { // probably nort useful - 1x1 should be more appropriate
+Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) { // probably not useful - 1x1 should be more appropriate
   // axis:       the axis of rotation
   // far1, far2: two vector outgoing from the far end of the 'axis'
   // near:       one vector outgoing from the near end of the 'axis', originally towards the right direction
