@@ -11,5 +11,6 @@ public:
   // returns a rotation vector
   static Mat3 rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 &m1, const Vec3 &m2);
   // angle calculation (like in a Ramachandran plot, but with a degree of non-planarity present)
+  static Float angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &near);
   static Float angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near);
 }; // Vec3Extra

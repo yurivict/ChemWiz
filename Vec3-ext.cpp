@@ -36,7 +36,34 @@ Mat3 Vec3Extra::rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 
   return rotateBetweenVectors(m1prime,n1,n2)*R2;
 }
 
-Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) {
+Float Vec3Extra::angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &near) {
+  // axis:       the axis of rotation
+  // far:        one vector outgoing from the far end of the 'axis'
+  // near:       one vector outgoing from the near end of the 'axis'
+
+  // checks
+  assert(!far.isParallel(axis));
+  assert(!near.isParallel(axis));
+
+  // values
+  auto axisNorm = axis.normalize();
+  auto farOrth =  far.orthogonal(axisNorm).normalize();
+  auto nearOrth = near.orthogonal(axisNorm).normalize();
+
+  // compute the angle
+  auto sin = farOrth.cross(nearOrth)*axisNorm;
+  auto cos = nearOrth*farOrth;
+  auto a = std::atan(sin/cos);
+  if (cos < 0) {
+    if (a < 0)
+      a += M_PI;
+    else
+      a -= M_PI;
+  }
+  return Vec3::radToDeg(a);
+}
+
+Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) { // probably nort useful - 1x1 should be more appropriate
   // axis:       the axis of rotation
   // far1, far2: two vector outgoing from the far end of the 'axis'
   // near:       one vector outgoing from the near end of the 'axis', originally towards the right direction
