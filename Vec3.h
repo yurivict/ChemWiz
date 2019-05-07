@@ -115,6 +115,7 @@ public:
   Vec3 orthogonal(const Vec3 &dir) const { // dir is assumed to be a normal vector or zero vector
     return *this - project(dir);
   }
+  bool isNormalized() const {return is(len2(), 1);} // to be used primarily in asserts, otherwie this check probably shouldn't be needed
   bool isParallel(const Vec3 &other) const {return is(normalize()*other.normalize(), 1);}
   bool isOrthogonal(const Vec3 &other) const {return is(cross(other).len2(), 1);}
   Vec3 divOneByOne(const Vec3 &d) const { // dir is assumed to be a normal vector or zero vector

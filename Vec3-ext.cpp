@@ -36,22 +36,22 @@ Mat3 Vec3Extra::rotateCornerToCorner(const Vec3 &n1, const Vec3 &n2, const Vec3 
   return rotateBetweenVectors(m1prime,n1,n2)*R2;
 }
 
-Float Vec3Extra::angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &near) {
+Float Vec3Extra::angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &near) { // ASSUME 'axis' is normalized
   // axis:       the axis of rotation
   // far:        one vector outgoing from the far end of the 'axis'
   // near:       one vector outgoing from the near end of the 'axis'
 
   // checks
+  assert(axis.isNormalized());
   assert(!far.isParallel(axis));
   assert(!near.isParallel(axis));
 
   // values
-  auto axisNorm = axis.normalize();
-  auto farOrth =  far.orthogonal(axisNorm).normalize();
-  auto nearOrth = near.orthogonal(axisNorm).normalize();
+  auto farOrth =  far.orthogonal(axis).normalize();
+  auto nearOrth = near.orthogonal(axis).normalize();
 
   // compute the angle
-  auto sin = farOrth.cross(nearOrth)*axisNorm;
+  auto sin = farOrth.cross(nearOrth)*axis;
   auto cos = nearOrth*farOrth;
   auto a = std::atan(sin/cos);
   if (cos < 0) {
