@@ -60,7 +60,7 @@ Float Vec3Extra::angleAxis1x1(const Vec3 &axis, const Vec3 &far, const Vec3 &nea
     else
       a -= M_PI;
   }
-  return Vec3::radToDeg(a);
+  return -Vec3::radToDeg(a);
 }
 
 Float Vec3Extra::angleAxis2x1(const Vec3 &axis, const Vec3 &far1, const Vec3 &far2, const Vec3 &near) { // probably not useful - 1x1 should be more appropriate
