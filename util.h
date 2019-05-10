@@ -18,6 +18,14 @@ std::vector<std::string> split(const std::string &s) {
   return res;
 }
 
+template<typename C>
+std::vector<typename C::value_type> containerToVec(const C &c) {
+  std::vector<typename C::value_type> res;
+  for (auto i : c)
+    res.push_back(i);
+  return res;
+}
+
 inline std::vector<std::string> splitLines(const std::string &s) {
   return split<'\n'>(s);
 }
