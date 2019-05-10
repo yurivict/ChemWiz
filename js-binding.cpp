@@ -34,6 +34,7 @@
 #include "periodic-table-data.h"
 #include "Vec3.h"
 #include "Vec3-ext.h"
+#include "util.h"
 
 // types defined locally
 typedef std::vector<uint8_t> Binary;
@@ -66,6 +67,7 @@ static void ckErr(js_State *J, int err) {
                                  abort(); // because DbgPrintStack damages stack by converting all values to strings
 #define GetNArgs()               (js_gettop(J)-1)
 #define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
+#define GetArgZ(type, n)         (!js_isundefined(J, n) ? (type*)js_touserdata(J, n, TAG_##type) : nullptr)
 #define GetArgBoolean(n)         js_toboolean(J, n)
 #define GetArgFloat(n)           js_tonumber(J, n)
 #define GetArgString(n)          std::string(js_tostring(J, n))
@@ -917,6 +919,12 @@ static void fromXyzMany(js_State *J) {
   returnArrayOfUserData<std::vector<Molecule*>, void(*)(js_State*,Molecule*)>(J, Molecule::readXyzFileMany(GetArgString(1)), TAG_Molecule, moleculeFinalize, JsMolecule::xnewo);
 }
 
+static void listNeighborsHierarchically(js_State *J) {
+  AssertNargs(4)
+  auto atoms = Molecule::listNeighborsHierarchically(GetArg(Atom, 1), GetArgBoolean(2), GetArgZ(Atom, 3), GetArgZ(Atom, 4));
+  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, Util::containerToVec(atoms), TAG_Atom, atomFinalize, JsAtom::xnewo);
+}
+
 #if defined(USE_OPENBABEL)
 static void fromSMILES(js_State *J) {
   AssertNargs(2)
@@ -1723,6 +1731,7 @@ void registerFunctions(js_State *J) {
   BEGIN_NAMESPACE(Moleculex) // TODO figure out how to have the same namespace for methodsand functions
     ADD_NS_FUNCTION_CPP(Moleculex, fromXyzOne, JsMolecule::fromXyzOne, 1)
     ADD_NS_FUNCTION_CPP(Moleculex, fromXyzMany, JsMolecule::fromXyzMany, 1)
+    ADD_NS_FUNCTION_CPP(Moleculex, listNeighborsHierarchically, JsMolecule::listNeighborsHierarchically, 4)
 #if defined(USE_OPENBABEL)
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif

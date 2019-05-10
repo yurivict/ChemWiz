@@ -256,6 +256,26 @@ bool Molecule::isEqual(const Molecule &other) const {
   return true;
 }
 
+std::set<Atom*> Molecule::listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2) { // up to 2 excluded atoms
+  std::set<Atom*> lst;
+
+  auto listBonds = [self,except1,except2,&lst](Atom *a, auto &lb) -> void {
+    for (auto n : a->bonds)
+      if (n != self && n != except1 && n != except2)
+        if (lst.find(n) == lst.end()) {
+          lst.insert(n);
+          lb(n, lb);
+        }
+  };
+
+  listBonds(self, listBonds);
+
+  if (includeSelf)
+    lst.insert(self);
+
+  return lst;
+}
+
 void Molecule::appendAsAminoAcidChain(Molecule &aa) { // ASSUME that aa is an amino acid XXX alters aa
   auto &me = *this;
   // find C/N terms

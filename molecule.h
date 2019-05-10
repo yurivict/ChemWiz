@@ -317,6 +317,7 @@ public:
   std::vector<AaCore> findAaCores();  // finds all AA cores
   void detectBonds();
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
+  static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
   // high-level append
   void appendAsAminoAcidChain(Molecule &aa); // ASSUME that aa is an amino acid XXX alters aa
   // remove
