@@ -636,6 +636,72 @@ static void init(js_State *J) {
 
 namespace JsMolecule {
 
+namespace helpers {
+
+static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
+  auto addFld = [J](const char *fld, Atom *atom) {
+    JsAtom::xnewo(J, atom);
+    js_setproperty(J, -2, fld);
+  };
+  auto addFldZ = [J, addFld](const char *fld, Atom *atom) { // can be null (optional fields)
+    if (atom)
+      addFld(fld, atom);
+    else {
+      js_pushnull(J);
+      js_setproperty(J, -2, fld);
+    }
+  };
+  js_newobject(J);
+  addFld ("N",       aaCore.N);
+  addFld ("HCn1",    aaCore.HCn1);
+  addFldZ("Hn2",     aaCore.Hn2);
+  addFld ("Cmain",   aaCore.Cmain);
+  addFld ("Hc",      aaCore.Hc);
+  addFld ("Coo",     aaCore.Coo);
+  addFld ("O2",      aaCore.O2);
+  addFldZ("O1",      aaCore.O1);
+  addFldZ("Ho",      aaCore.Ho);
+  addFld ("payload", aaCore.payload);
+}
+
+static Molecule::AaCore popAaCoreAsJsObject(js_State *J) {
+  Molecule::AaCore aaCore;
+  auto addFld = [J](const char *fld, Atom *&atom) {
+    js_getproperty(J, -1, fld);
+    atom = (Atom*)js_touserdata(J, -1, TAG_Atom);
+    js_pop(J,1);
+  };
+  auto addFldZ = [J](const char *fld, Atom *&atom) {
+    js_getproperty(J, -1, fld);
+    if (!js_isnull(J, -1))
+      atom = (Atom*)js_touserdata(J, -1, TAG_Atom);
+    else
+      atom = nullptr;
+    js_pop(J,1);
+  };
+  addFld ("N",       aaCore.N);
+  addFld ("HCn1",    aaCore.HCn1);
+  addFldZ("Hn2",     aaCore.Hn2);
+  addFld ("Cmain",   aaCore.Cmain);
+  addFld ("Hc",      aaCore.Hc);
+  addFld ("Coo",     aaCore.Coo);
+  addFld ("O2",      aaCore.O2);
+  addFldZ("O1",      aaCore.O1);
+  addFldZ("Ho",      aaCore.Ho);
+  addFld ("payload", aaCore.payload);
+  js_pop(J,1);
+  return aaCore;
+}
+
+static void pushAaCoreAsJsObjectZ(js_State *J, const Molecule::AaCore &aaCore) {
+  if (aaCore.Cmain)
+    pushAaCoreAsJsObject(J, aaCore);
+  else
+    js_pushnull(J); // null is returned when it is not found
+}
+
+} // helpers
+
 static void xnewo(js_State *J, Molecule *m) {
   js_getglobal(J, TAG_Molecule);
   js_getproperty(J, -1, "prototype");
@@ -704,9 +770,38 @@ static void addMolecule(js_State *J) {
 }
 
 static void appendAminoAcid(js_State *J) {
-  AssertNargs(1)
+  AssertNargs(4)
   Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
-  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa);
+  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+}
+
+static void readAminoAcidAnglesFromAaChain(js_State *J) {
+  AssertNargs(1) // expect a binary
+  // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
+  // binary is disabled:
+  // std::unique_ptr<std::vector<Molecule::AaCore>> aaCoreArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaCore>>(*GetArg(Binary, 1)));
+  // read the AaCore array argument
+  std::unique_ptr<std::vector<Molecule::AaCore>> aaCoreArray(new std::vector<Molecule::AaCore>);
+  {
+    auto len = js_getlength(J, 1/*argno*/);
+    aaCoreArray->resize(len);
+    for (unsigned i = 0; i < len; i++) {
+      js_getindex(J, 1/*argno*/, i);
+      (*aaCoreArray)[i] = helpers::popAaCoreAsJsObject(J);
+    }
+  }
+  // return the angles array
+  js_newarray(J);
+  unsigned idx = 0;
+  for (auto &aaAngles : Molecule::readAminoAcidAnglesFromAaChain(*aaCoreArray)) {
+    js_newarray(J);
+    unsigned aidx = 0;
+    for (auto angle : aaAngles) {
+      js_pushnumber(J, angle);
+      js_setindex(J, -2, aidx++);
+    }
+    js_setindex(J, -2, idx++);
+  }
 }
 
 static void detectBonds(js_State *J) {
@@ -783,43 +878,6 @@ static void snapToGrid(js_State *J) {
   ReturnVoid(J);
 }
 
-namespace helpers {
-
-static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
-  auto addFld = [J](const char *fld, Atom *atom) {
-    JsAtom::xnewo(J, atom);
-    js_setproperty(J, -2, fld);
-  };
-  auto addFldZ = [J, addFld](const char *fld, Atom *atom) { // can be null (optional fields)
-    if (atom)
-      addFld(fld, atom);
-    else {
-      js_pushnull(J);
-      js_setproperty(J, -2, fld);
-    }
-  };
-  js_newobject(J);
-  addFld ("N",       aaCore.N);
-  addFld ("HCn1",    aaCore.HCn1);
-  addFldZ("Hn2",     aaCore.Hn2);
-  addFld ("Cmain",   aaCore.Cmain);
-  addFld ("Hc",      aaCore.Hc);
-  addFld ("Coo",     aaCore.Coo);
-  addFld ("O2",      aaCore.O2);
-  addFldZ("O1",      aaCore.O1);
-  addFldZ("Ho",      aaCore.Ho);
-  addFld ("payload", aaCore.payload);
-}
-
-static void pushAaCoreAsJsObjectZ(js_State *J, const Molecule::AaCore &aaCore) {
-  if (aaCore.Cmain)
-    pushAaCoreAsJsObject(J, aaCore);
-  else
-    js_pushnull(J); // null is returned when it is not found
-}
-
-} // helpers
-
 static void findAaCore1(js_State *J) {
   AssertNargs(0)
   helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCore1());
@@ -845,7 +903,13 @@ static void findAaCores(js_State *J) {
     js_setindex(J, -2, idx++);
   }
 }
-
+/* binary methods are disabled for now
+static void findAaCoresBin(js_State *J) { // returns the same as findAaCores but as a binary array in order to pass it to other functions easily
+  AssertNargs(0)
+  auto aaCoresBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaCore>, Binary>(GetArg(Molecule, 0)->findAaCores());
+  Return(Binary, aaCoresBinary);
+}
+*/
 } // prototype
 
 static void init(js_State *J) {
@@ -873,7 +937,8 @@ static void init(js_State *J) {
       }
     })
     ADD_METHOD_CPP(Molecule, addMolecule, 1)
-    ADD_METHOD_CPP(Molecule, appendAminoAcid, 1)
+    ADD_METHOD_CPP(Molecule, appendAminoAcid, 4)
+    ADD_METHOD_CPP(Molecule, readAminoAcidAnglesFromAaChain, 1)
     ADD_METHOD_CPP(Molecule, detectBonds, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
@@ -887,6 +952,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaCoreFirst, 0)
     ADD_METHOD_CPP(Molecule, findAaCoreLast, 0)
     ADD_METHOD_CPP(Molecule, findAaCores, 0)
+    //ADD_METHOD_CPP(Molecule, findAaCoresBin, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();

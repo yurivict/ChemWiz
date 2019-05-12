@@ -248,7 +248,7 @@ public:
 }; // Atom
 
 class Molecule : public Obj {
-public: // structs
+public: // structs and types
   struct AaCore {
     Atom    *N;
     Atom    *HCn1;      // mandatory (inner element of the AaCore), H in most cases, C in case of proline, the only exception
@@ -260,7 +260,27 @@ public: // structs
     Atom    *O1;        // O in the backbone OH (optional, missing when bonded at C)
     Atom    *Ho;        // H in OH group (optional, missing when bonded at C)
     Atom    *payload;   // the first atom of the rest of the amino acid
+    // methods
+    std::set<Atom*> listPayload();
   }; // AaCore
+  typedef double Angle;
+  class AaAngles { // Ramachandran and other angles related to amino acid conformations
+  public: // types
+    struct AngleAndAxis {
+      Angle  angle;
+      Vec3   axis;
+    }; // AngleAndAxis
+  public: // angle computation: they return angle and axis in case the axis needs to be reused to rotate the molecules to some specific angle
+    static AngleAndAxis omega(const AaCore &cterm, const AaCore &nterm);
+    static AngleAndAxis phi(const AaCore &cterm, const AaCore &nterm);
+    static AngleAndAxis psi(const AaCore &cterm, const AaCore &nterm);
+  private: // internals
+    static AngleAndAxis fromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext);
+    static Vec3 atomPairToVec(const Atom *a1, const Atom *a2);
+    static Vec3 atomPairToVecN(const Atom *a1, const Atom *a2);
+    // printing
+    friend std::ostream& operator<<(std::ostream &os, const AngleAndAxis &aa);
+  }; // AaAngles
 public:
   std::string        idx;
   std::string        descr;
@@ -319,7 +339,8 @@ public:
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
   // high-level append
-  void appendAsAminoAcidChain(Molecule &aa); // ASSUME that aa is an amino acid XXX alters aa
+  void appendAsAminoAcidChain(Molecule &aa, double omega, double phi, double psi); // ASSUME that aa is an amino acid XXX alters aa
+  static std::vector<std::array<Angle,3>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
   // remove
   void removeAtBegin(Atom *a) {
     for (auto i = atoms.begin(), ie = atoms.end(); i != ie; i++)
