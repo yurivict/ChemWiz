@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 
 namespace Util {
 
@@ -23,6 +24,17 @@ std::vector<typename C::value_type> containerToVec(const C &c) {
   std::vector<typename C::value_type> res;
   for (auto i : c)
     res.push_back(i);
+  return res;
+}
+
+template<typename Csrc, typename Cdst>
+Cdst* createContainerFromBufferOfDifferentType(const Csrc &arg) { // ASSUME that binary arrays align to an element of Cdst
+  auto res = new Cdst;
+  // copy memory
+  if (auto memsz = arg.size()*sizeof(typename Csrc::value_type)) {
+    res->resize(memsz/sizeof(typename Cdst::value_type));
+    std::memcpy(res->data(), arg.data(), memsz);
+  }
   return res;
 }
 
