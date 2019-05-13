@@ -76,6 +76,7 @@ static void ckErr(js_State *J, int err) {
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
+#define GetArgFloatArray(n)      objToFloatArray(J, n, __func__)
 #define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
@@ -203,6 +204,21 @@ static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   for (unsigned i = 0; i < 3; i++) {
     js_getindex(J, idx, i);
     v[i] = js_tonumber(J, -1);
+    js_pop(J, 1);
+  }
+
+  return v;
+}
+
+static std::vector<double> objToFloatArray(js_State *J, int idx, const char *fname) {
+  if (!js_isarray(J, idx))
+    js_typeerror(J, "not an array in arg#%d of the function '%s'", idx, fname);
+
+  std::vector<double> v;
+
+  for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
+    js_getindex(J, idx, i);
+    v.push_back(js_tonumber(J, -1));
     js_pop(J, 1);
   }
 
@@ -770,9 +786,9 @@ static void addMolecule(js_State *J) {
 }
 
 static void appendAminoAcid(js_State *J) {
-  AssertNargs(4)
+  AssertNargs(2)
   Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
-  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloatArray(2));
 }
 
 static void readAminoAcidAnglesFromAaChain(js_State *J) {
@@ -937,7 +953,7 @@ static void init(js_State *J) {
       }
     })
     ADD_METHOD_CPP(Molecule, addMolecule, 1)
-    ADD_METHOD_CPP(Molecule, appendAminoAcid, 4)
+    ADD_METHOD_CPP(Molecule, appendAminoAcid, 2)
     ADD_METHOD_CPP(Molecule, readAminoAcidAnglesFromAaChain, 1)
     ADD_METHOD_CPP(Molecule, detectBonds, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)

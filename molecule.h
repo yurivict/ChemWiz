@@ -261,7 +261,8 @@ public: // structs and types
     Atom    *Ho;        // H in OH group (optional, missing when bonded at C)
     Atom    *payload;   // the first atom of the rest of the amino acid
     // methods
-    std::set<Atom*> listPayload();
+    std::set<Atom*> listPayload();  // list all payload atoms
+    Atom* nextN() const;                  // next N if connected, otherwise our O1
   }; // AaCore
   typedef double Angle;
   class AaAngles { // Ramachandran and other angles related to amino acid conformations
@@ -271,11 +272,17 @@ public: // structs and types
       Vec3   axis;
     }; // AngleAndAxis
   public: // angle computation: they return angle and axis in case the axis needs to be reused to rotate the molecules to some specific angle
+    // Ramachandran angles: -180..+180
     static AngleAndAxis omega(const AaCore &cterm, const AaCore &nterm);
     static AngleAndAxis phi(const AaCore &cterm, const AaCore &nterm);
     static AngleAndAxis psi(const AaCore &cterm, const AaCore &nterm);
+    // adjacency angles in the AA backbone: 0..180
+    static AngleAndAxis adjacencyN(const AaCore &cterm, const AaCore &nterm); // between Cterm and Nterm
+    static AngleAndAxis adjacencyCmain(const AaCore &cterm, const AaCore &nterm); // in Nterm
+    static AngleAndAxis adjacencyCoo(const AaCore &cterm, const AaCore &nterm); // between Nterm and next or self oxygen
   private: // internals
-    static AngleAndAxis fromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext);
+    static AngleAndAxis ramachandranFromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext);
+    static AngleAndAxis adjacencyFromChain(const Atom *prev, const Atom *curr, const Atom *next);
     static Vec3 atomPairToVec(const Atom *a1, const Atom *a2);
     static Vec3 atomPairToVecN(const Atom *a1, const Atom *a2);
     // printing
@@ -339,8 +346,8 @@ public:
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
   // high-level append
-  void appendAsAminoAcidChain(Molecule &aa, double omega, double phi, double psi); // ASSUME that aa is an amino acid XXX alters aa
-  static std::vector<std::array<Angle,3>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
+  void appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles); // ASSUME that aa is an amino acid XXX alters aa
+  static std::vector<std::array<Angle,6>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
   // remove
   void removeAtBegin(Atom *a) {
     for (auto i = atoms.begin(), ie = atoms.end(); i != ie; i++)
@@ -387,6 +394,10 @@ public:
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
   bool findAaCore(Atom *O2anchor, AaCore &aaCore);
+private: // internals
+  static bool checkAngle(Angle angle, Angle low, Angle high);
+  static bool checkAngleR(Angle angle); // for Ramachandran angles
+  static bool checkAngleA(Angle angle); // for adjacency angles
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule

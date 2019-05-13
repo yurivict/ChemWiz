@@ -37,7 +37,7 @@ function combine(peptide, angles) {
       peptideChain = aaMolecule
     } else {
       var anglesOne = angles != undefined ? angles[i-1] : defaultAngles(prevCode, code)
-      peptideChain.appendAminoAcid(aaMolecule, anglesOne[0], anglesOne[1], anglesOne[2])
+      peptideChain.appendAminoAcid(aaMolecule, anglesOne)
     }
     var prevCode = code
   })

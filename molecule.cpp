@@ -13,6 +13,7 @@
 #include <list>
 #include <array>
 #include <ostream>
+#include <cmath>
 #include <algorithm> // for std::find
 
 /// references
@@ -281,18 +282,20 @@ std::set<Atom*> Molecule::listNeighborsHierarchically(Atom *self, bool includeSe
   return lst;
 }
 
-void Molecule::appendAsAminoAcidChain(Molecule &aa, double omega, double phi, double psi) { // angles are in degrees, -180..+180
+void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles) { // angles are in degrees, -180..+180
+  // checks
+  if (angles.size() != 3 && angles.size() != 6)
+    ERROR("Molecule::appendAsAminoAcidChain: angles argument is expected to have either 3 or 6 angle values, supplied " << angles.size() << " values")
+  if (!checkAngleR(angles[0]) || !checkAngleR(angles[1]) || !checkAngleR(angles[2]) ||
+      (angles.size() == 6 && (!checkAngleA(angles[3]) || !checkAngleA(angles[4]) || !checkAngleA(angles[5]))))
+    ERROR("Molecule::appendAsAminoAcidChain: the supplied angle is out-of-bounds")
+
   // ASSUME that aa is an amino acid XXX alters aa
   // ASSUME that aa is small because we will translate/rotate it
   auto &me = *this;
   // find C/N terms // XXX some peptides are also defined beginning with C-term for some reason, we need another procedure for that
   auto meAaCoreCterm = me.findAaCoreLast();
   auto aaAaCoreNterm = aa.findAaCoreFirst();
-  //
-  // angle definitions:
-  // phi: Calpha-N: Calpha-Cbeta => N-next and N-H
-  // psi: Calpha-Cbeta: Cbeta-O2 => Cbeta-N (or Oh)
-  // omega: ?
   // local functions in a form of lambda functions
   auto getAtomAxis = [](const Atom *atom1, const Atom *atom2) {
     return (atom2->pos - atom1->pos).normalize();
@@ -326,9 +329,20 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, double omega, double phi, do
     auto priorPhi   = AaAngles::phi(meAaCoreCterm, aaAaCoreNterm);
     auto priorPsi   = AaAngles::psi(meAaCoreCterm, aaAaCoreNterm);
     // rotate: begin from the most remote from C-term
-    rotate(aaAaCoreNterm.Cmain->pos, priorPsi.axis,   psi   - priorPsi.angle,   aa, aaAaCoreNterm.N);
-    rotate(aaAaCoreNterm.N->pos,     priorPhi.axis,   phi   - priorPhi.angle,   aa, nullptr);
-    rotate(meAaCoreCterm.Coo->pos,   priorOmega.axis, omega - priorOmega.angle, aa, nullptr);
+    rotate(aaAaCoreNterm.Cmain->pos, priorPsi.axis,   angles[2] - priorPsi.angle,   aa, aaAaCoreNterm.N);
+    rotate(aaAaCoreNterm.N->pos,     priorPhi.axis,   angles[1] - priorPhi.angle,   aa, nullptr);
+    rotate(meAaCoreCterm.Coo->pos,   priorOmega.axis, angles[0] - priorOmega.angle, aa, nullptr);
+  }
+
+  // apply adjacencyN, adjacencyCmain, adjacencyCoo when supplied
+  if (angles.size() == 6) {
+    auto priorAdjacencyN     = AaAngles::adjacencyN(meAaCoreCterm, aaAaCoreNterm);
+    auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaCoreCterm, aaAaCoreNterm);
+    auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaCoreCterm, aaAaCoreNterm);
+    // rotate: begin from the most remote from C-term
+    rotate(aaAaCoreNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[5] - priorAdjacencyCoo.angle,   aa, aaAaCoreNterm.N);
+    rotate(aaAaCoreNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[4] - priorAdjacencyCmain.angle, aa, nullptr);
+    rotate(aaAaCoreNterm.N->pos,     priorAdjacencyN.axis,     angles[3] - priorAdjacencyN.angle,     aa, nullptr);
   }
 
   // remove atoms that are excluded by the connection: 1xO and 2xH atoms
@@ -339,14 +353,18 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, double omega, double phi, do
   add(aa);
 }
 
-std::vector<std::array<Molecule::Angle,3>> Molecule::readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores) {
-  std::vector<std::array<Angle,3>> angles;
+std::vector<std::array<Molecule::Angle,6>> Molecule::readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores) {
+  std::vector<std::array<Angle,6>> angles;
   if (!aaCores.empty())
     angles.reserve(aaCores.size());
   const AaCore *prev = nullptr;
   for (auto &curr : aaCores) {
     if (prev)
-      angles.push_back(std::array<Angle,3>{{AaAngles::omega(*prev, curr).angle, AaAngles::phi(*prev, curr).angle, AaAngles::psi(*prev, curr).angle}});
+      angles.push_back(std::array<Angle,6>{{AaAngles::omega(*prev, curr).angle, AaAngles::phi(*prev, curr).angle, AaAngles::psi(*prev, curr).angle,
+                                            AaAngles::adjacencyN(*prev, curr).angle,
+                                            AaAngles::adjacencyCmain(*prev, curr).angle,
+                                            AaAngles::adjacencyCoo(*prev, curr).angle
+                                          }});
     prev = &curr;
   }
   return angles;
@@ -452,6 +470,20 @@ bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
   return true;
 }
 
+// internals
+
+bool Molecule::checkAngle(Angle angle, Angle low, Angle high) {
+ return low <= angle && angle <= high;
+}
+
+bool Molecule::checkAngleR(Angle angle) {
+  return checkAngle(angle, -180, +180);
+}
+
+bool Molecule::checkAngleA(Angle angle) {
+  return checkAngle(angle, 0, +180);
+}
+
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {
   os << m.atoms.size() << std::endl;
   os << m.descr << std::endl;
@@ -465,23 +497,45 @@ std::set<Atom*> Molecule::AaCore::listPayload() {
   return Molecule::listNeighborsHierarchically(payload, true/*includeSelf*/, Cmain, N); // except Cmain,N (N is only for Proline)
 }
 
+Atom* Molecule::AaCore::nextN() const {
+  return O1 ? O1 : Coo->filterBonds1(Element::N);
+}
+
 /// Molecule::AaAngles // see https://en.wikipedia.org/wiki/Ramachandran_plot#/media/File:Protein_backbone_PhiPsiOmega_drawing.svg
 
 Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::omega(const AaCore &cterm, const AaCore &nterm) {
-  return fromChain(cterm.Cmain, cterm.Coo, nterm.N, nterm.Cmain);
+  return ramachandranFromChain(cterm.Cmain, cterm.Coo, nterm.N, nterm.Cmain);
 }
 
 Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::phi(const AaCore &cterm, const AaCore &nterm) {
-  return fromChain(cterm.Coo, nterm.N, nterm.Cmain, nterm.Coo);
+  return ramachandranFromChain(cterm.Coo, nterm.N, nterm.Cmain, nterm.Coo);
 }
 
 Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::psi(const AaCore &cterm, const AaCore &nterm) {
-  return fromChain(nterm.N, nterm.Cmain, nterm.Coo, nterm.O1 ? nterm.O1 : nterm.Coo->filterBonds1(N)/*next AaCore N element*/);
+  return ramachandranFromChain(nterm.N, nterm.Cmain, nterm.Coo, nterm.nextN());
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::fromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyN(const AaCore &cterm, const AaCore &nterm) {
+  return adjacencyFromChain(cterm.Coo, nterm.N, nterm.Cmain);
+}
+
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCmain(const AaCore &cterm, const AaCore &nterm) {
+  return adjacencyFromChain(nterm.N, nterm.Cmain, nterm.Coo);
+}
+
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCoo(const AaCore &cterm, const AaCore &nterm) {
+  return adjacencyFromChain(nterm.Cmain, nterm.Coo, nterm.nextN());
+}
+
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::ramachandranFromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext) {
   auto axis = atomPairToVecN(near, far);
   return {Vec3Extra::angleAxis1x1(axis, atomPairToVec(far, farNext), atomPairToVec(near, nearNext)), axis};
+}
+
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyFromChain(const Atom *prev, const Atom *curr, const Atom *next) {
+  auto toPrev = atomPairToVecN(curr, prev);
+  auto toNext = atomPairToVecN(curr, next);
+  return {Vec3::radToDeg(std::acos(toPrev*toNext)), toPrev.cross(toNext).normalize()};
 }
 
 Vec3 Molecule::AaAngles::atomPairToVec(const Atom *a1, const Atom *a2) {
