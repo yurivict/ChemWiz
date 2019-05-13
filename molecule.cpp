@@ -283,11 +283,13 @@ std::set<Atom*> Molecule::listNeighborsHierarchically(Atom *self, bool includeSe
 }
 
 void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles) { // angles are in degrees, -180..+180
+  typedef AaAngles A;
+
   // checks
-  if (angles.size() != 3 && angles.size() != 6)
+  if (angles.size() != A::MAX_RAM+1 && angles.size() != A::MAX_ADJ+1)
     ERROR("Molecule::appendAsAminoAcidChain: angles argument is expected to have either 3 or 6 angle values, supplied " << angles.size() << " values")
-  if (!checkAngleR(angles[0]) || !checkAngleR(angles[1]) || !checkAngleR(angles[2]) ||
-      (angles.size() == 6 && (!checkAngleA(angles[3]) || !checkAngleA(angles[4]) || !checkAngleA(angles[5]))))
+  if (!checkAngleR(angles[A::OMEGA]) || !checkAngleR(angles[A::PHI]) || !checkAngleR(angles[A::PSI]) ||
+      (angles.size() == A::MAX_ADJ+1 && (!checkAngleA(angles[A::ADJ_N]) || !checkAngleA(angles[A::ADJ_CMAIN]) || !checkAngleA(angles[A::ADJ_COO]))))
     ERROR("Molecule::appendAsAminoAcidChain: the supplied angle is out-of-bounds")
 
   // ASSUME that aa is an amino acid XXX alters aa
@@ -329,9 +331,9 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorPhi   = AaAngles::phi(meAaCoreCterm, aaAaCoreNterm);
     auto priorPsi   = AaAngles::psi(meAaCoreCterm, aaAaCoreNterm);
     // rotate: begin from the most remote from C-term
-    rotate(aaAaCoreNterm.Cmain->pos, priorPsi.axis,   angles[2] - priorPsi.angle,   aa, aaAaCoreNterm.N);
-    rotate(aaAaCoreNterm.N->pos,     priorPhi.axis,   angles[1] - priorPhi.angle,   aa, nullptr);
-    rotate(meAaCoreCterm.Coo->pos,   priorOmega.axis, angles[0] - priorOmega.angle, aa, nullptr);
+    rotate(aaAaCoreNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaCoreNterm.N);
+    rotate(aaAaCoreNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
+    rotate(meAaCoreCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
   }
 
   // apply adjacencyN, adjacencyCmain, adjacencyCoo when supplied
@@ -340,15 +342,16 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaCoreCterm, aaAaCoreNterm);
     auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaCoreCterm, aaAaCoreNterm);
     // rotate: begin from the most remote from C-term
-    rotate(aaAaCoreNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[5] - priorAdjacencyCoo.angle,   aa, aaAaCoreNterm.N);
-    rotate(aaAaCoreNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[4] - priorAdjacencyCmain.angle, aa, nullptr);
-    rotate(aaAaCoreNterm.N->pos,     priorAdjacencyN.axis,     angles[3] - priorAdjacencyN.angle,     aa, nullptr);
+    rotate(aaAaCoreNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaCoreNterm.N);
+    rotate(aaAaCoreNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
+    rotate(aaAaCoreNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
   }
 
   // remove atoms that are excluded by the connection: 1xO and 2xH atoms
   me.removeAtEnd(meAaCoreCterm.O1);
   me.removeAtEnd(meAaCoreCterm.Ho);
   aa.removeAtBegin(aaAaCoreNterm.HCn1->elt == H ? aaAaCoreNterm.HCn1 : aaAaCoreNterm.Hn2); // ad-hoc choice - HCn1 and Hn2 are chosen aritrarily in 'findAaCore'
+
   // append aa to me
   add(aa);
 }

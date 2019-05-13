@@ -267,6 +267,16 @@ public: // structs and types
   typedef double Angle;
   class AaAngles { // Ramachandran and other angles related to amino acid conformations
   public: // types
+    enum Type {
+      OMEGA     = 0,
+      PHI       = 1,
+      PSI       = 2,
+      MAX_RAM   = 2,
+      ADJ_N     = 3,
+      ADJ_CMAIN = 4,
+      ADJ_COO   = 5,
+      MAX_ADJ   = 5
+    };
     struct AngleAndAxis {
       Angle  angle;
       Vec3   axis;
