@@ -44,6 +44,7 @@ function renderMoleculeToFile(m, params) {
   // prepare files
   var output = new TempFile("png")
   var script = ""
+  script += "set antialiasdisplay true\n"
   script += "color cpk\n"
   script += "set defaultColors Jmol\n"
   //script += "set defaultColors Rasmol\n"
