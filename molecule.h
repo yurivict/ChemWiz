@@ -267,15 +267,24 @@ public: // structs and types
   typedef double Angle;
   class AaAngles { // Ramachandran and other angles related to amino acid conformations
   public: // types
-    enum Type {
+    enum Type { // used as an array index
+      // Ramachandran angles (3 angles are required)
       OMEGA     = 0,
       PHI       = 1,
       PSI       = 2,
       MAX_RAM   = 2,
+      // Adjacency angles (+3 angles are optional)
       ADJ_N     = 3,
       ADJ_CMAIN = 4,
       ADJ_COO   = 5,
-      MAX_ADJ   = 5
+      MAX_ADJ   = 5,
+      // secondary bond angles (+4 angles are optional)
+      O2_RISE   = 6, // O2 "rise" (nonflatness) angle: angle of rise over the Cmain+Coo+N plain
+      O2_TILT   = 7, // O2 tilt: how is it tilted towards N along the Cmain+Coo+N plain
+      PL_RISE   = 8, // payload "rise" (nonflatness) angle: angle of rise over the N+Cmain+Coo plain
+      PL_TILT   = 9, // payload tilt: how is it tilted towards Coo along the N+Cmain+Coo plain
+      MAX_SEC   = 9,
+      CNT       = 10 // total count
     };
     struct AngleAndAxis {
       Angle  angle;
@@ -290,9 +299,17 @@ public: // structs and types
     static AngleAndAxis adjacencyN(const AaCore &cterm, const AaCore &nterm); // between Cterm and Nterm
     static AngleAndAxis adjacencyCmain(const AaCore &cterm, const AaCore &nterm); // in Nterm
     static AngleAndAxis adjacencyCoo(const AaCore &cterm, const AaCore &nterm); // between Nterm and next or self oxygen
+    // secondary angles
+    static AngleAndAxis secondaryO2Rise(const AaCore &aaCore);
+    static AngleAndAxis secondaryO2Tilt(const AaCore &aaCore);
+    static AngleAndAxis secondaryPlRise(const AaCore &aaCore);
+    static AngleAndAxis secondaryPlTilt(const AaCore &aaCore);
+    static void checkAngles(const std::vector<Angle> &angles, const char *loc);
   private: // internals
     static AngleAndAxis ramachandranFromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext);
     static AngleAndAxis adjacencyFromChain(const Atom *prev, const Atom *curr, const Atom *next);
+    static AngleAndAxis riseFromChain(const Atom *atom, const Atom *prev, const Atom *curr, const Atom *next);
+    static AngleAndAxis tiltFromChain(const Atom *atom, const Atom *prev, const Atom *curr, const Atom *next);
     static Vec3 atomPairToVec(const Atom *a1, const Atom *a2);
     static Vec3 atomPairToVecN(const Atom *a1, const Atom *a2);
     // printing
@@ -357,7 +374,7 @@ public:
   static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
   // high-level append
   void appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles); // ASSUME that aa is an amino acid XXX alters aa
-  static std::vector<std::array<Angle,6>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
+  static std::vector<std::array<Angle,AaAngles::CNT>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
   // remove
   void removeAtBegin(Atom *a) {
     for (auto i = atoms.begin(), ie = atoms.end(); i != ie; i++)
@@ -404,10 +421,6 @@ public:
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
   bool findAaCore(Atom *O2anchor, AaCore &aaCore);
-private: // internals
-  static bool checkAngle(Angle angle, Angle low, Angle high);
-  static bool checkAngleR(Angle angle); // for Ramachandran angles
-  static bool checkAngleA(Angle angle); // for adjacency angles
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule
