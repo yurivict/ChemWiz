@@ -1,6 +1,8 @@
 
 #include "tm.h"
 
+#include <date.h>
+
 #include <chrono>
 #include <ctime>
 
@@ -18,6 +20,10 @@ std::time_t now() {
 
 std::time_t wallclock() {
   return now() - start();
+}
+
+std::string strYearToSecond() {
+  return date::format("%F_%T", std::chrono::system_clock::now());
 }
 
 }; // Tm

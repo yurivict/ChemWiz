@@ -1,10 +1,10 @@
 #include "temp-file.h"
 #include "util.h"
+#include "tm.h"
 #include "xerror.h"
 
 #include <unistd.h>
 #include <rang.hpp>
-#include <date.h>
 
 #include <boost/format.hpp>
 
@@ -16,7 +16,6 @@
 #include <cstdio>
 #include <iterator>
 #include <stdexcept>
-#include <chrono>
 //#include <experimental/filesystem>
 
 static std::string dirLocation = ".";       // where these files are created /tmp breaks std::rename below (cross-device error)
@@ -31,7 +30,7 @@ public:
   ~TempFile__KeptFileRegistry() {
     if (!empty()) {
       std::ostringstream ssRmShellFileName;
-      ssRmShellFileName << "temp-files-to-remove-" << date::format("%F-%T", std::chrono::system_clock::now()) << ".sh";
+      ssRmShellFileName << "temp-files-to-remove-" << Tm::strYearToSecond() << ".sh";
       std::ofstream rmShellFile(ssRmShellFileName.str(), std::ios::trunc);
       rmShellFile << "#!/bin/sh" << std::endl;
       rmShellFile << std::endl;
