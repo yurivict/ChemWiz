@@ -13,7 +13,7 @@ HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h util.h process.h Vec3.h
 		structure-db.h
 APP=		chemwiz
 CXX?=		clang++80
-CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\"
+CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
 
 # for MuJS
