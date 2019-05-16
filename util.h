@@ -71,4 +71,6 @@ inline bool realEof(std::ifstream &f) {
   return f.eof();
 }
 
+bool strAsBool(const std::string &str);
+
 }; // Util

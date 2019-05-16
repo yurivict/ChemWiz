@@ -1195,6 +1195,21 @@ static void numCPUs(js_State *J) {
 #endif
 }
 
+static void setCtlParam(js_State *J) {
+  AssertNargs(2)
+  auto nameParts = Util::split<'.'>(GetArgString(1));
+  auto val = GetArgString(2);
+  if (nameParts.size() < 2)
+    ERROR("setCtlParam: name is expected to have at least 2 parts")
+  if (nameParts[0] == "temp-file") {
+    nameParts.erase(nameParts.begin());
+    TempFile::setCtlParam(nameParts, val);
+  } else {
+    ERROR("setCtlParam: unknown name domain '" << nameParts[0] << "'")
+  }
+  ReturnVoid(J);
+}
+
 } // JsSystem
 
 namespace JsFile {
@@ -1713,7 +1728,8 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
   BEGIN_NAMESPACE(System)
-    ADD_NS_FUNCTION_CPP(System, numCPUs, JsSystem::numCPUs, 0)
+    ADD_NS_FUNCTION_CPP(System, numCPUs,            JsSystem::numCPUs, 0)
+    ADD_NS_FUNCTION_CPP(System, setCtlParam,        JsSystem::setCtlParam, 2)
   END_NAMESPACE(System)
   BEGIN_NAMESPACE(File)
     ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
