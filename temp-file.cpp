@@ -19,7 +19,7 @@
 #include <chrono>
 //#include <experimental/filesystem>
 
-static std::string dirLocation = "./";      // where these files are created /tmp breaks std::rename below (cross-device error)
+static std::string dirLocation = ".";       // where these files are created /tmp breaks std::rename below (cross-device error)
 static const char *deftExt = "tmp";         // serial number of the file
 static unsigned sno = 0;                    // serial number of the file (XXX thread unsafe)
 
