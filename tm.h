@@ -10,6 +10,6 @@ std::time_t now();
 std::time_t wallclock();
 
 // printing
-std::string strYearToSecond();
+std::string strYearToMicrosecond();
 
 }; // Tm

@@ -30,7 +30,7 @@ public:
   ~TempFile__KeptFileRegistry() {
     if (!empty()) {
       std::ostringstream ssRmShellFileName;
-      ssRmShellFileName << "temp-files-to-remove-" << Tm::strYearToSecond() << ".sh";
+      ssRmShellFileName << "temp-files-to-remove-" << Tm::strYearToMicrosecond() << ".sh";
       std::ofstream rmShellFile(ssRmShellFileName.str(), std::ios::trunc);
       rmShellFile << "#!/bin/sh" << std::endl;
       rmShellFile << std::endl;

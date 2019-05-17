@@ -22,7 +22,7 @@ std::time_t wallclock() {
   return now() - start();
 }
 
-std::string strYearToSecond() {
+std::string strYearToMicrosecond() {
   return date::format("%F_%T", std::chrono::system_clock::now());
 }
 
