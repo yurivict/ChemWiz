@@ -1204,6 +1204,9 @@ static void setCtlParam(js_State *J) {
   if (nameParts[0] == "temp-file") {
     nameParts.erase(nameParts.begin());
     TempFile::setCtlParam(nameParts, val);
+  } else if (nameParts[0] == "process") {
+    nameParts.erase(nameParts.begin());
+    Process::setCtlParam(nameParts, val);
   } else {
     ERROR("setCtlParam: unknown name domain '" << nameParts[0] << "'")
   }
