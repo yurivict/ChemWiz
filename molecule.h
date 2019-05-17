@@ -249,9 +249,9 @@ public:
 
 class Molecule : public Obj {
 public: // structs and types
-  struct AaCore {
+  struct AaBackbone {
     Atom    *N;
-    Atom    *HCn1;      // mandatory (inner element of the AaCore), H in most cases, C in case of proline, the only exception
+    Atom    *HCn1;      // mandatory (inner element of the AaBackbone), H in most cases, C in case of proline, the only exception
     Atom    *Hn2;       // optional (connectable element), missing when bonded at N
     Atom    *Cmain;     // main carbon
     Atom    *Hc;        // H near Cmain
@@ -263,7 +263,7 @@ public: // structs and types
     // methods
     std::set<Atom*> listPayload();  // list all payload atoms
     Atom* nextN() const;                  // next N if connected, otherwise our O1
-  }; // AaCore
+  }; // AaBackbone
   typedef double Angle;
   class AaAngles { // Ramachandran and other angles related to amino acid conformations
   public: // types
@@ -292,18 +292,18 @@ public: // structs and types
     }; // AngleAndAxis
   public: // angle computation: they return angle and axis in case the axis needs to be reused to rotate the molecules to some specific angle
     // Ramachandran angles: -180..+180
-    static AngleAndAxis omega(const AaCore &cterm, const AaCore &nterm);
-    static AngleAndAxis phi(const AaCore &cterm, const AaCore &nterm);
-    static AngleAndAxis psi(const AaCore &cterm, const AaCore &nterm);
+    static AngleAndAxis omega(const AaBackbone &cterm, const AaBackbone &nterm);
+    static AngleAndAxis phi(const AaBackbone &cterm, const AaBackbone &nterm);
+    static AngleAndAxis psi(const AaBackbone &cterm, const AaBackbone &nterm);
     // adjacency angles in the AA backbone: 0..180
-    static AngleAndAxis adjacencyN(const AaCore &cterm, const AaCore &nterm); // between Cterm and Nterm
-    static AngleAndAxis adjacencyCmain(const AaCore &cterm, const AaCore &nterm); // in Nterm
-    static AngleAndAxis adjacencyCoo(const AaCore &cterm, const AaCore &nterm); // between Nterm and next or self oxygen
+    static AngleAndAxis adjacencyN(const AaBackbone &cterm, const AaBackbone &nterm); // between Cterm and Nterm
+    static AngleAndAxis adjacencyCmain(const AaBackbone &cterm, const AaBackbone &nterm); // in Nterm
+    static AngleAndAxis adjacencyCoo(const AaBackbone &cterm, const AaBackbone &nterm); // between Nterm and next or self oxygen
     // secondary angles
-    static AngleAndAxis secondaryO2Rise(const AaCore &aaCore);
-    static AngleAndAxis secondaryO2Tilt(const AaCore &aaCore);
-    static AngleAndAxis secondaryPlRise(const AaCore &aaCore);
-    static AngleAndAxis secondaryPlTilt(const AaCore &aaCore);
+    static AngleAndAxis secondaryO2Rise(const AaBackbone &aaBackbone);
+    static AngleAndAxis secondaryO2Tilt(const AaBackbone &aaBackbone);
+    static AngleAndAxis secondaryPlRise(const AaBackbone &aaBackbone);
+    static AngleAndAxis secondaryPlTilt(const AaBackbone &aaBackbone);
     static void checkAngles(const std::vector<Angle> &angles, const char *loc);
   private: // internals
     static AngleAndAxis ramachandranFromChain(const Atom *nearNext, const Atom *near, const Atom *far, const Atom *farNext);
@@ -365,16 +365,16 @@ public:
         return *i;
     return nullptr;
   }
-  AaCore findAaCore1();  // finds a single AaCore, fails when AA core is missing or it has multiple AA cores
-  AaCore findAaCoreFirst();
-  AaCore findAaCoreLast();
-  std::vector<AaCore> findAaCores();  // finds all AA cores
+  AaBackbone findAaBackbone1();  // finds a single AaBackbone, fails when AA core is missing or it has multiple AA cores
+  AaBackbone findAaBackboneFirst();
+  AaBackbone findAaBackboneLast();
+  std::vector<AaBackbone> findAaBackbones();  // finds all AA cores
   void detectBonds();
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
   // high-level append
   void appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles); // ASSUME that aa is an amino acid XXX alters aa
-  static std::vector<std::array<Angle,AaAngles::CNT>> readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores);
+  static std::vector<std::array<Angle,AaAngles::CNT>> readAminoAcidAnglesFromAaChain(const std::vector<AaBackbone> &aaBackbones);
   // remove
   void removeAtBegin(Atom *a) {
     for (auto i = atoms.begin(), ie = atoms.end(); i != ie; i++)
@@ -420,7 +420,7 @@ public:
   void prnCoords(std::ostream &os) const;
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
-  bool findAaCore(Atom *O2anchor, AaCore &aaCore);
+  bool findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule

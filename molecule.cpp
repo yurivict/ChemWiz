@@ -183,52 +183,52 @@ std::vector<std::vector<Atom*>> Molecule::findComponents() const {
   return res;
 }
 
-Molecule::AaCore Molecule::findAaCore1() { // finds a single AaCore, fails when AA core is missing or it has multiple AA cores
-  AaCore aaCore;
-  bool   aaCoreFound = false;
+Molecule::AaBackbone Molecule::findAaBackbone1() { // finds a single AaBackbone, fails when AA core is missing or it has multiple AA cores
+  AaBackbone aaBackbone;
+  bool   aaBackboneFound = false;
   // begin from O2, use it as an anchor because it is always present
   for (auto aO2 : atoms)
     if (aO2->elt == O && aO2->isBonds(C, 1)) {
-      bool aaCoreFoundNew = findAaCore(aO2, aaCore);
-      if (aaCoreFoundNew && aaCoreFound)
-        ERROR("multiple AA cores in a molecule when findAaCore1() expects only one core")
+      bool aaBackboneFoundNew = findAaBackbone(aO2, aaBackbone);
+      if (aaBackboneFoundNew && aaBackboneFound)
+        ERROR("multiple AA cores in a molecule when findAaBackbone1() expects only one core")
 
-      aaCoreFound = aaCoreFoundNew;
+      aaBackboneFound = aaBackboneFoundNew;
     }
-  return aaCoreFound ? aaCore : AaCore({});
+  return aaBackboneFound ? aaBackbone : AaBackbone({});
 }
 
-Molecule::AaCore Molecule::findAaCoreFirst() {
+Molecule::AaBackbone Molecule::findAaBackboneFirst() {
   for (auto aO2 : atoms)
     if (aO2->elt == O && aO2->isBonds(C, 1)) {
-      AaCore aaCore;
-      if (findAaCore(aO2, aaCore))
-        return aaCore;
+      AaBackbone aaBackbone;
+      if (findAaBackbone(aO2, aaBackbone))
+        return aaBackbone;
     }
-  ERROR("no AA core found in the molecule when findAaCoreFirst() expects at least one AA core")
+  ERROR("no AA core found in the molecule when findAaBackboneFirst() expects at least one AA core")
 }
 
-Molecule::AaCore Molecule::findAaCoreLast() {
+Molecule::AaBackbone Molecule::findAaBackboneLast() {
   for (auto i = atoms.rbegin(); i != atoms.rend(); i++) {
     auto aO2 = *i;
     if (aO2->elt == O && aO2->isBonds(C, 1)) {
-      AaCore aaCore;
-      if (findAaCore(aO2, aaCore))
-        return aaCore;
+      AaBackbone aaBackbone;
+      if (findAaBackbone(aO2, aaBackbone))
+        return aaBackbone;
     }
   }
-  ERROR("no AA core found in the molecule when findAaCoreLast() expects at least one AA core")
+  ERROR("no AA core found in the molecule when findAaBackboneLast() expects at least one AA core")
 }
 
-std::vector<Molecule::AaCore> Molecule::findAaCores() {  // finds all AA cores
-  std::vector<AaCore> aaCores;
-  AaCore aaCore;
+std::vector<Molecule::AaBackbone> Molecule::findAaBackbones() {  // finds all AA cores
+  std::vector<AaBackbone> aaBackbones;
+  AaBackbone aaBackbone;
   // begin from O2, use it as an anchor because it is always present
   for (auto aO2 : atoms)
     if (aO2->elt == O && aO2->isBonds(C, 1))
-      if (findAaCore(aO2, aaCore))
-        aaCores.push_back(aaCore);
-  return aaCores;
+      if (findAaBackbone(aO2, aaBackbone))
+        aaBackbones.push_back(aaBackbone);
+  return aaBackbones;
 }
 
 void Molecule::detectBonds() {
@@ -292,8 +292,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
   // ASSUME that aa is small because we will translate/rotate it
   auto &me = *this;
   // find C/N terms // XXX some peptides are also defined beginning with C-term for some reason, we need another procedure for that
-  auto meAaCoreCterm = me.findAaCoreLast();
-  auto aaAaCoreNterm = aa.findAaCoreFirst();
+  auto meAaBackboneCterm = me.findAaBackboneLast();
+  auto aaAaBackboneNterm = aa.findAaBackboneFirst();
   // local functions in a form of lambda functions
   auto getAtomAxis = [](const Atom *atom1, const Atom *atom2) {
     return (atom2->pos - atom1->pos).normalize();
@@ -314,73 +314,73 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
         a->pos = M*(a->pos - center) + center;
   };
   // center them both at the junction point
-  me.centerAt(meAaCoreCterm.O1->pos); // XXX should not center it
-  aa.centerAt(aaAaCoreNterm.N->pos);
+  me.centerAt(meAaBackboneCterm.O1->pos); // XXX should not center it
+  aa.centerAt(aaAaBackboneNterm.N->pos);
   // rotate aa to (1) align its Oalpha-N axis with me's Oalpha-N axis, (2) make O2 bonds anti-parallel
   { // XXX this might be a wrong way, but we align them such that they are in one line along the AA backbone
-    auto meAlong = getAtomAxis(meAaCoreCterm.N, meAaCoreCterm.O1);
-    auto aaAlong = getAtomAxis(aaAaCoreNterm.N, aaAaCoreNterm.O1);
-    auto aaAaCoreCterm = aa.findAaCoreLast();
-    auto meDblO = (meAaCoreCterm.O2->pos - meAaCoreCterm.Coo->pos).orthogonal(meAlong).normalize();
-    auto aaDblO = (aaAaCoreCterm.O2->pos - aaAaCoreCterm.Coo->pos).orthogonal(aaAlong).normalize();
+    auto meAlong = getAtomAxis(meAaBackboneCterm.N, meAaBackboneCterm.O1);
+    auto aaAlong = getAtomAxis(aaAaBackboneNterm.N, aaAaBackboneNterm.O1);
+    auto aaAaBackboneCterm = aa.findAaBackboneLast();
+    auto meDblO = (meAaBackboneCterm.O2->pos - meAaBackboneCterm.Coo->pos).orthogonal(meAlong).normalize();
+    auto aaDblO = (aaAaBackboneCterm.O2->pos - aaAaBackboneCterm.Coo->pos).orthogonal(aaAlong).normalize();
     assert(meDblO.isOrthogonal(meAlong));
     assert(aaDblO.isOrthogonal(aaAlong));
     aa.applyMatrix(Vec3Extra::rotateCornerToCorner(meAlong,meDblO, aaAlong,-aaDblO));
-    assert((meAaCoreCterm.O1->pos - meAaCoreCterm.N->pos).isParallel((aaAaCoreNterm.O1->pos - aaAaCoreNterm.N->pos)));
+    assert((meAaBackboneCterm.O1->pos - meAaBackboneCterm.N->pos).isParallel((aaAaBackboneNterm.O1->pos - aaAaBackboneNterm.N->pos)));
   }
 
   { // apply omega, phi, psi angles
     // compute prior angles
-    auto priorOmega = AaAngles::omega(meAaCoreCterm, aaAaCoreNterm);
-    auto priorPhi   = AaAngles::phi(meAaCoreCterm, aaAaCoreNterm);
-    auto priorPsi   = AaAngles::psi(meAaCoreCterm, aaAaCoreNterm);
+    auto priorOmega = AaAngles::omega(meAaBackboneCterm, aaAaBackboneNterm);
+    auto priorPhi   = AaAngles::phi(meAaBackboneCterm, aaAaBackboneNterm);
+    auto priorPsi   = AaAngles::psi(meAaBackboneCterm, aaAaBackboneNterm);
     // rotate: begin from the most remote from C-term
-    rotateMolecule(aaAaCoreNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaCoreNterm.N);
-    rotateMolecule(aaAaCoreNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
-    rotateMolecule(meAaCoreCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
+    rotateMolecule(aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaBackboneNterm.N);
+    rotateMolecule(aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
+    rotateMolecule(meAaBackboneCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
   }
 
   // apply adjacencyN, adjacencyCmain, adjacencyCoo when supplied
   if (angles.size() >= A::MAX_ADJ+1) {
-    auto priorAdjacencyN     = AaAngles::adjacencyN(meAaCoreCterm, aaAaCoreNterm);
-    auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaCoreCterm, aaAaCoreNterm);
-    auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaCoreCterm, aaAaCoreNterm);
+    auto priorAdjacencyN     = AaAngles::adjacencyN(meAaBackboneCterm, aaAaBackboneNterm);
+    auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaBackboneCterm, aaAaBackboneNterm);
+    auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaBackboneCterm, aaAaBackboneNterm);
     // rotate: begin from the most remote from C-term
-    rotateMolecule(aaAaCoreNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaCoreNterm.N);
-    rotateMolecule(aaAaCoreNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
-    rotateMolecule(aaAaCoreNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
+    rotateMolecule(aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaBackboneNterm.N);
+    rotateMolecule(aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
+    rotateMolecule(aaAaBackboneNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
   }
 
   // apply secondary angles when supplied
   if (angles.size() == A::MAX_SEC+1) {
-    auto priorSecondaryO2Rise = AaAngles::secondaryO2Rise(aaAaCoreNterm);
-    auto priorSecondaryO2Tilt = AaAngles::secondaryO2Tilt(aaAaCoreNterm);
-    auto priorSecondaryPlRise = AaAngles::secondaryPlRise(aaAaCoreNterm);
-    auto priorSecondaryPlTilt = AaAngles::secondaryPlTilt(aaAaCoreNterm);
-    auto ntermPayload = aaAaCoreNterm.listPayload();
+    auto priorSecondaryO2Rise = AaAngles::secondaryO2Rise(aaAaBackboneNterm);
+    auto priorSecondaryO2Tilt = AaAngles::secondaryO2Tilt(aaAaBackboneNterm);
+    auto priorSecondaryPlRise = AaAngles::secondaryPlRise(aaAaBackboneNterm);
+    auto priorSecondaryPlTilt = AaAngles::secondaryPlTilt(aaAaBackboneNterm);
+    auto ntermPayload = aaAaBackboneNterm.listPayload();
     // rotate: begin from the most remote from C-term
-    rotateAtom (aaAaCoreNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaCoreNterm.O2);
-    rotateAtom (aaAaCoreNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_TILT] - priorSecondaryO2Tilt.angle, aaAaCoreNterm.O2);
-    rotateAtoms(aaAaCoreNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload);
-    rotateAtoms(aaAaCoreNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload);
+    rotateAtom (aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaBackboneNterm.O2);
+    rotateAtom (aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_TILT] - priorSecondaryO2Tilt.angle, aaAaBackboneNterm.O2);
+    rotateAtoms(aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload);
+    rotateAtoms(aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload);
   }
 
   // remove atoms that are excluded by the connection: 1xO and 2xH atoms
-  me.removeAtEnd(meAaCoreCterm.O1);
-  me.removeAtEnd(meAaCoreCterm.Ho);
-  aa.removeAtBegin(aaAaCoreNterm.HCn1->elt == H ? aaAaCoreNterm.HCn1 : aaAaCoreNterm.Hn2); // ad-hoc choice - HCn1 and Hn2 are chosen aritrarily in 'findAaCore'
+  me.removeAtEnd(meAaBackboneCterm.O1);
+  me.removeAtEnd(meAaBackboneCterm.Ho);
+  aa.removeAtBegin(aaAaBackboneNterm.HCn1->elt == H ? aaAaBackboneNterm.HCn1 : aaAaBackboneNterm.Hn2); // ad-hoc choice - HCn1 and Hn2 are chosen aritrarily in 'findAaBackbone'
 
   // append aa to me
   add(aa);
 }
 
-std::vector<std::array<Molecule::Angle,Molecule::AaAngles::CNT>> Molecule::readAminoAcidAnglesFromAaChain(const std::vector<AaCore> &aaCores) {
+std::vector<std::array<Molecule::Angle,Molecule::AaAngles::CNT>> Molecule::readAminoAcidAnglesFromAaChain(const std::vector<AaBackbone> &aaBackbones) {
   typedef AaAngles A;
   std::vector<std::array<Angle,A::CNT>> angles;
-  if (!aaCores.empty())
-    angles.reserve(aaCores.size());
-  const AaCore *prev = nullptr;
-  for (auto &curr : aaCores) {
+  if (!aaBackbones.empty())
+    angles.reserve(aaBackbones.size());
+  const AaBackbone *prev = nullptr;
+  for (auto &curr : aaBackbones) {
     if (prev)
       angles.push_back(std::array<Angle,A::CNT>{{AaAngles::omega(*prev, curr).angle, AaAngles::phi(*prev, curr).angle, AaAngles::psi(*prev, curr).angle,
                                                  AaAngles::adjacencyN(*prev, curr).angle,
@@ -425,7 +425,7 @@ void Molecule::snapToGrid(const Vec3 &grid) {
     a->snapToGrid(grid);
 }
 
-bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
+bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
   // TODO Proline is different - the group includes a 5-cycle
   // begin from O2, use it as an anchor because it is always present
   auto aCoo = O2anchor->bonds[0];
@@ -492,7 +492,7 @@ bool Molecule::findAaCore(Atom *O2anchor, AaCore &aaCore) {
   assert(!aHo || aHo->elt == H);
 
   // found
-  aaCore = {aN, aHCn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
+  aaBackbone = {aN, aHCn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
   return true;
 }
 
@@ -503,56 +503,56 @@ std::ostream& operator<<(std::ostream &os, const Molecule &m) {
   return os;
 }
 
-/// Molecule::AaCore
+/// Molecule::AaBackbone
 
-std::set<Atom*> Molecule::AaCore::listPayload() {
+std::set<Atom*> Molecule::AaBackbone::listPayload() {
   return Molecule::listNeighborsHierarchically(payload, true/*includeSelf*/, Cmain, N); // except Cmain,N (N is only for Proline)
 }
 
-Atom* Molecule::AaCore::nextN() const {
+Atom* Molecule::AaBackbone::nextN() const {
   return O1 ? O1 : Coo->filterBonds1(Element::N);
 }
 
 /// Molecule::AaAngles // see https://en.wikipedia.org/wiki/Ramachandran_plot#/media/File:Protein_backbone_PhiPsiOmega_drawing.svg
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::omega(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::omega(const AaBackbone &cterm, const AaBackbone &nterm) {
   return ramachandranFromChain(cterm.Cmain, cterm.Coo, nterm.N, nterm.Cmain);
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::phi(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::phi(const AaBackbone &cterm, const AaBackbone &nterm) {
   return ramachandranFromChain(cterm.Coo, nterm.N, nterm.Cmain, nterm.Coo);
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::psi(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::psi(const AaBackbone &cterm, const AaBackbone &nterm) {
   return ramachandranFromChain(nterm.N, nterm.Cmain, nterm.Coo, nterm.nextN());
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyN(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyN(const AaBackbone &cterm, const AaBackbone &nterm) {
   return adjacencyFromChain(cterm.Coo, nterm.N, nterm.Cmain);
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCmain(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCmain(const AaBackbone &cterm, const AaBackbone &nterm) {
   return adjacencyFromChain(nterm.N, nterm.Cmain, nterm.Coo);
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCoo(const AaCore &cterm, const AaCore &nterm) {
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::adjacencyCoo(const AaBackbone &cterm, const AaBackbone &nterm) {
   return adjacencyFromChain(nterm.Cmain, nterm.Coo, nterm.nextN());
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryO2Rise(const AaCore &aaCore) {
-  return riseFromChain(aaCore.O2, aaCore.Cmain, aaCore.Coo, aaCore.nextN());
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryO2Rise(const AaBackbone &aaBackbone) {
+  return riseFromChain(aaBackbone.O2, aaBackbone.Cmain, aaBackbone.Coo, aaBackbone.nextN());
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryO2Tilt(const AaCore &aaCore) {
-  return tiltFromChain(aaCore.O2, aaCore.Cmain, aaCore.Coo, aaCore.nextN());
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryO2Tilt(const AaBackbone &aaBackbone) {
+  return tiltFromChain(aaBackbone.O2, aaBackbone.Cmain, aaBackbone.Coo, aaBackbone.nextN());
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryPlRise(const AaCore &aaCore) {
-  return riseFromChain(aaCore.payload, aaCore.N, aaCore.Cmain, aaCore.Coo);
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryPlRise(const AaBackbone &aaBackbone) {
+  return riseFromChain(aaBackbone.payload, aaBackbone.N, aaBackbone.Cmain, aaBackbone.Coo);
 }
 
-Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryPlTilt(const AaCore &aaCore) {
-  return tiltFromChain(aaCore.payload, aaCore.N, aaCore.Cmain, aaCore.Coo);
+Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::secondaryPlTilt(const AaBackbone &aaBackbone) {
+  return tiltFromChain(aaBackbone.payload, aaBackbone.N, aaBackbone.Cmain, aaBackbone.Coo);
 }
 
 void Molecule::AaAngles::checkAngles(const std::vector<Angle> &angles, const char *loc) {

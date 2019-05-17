@@ -654,7 +654,7 @@ namespace JsMolecule {
 
 namespace helpers {
 
-static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
+static void pushAaBackboneAsJsObject(js_State *J, const Molecule::AaBackbone &aaBackbone) {
   auto addFld = [J](const char *fld, Atom *atom) {
     JsAtom::xnewo(J, atom);
     js_setproperty(J, -2, fld);
@@ -668,20 +668,20 @@ static void pushAaCoreAsJsObject(js_State *J, const Molecule::AaCore &aaCore) {
     }
   };
   js_newobject(J);
-  addFld ("N",       aaCore.N);
-  addFld ("HCn1",    aaCore.HCn1);
-  addFldZ("Hn2",     aaCore.Hn2);
-  addFld ("Cmain",   aaCore.Cmain);
-  addFld ("Hc",      aaCore.Hc);
-  addFld ("Coo",     aaCore.Coo);
-  addFld ("O2",      aaCore.O2);
-  addFldZ("O1",      aaCore.O1);
-  addFldZ("Ho",      aaCore.Ho);
-  addFld ("payload", aaCore.payload);
+  addFld ("N",       aaBackbone.N);
+  addFld ("HCn1",    aaBackbone.HCn1);
+  addFldZ("Hn2",     aaBackbone.Hn2);
+  addFld ("Cmain",   aaBackbone.Cmain);
+  addFld ("Hc",      aaBackbone.Hc);
+  addFld ("Coo",     aaBackbone.Coo);
+  addFld ("O2",      aaBackbone.O2);
+  addFldZ("O1",      aaBackbone.O1);
+  addFldZ("Ho",      aaBackbone.Ho);
+  addFld ("payload", aaBackbone.payload);
 }
 
-static Molecule::AaCore popAaCoreAsJsObject(js_State *J) {
-  Molecule::AaCore aaCore;
+static Molecule::AaBackbone popAaBackboneAsJsObject(js_State *J) {
+  Molecule::AaBackbone aaBackbone;
   auto addFld = [J](const char *fld, Atom *&atom) {
     js_getproperty(J, -1, fld);
     atom = (Atom*)js_touserdata(J, -1, TAG_Atom);
@@ -695,23 +695,23 @@ static Molecule::AaCore popAaCoreAsJsObject(js_State *J) {
       atom = nullptr;
     js_pop(J,1);
   };
-  addFld ("N",       aaCore.N);
-  addFld ("HCn1",    aaCore.HCn1);
-  addFldZ("Hn2",     aaCore.Hn2);
-  addFld ("Cmain",   aaCore.Cmain);
-  addFld ("Hc",      aaCore.Hc);
-  addFld ("Coo",     aaCore.Coo);
-  addFld ("O2",      aaCore.O2);
-  addFldZ("O1",      aaCore.O1);
-  addFldZ("Ho",      aaCore.Ho);
-  addFld ("payload", aaCore.payload);
+  addFld ("N",       aaBackbone.N);
+  addFld ("HCn1",    aaBackbone.HCn1);
+  addFldZ("Hn2",     aaBackbone.Hn2);
+  addFld ("Cmain",   aaBackbone.Cmain);
+  addFld ("Hc",      aaBackbone.Hc);
+  addFld ("Coo",     aaBackbone.Coo);
+  addFld ("O2",      aaBackbone.O2);
+  addFldZ("O1",      aaBackbone.O1);
+  addFldZ("Ho",      aaBackbone.Ho);
+  addFld ("payload", aaBackbone.payload);
   js_pop(J,1);
-  return aaCore;
+  return aaBackbone;
 }
 
-static void pushAaCoreAsJsObjectZ(js_State *J, const Molecule::AaCore &aaCore) {
-  if (aaCore.Cmain)
-    pushAaCoreAsJsObject(J, aaCore);
+static void pushAaBackboneAsJsObjectZ(js_State *J, const Molecule::AaBackbone &aaBackbone) {
+  if (aaBackbone.Cmain)
+    pushAaBackboneAsJsObject(J, aaBackbone);
   else
     js_pushnull(J); // null is returned when it is not found
 }
@@ -795,21 +795,21 @@ static void readAminoAcidAnglesFromAaChain(js_State *J) {
   AssertNargs(1) // expect a binary
   // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
   // binary is disabled:
-  // std::unique_ptr<std::vector<Molecule::AaCore>> aaCoreArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaCore>>(*GetArg(Binary, 1)));
-  // read the AaCore array argument
-  std::unique_ptr<std::vector<Molecule::AaCore>> aaCoreArray(new std::vector<Molecule::AaCore>);
+  // std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaBackbone>>(*GetArg(Binary, 1)));
+  // read the AaBackbone array argument
+  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(new std::vector<Molecule::AaBackbone>);
   {
     auto len = js_getlength(J, 1/*argno*/);
-    aaCoreArray->resize(len);
+    aaBackboneArray->resize(len);
     for (unsigned i = 0; i < len; i++) {
       js_getindex(J, 1/*argno*/, i);
-      (*aaCoreArray)[i] = helpers::popAaCoreAsJsObject(J);
+      (*aaBackboneArray)[i] = helpers::popAaBackboneAsJsObject(J);
     }
   }
   // return the angles array
   js_newarray(J);
   unsigned idx = 0;
-  for (auto &aaAngles : Molecule::readAminoAcidAnglesFromAaChain(*aaCoreArray)) {
+  for (auto &aaAngles : Molecule::readAminoAcidAnglesFromAaChain(*aaBackboneArray)) {
     js_newarray(J);
     unsigned aidx = 0;
     for (auto angle : aaAngles) {
@@ -894,36 +894,36 @@ static void snapToGrid(js_State *J) {
   ReturnVoid(J);
 }
 
-static void findAaCore1(js_State *J) {
+static void findAaBackbone1(js_State *J) {
   AssertNargs(0)
-  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCore1());
+  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackbone1());
 }
 
-static void findAaCoreFirst(js_State *J) {
+static void findAaBackboneFirst(js_State *J) {
   AssertNargs(0)
-  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCoreFirst());
+  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneFirst());
 }
 
-static void findAaCoreLast(js_State *J) {
+static void findAaBackboneLast(js_State *J) {
   AssertNargs(0)
-  helpers::pushAaCoreAsJsObjectZ(J, GetArg(Molecule, 0)->findAaCoreLast());
+  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneLast());
 }
 
-static void findAaCores(js_State *J) {
+static void findAaBackbones(js_State *J) {
   AssertNargs(0)
   // return array
   js_newarray(J);
   unsigned idx = 0;
-  for (auto &aaCore : GetArg(Molecule, 0)->findAaCores()) {
-    helpers::pushAaCoreAsJsObject(J, aaCore);
+  for (auto &aaBackbone : GetArg(Molecule, 0)->findAaBackbones()) {
+    helpers::pushAaBackboneAsJsObject(J, aaBackbone);
     js_setindex(J, -2, idx++);
   }
 }
 /* binary methods are disabled for now
-static void findAaCoresBin(js_State *J) { // returns the same as findAaCores but as a binary array in order to pass it to other functions easily
+static void findAaBackbonesBin(js_State *J) { // returns the same as findAaBackbones but as a binary array in order to pass it to other functions easily
   AssertNargs(0)
-  auto aaCoresBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaCore>, Binary>(GetArg(Molecule, 0)->findAaCores());
-  Return(Binary, aaCoresBinary);
+  auto aaBackbonesBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaBackbone>, Binary>(GetArg(Molecule, 0)->findAaBackbones());
+  Return(Binary, aaBackbonesBinary);
 }
 */
 } // prototype
@@ -964,11 +964,11 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, centerOfMass, 0)
     ADD_METHOD_CPP(Molecule, centerAt, 1)
     ADD_METHOD_CPP(Molecule, snapToGrid, 1)
-    ADD_METHOD_CPP(Molecule, findAaCore1, 0)
-    ADD_METHOD_CPP(Molecule, findAaCoreFirst, 0)
-    ADD_METHOD_CPP(Molecule, findAaCoreLast, 0)
-    ADD_METHOD_CPP(Molecule, findAaCores, 0)
-    //ADD_METHOD_CPP(Molecule, findAaCoresBin, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackbone1, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackboneFirst, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackboneLast, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackbones, 0)
+    //ADD_METHOD_CPP(Molecule, findAaBackbonesBin, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
