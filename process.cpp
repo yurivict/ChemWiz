@@ -3,6 +3,8 @@
 #include "util.h"
 #include "xerror.h"
 
+#include <rang.hpp>
+
 #include <iostream>
 #include <string>
 #include <array>
@@ -14,7 +16,7 @@ static bool ctlParamLogCommands = false;
 
 std::string Process::exec(const std::string &cmd) {
   if (ctlParamLogCommands)
-    std::cout << "[" << Tm::strYearToMicrosecond() << "] LOG(process.command): " << cmd << std::endl;
+    std::cout << rang::fg::cyan << "[" << Tm::strYearToMicrosecond() << "] LOG(process.command): " << cmd << rang::style::reset << std::endl;
   std::string result;
   std::array<char, 128> buffer;
   std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
