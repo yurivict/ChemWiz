@@ -19,7 +19,7 @@
 
 /// (DBG) logging: uncomment to enable
 
-#define LOG_ROTATE_FUNCTIONS(msg...) // std::cout << rang::fg::cyan << msg << rang::style::reset << std::endl;
+#define LOG_ROTATE_FUNCTIONS(msg...) // std::cout << rang::fg::cyan << "{rotate}: " << msg << rang::style::reset << std::endl;
 
 /// references
 
@@ -289,6 +289,7 @@ std::set<Atom*> Molecule::listNeighborsHierarchically(Atom *self, bool includeSe
 
 void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles) { // angles are in degrees, -180..+180
   typedef AaAngles A;
+  LOG_ROTATE_FUNCTIONS("appendAaChain: >>>")
 
   // check angles
   A::checkAngles(angles, "Molecule::appendAsAminoAcidChain");
@@ -341,6 +342,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorOmega = AaAngles::omega(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorPhi   = AaAngles::phi(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorPsi   = AaAngles::psi(meAaBackboneCterm, aaAaBackboneNterm);
+    LOG_ROTATE_FUNCTIONS("appendAaChain: priorOmega=" << priorOmega.angle << " priorPhi=" << priorPhi.angle << " priorPsi=" << priorPsi.angle)
+    LOG_ROTATE_FUNCTIONS("appendAaChain: newOmega=" << angles[A::OMEGA] << " newPhi=" << angles[A::PHI] << " newPsi=" << angles[A::PSI])
     // rotate: begin from the most remote from C-term
     rotateMolecule(A::PSI,   aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaBackboneNterm.N);
     rotateMolecule(A::PHI,   aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
@@ -352,6 +355,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorAdjacencyN     = AaAngles::adjacencyN(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaBackboneCterm, aaAaBackboneNterm);
+    LOG_ROTATE_FUNCTIONS("appendAaChain: priorAdjacencyN=" << priorAdjacencyN.angle << " priorAdjacencyCmain=" << priorAdjacencyCmain.angle << " priorAdjacencyCoo=" << priorAdjacencyCoo.angle)
+    LOG_ROTATE_FUNCTIONS("appendAaChain: newAdjacencyN=" << angles[A::ADJ_N] << " newAdjacencyCmain=" << angles[A::ADJ_CMAIN] << " newAdjacencyCoo=" << angles[A::ADJ_COO])
     // rotate: begin from the most remote from C-term
     rotateMolecule(A::ADJ_COO,   aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaBackboneNterm.N);
     rotateMolecule(A::ADJ_CMAIN, aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
@@ -364,6 +369,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorSecondaryO2Tilt = AaAngles::secondaryO2Tilt(aaAaBackboneNterm);
     auto priorSecondaryPlRise = AaAngles::secondaryPlRise(aaAaBackboneNterm);
     auto priorSecondaryPlTilt = AaAngles::secondaryPlTilt(aaAaBackboneNterm);
+    LOG_ROTATE_FUNCTIONS("appendAaChain: priorSecondaryO2Rise=" << priorSecondaryO2Rise.angle << " priorSecondaryO2Tilt=" << priorSecondaryO2Tilt.angle << " priorSecondaryPlRise=" << priorSecondaryPlRise.angle << " priorSecondaryPlTilt=" << priorSecondaryPlTilt.angle)
+    LOG_ROTATE_FUNCTIONS("appendAaChain: newSecondaryO2Rise=" << angles[A::O2_RISE] << " newSecondaryO2Tilt=" << angles[A::O2_TILT] << " newSecondaryPlRise=" << angles[A::PL_RISE] << " newSecondaryPlTilt=" << angles[A::PL_TILT])
     auto ntermPayload = aaAaBackboneNterm.listPayload();
     // rotate: begin from the most remote from C-term
     rotateAtom (A::O2_RISE, aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaBackboneNterm.O2);
@@ -379,6 +386,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
 
   // append aa to me
   add(aa);
+
+  LOG_ROTATE_FUNCTIONS("appendAaChain: <<<")
 }
 
 std::vector<std::array<Molecule::Angle,Molecule::AaAngles::CNT>> Molecule::readAminoAcidAnglesFromAaChain(const std::vector<AaBackbone> &aaBackbones) {
