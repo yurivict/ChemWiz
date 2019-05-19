@@ -41,12 +41,14 @@ ifeq ($(USE_EXCEPTIONS), yes)
 CXXFLAGS+=	-DUSE_EXCEPTIONS
 endif
 
-# for libqhull
+# for libqhull (from the qhull package)
 LDFLAGS+=	-lqhull_r
 # for boost compressor/recompressor
 LDFLAGS+=	-lboost_iostreams -lz
 # for OpenSSL used to access https URLs
-LDFLAGS+=	$(shell pkg-config --libs openssl) -pthread
+LDFLAGS+=	-lssl -lcrypto -pthread
+# for threads
+LDFLAGS+=	-pthread
 
 # for OpenBLAS that is needed for the rmsd library
 LDFLAGS+=	-lopenblas
