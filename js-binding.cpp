@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -19,8 +20,8 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
-#include <unistd.h>
 #include <mujs.h>
+#include <rang.hpp>
 
 #include "js-binding.h"
 #include "obj.h"
@@ -76,6 +77,7 @@ static void ckErr(js_State *J, int err) {
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
+#define GetArgStringArray(n)     objToStringArray(J, n, __func__)
 #define GetArgFloatArray(n)      objToFloatArray(J, n, __func__)
 #define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
@@ -204,6 +206,21 @@ static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   for (unsigned i = 0; i < 3; i++) {
     js_getindex(J, idx, i);
     v[i] = js_tonumber(J, -1);
+    js_pop(J, 1);
+  }
+
+  return v;
+}
+
+static std::vector<std::string> objToStringArray(js_State *J, int idx, const char *fname) {
+  if (!js_isarray(J, idx))
+    js_typeerror(J, "not an array in arg#%d of the function '%s'", idx, fname);
+
+  std::vector<std::string> v;
+
+  for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
+    js_getindex(J, idx, i);
+    v.push_back(js_tostring(J, -1));
     js_pop(J, 1);
   }
 
@@ -1158,6 +1175,33 @@ static void init(js_State *J) {
 // exported functions
 //
 
+namespace helpers {
+  static void applyAttrs(std::ostream &os, const std::vector<std::string> &attrs) {
+    for (auto &attr : attrs) {
+      if (attr == "clr.fg.black")        os << rang::fg::black;
+      else if (attr == "clr.fg.red")     os << rang::fg::red;
+      else if (attr == "clr.fg.green")   os << rang::fg::green;
+      else if (attr == "clr.fg.yellow")  os << rang::fg::yellow;
+      else if (attr == "clr.fg.blue")    os << rang::fg::blue;
+      else if (attr == "clr.fg.magenta") os << rang::fg::magenta;
+      else if (attr == "clr.fg.cyan")    os << rang::fg::cyan;
+      else if (attr == "clr.fg.gray")    os << rang::fg::gray;
+      else if (attr == "clr.fg.reset")   os << rang::fg::reset;
+      else if (attr == "clr.bg.black")   os << rang::bg::black;
+      else if (attr == "clr.bg.red")     os << rang::bg::red;
+      else if (attr == "clr.bg.green")   os << rang::bg::green;
+      else if (attr == "clr.bg.yellow")  os << rang::bg::yellow;
+      else if (attr == "clr.bg.blue")    os << rang::bg::blue;
+      else if (attr == "clr.bg.magenta") os << rang::bg::magenta;
+      else if (attr == "clr.bg.cyan")    os << rang::bg::cyan;
+      else if (attr == "clr.bg.gray")    os << rang::bg::gray;
+      else if (attr == "clr.bg.reset")   os << rang::bg::reset;
+      else
+        ERROR("unknown attr supplied: " << attr)
+    }
+  }
+}
+
 static void print(js_State *J) {
   AssertNargs(1)
   std::cout << GetArgString(1) << std::endl;
@@ -1167,6 +1211,20 @@ static void print(js_State *J) {
 static void printn(js_State *J) {
   AssertNargs(1)
   std::cout << GetArgString(1);
+  ReturnVoid(J);
+}
+
+static void printa(js_State *J) {
+  AssertNargs(2)
+  helpers::applyAttrs(std::cout, GetArgStringArray(1));
+  std::cout << GetArgString(2) << rang::fg::reset << rang::bg::reset << std::endl;
+  ReturnVoid(J);
+}
+
+static void printna(js_State *J) {
+  AssertNargs(2)
+  helpers::applyAttrs(std::cout, GetArgStringArray(1));
+  std::cout << GetArgString(2);
   ReturnVoid(J);
 }
 
@@ -1721,6 +1779,8 @@ void registerFunctions(js_State *J) {
 
   ADD_JS_FUNCTION(print, 1)
   ADD_JS_FUNCTION(printn, 1)
+  ADD_JS_FUNCTION(printa, 2)
+  ADD_JS_FUNCTION(printna, 2)
   BEGIN_NAMESPACE(System)
     ADD_NS_FUNCTION_CPP(System, numCPUs,            JsSystem::numCPUs, 0)
     ADD_NS_FUNCTION_CPP(System, setCtlParam,        JsSystem::setCtlParam, 2)
