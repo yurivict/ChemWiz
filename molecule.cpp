@@ -660,20 +660,20 @@ std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::AngleAndAxi
 std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::Type &type) {
   using A = Molecule::AaAngles;
   switch (type) {
-  case A::OMEGA:        os << "OMEGA"     << std::endl; break;
-  case A::PHI:          os << "PHI"       << std::endl; break;
-  case A::PSI:          os << "PSI"       << std::endl; break;
+  case A::OMEGA:        os << "OMEGA"     ; break;
+  case A::PHI:          os << "PHI"       ; break;
+  case A::PSI:          os << "PSI"       ; break;
   //
-  case A::ADJ_N:        os << "ADJ_N"     << std::endl; break;
-  case A::ADJ_CMAIN:    os << "ADJ_CMAIN" << std::endl; break;
-  case A::ADJ_COO:      os << "ADJ_COO"   << std::endl; break;
+  case A::ADJ_N:        os << "ADJ_N"     ; break;
+  case A::ADJ_CMAIN:    os << "ADJ_CMAIN" ; break;
+  case A::ADJ_COO:      os << "ADJ_COO"   ; break;
   //
-  case A::O2_RISE:      os << "O2_RISE"   << std::endl; break;
-  case A::O2_TILT:      os << "O2_TILT"   << std::endl; break;
-  case A::PL_RISE:      os << "PL_RISE"   << std::endl; break;
-  case A::PL_TILT:      os << "PL_TILT"   << std::endl; break;
+  case A::O2_RISE:      os << "O2_RISE"   ; break;
+  case A::O2_TILT:      os << "O2_TILT"   ; break;
+  case A::PL_RISE:      os << "PL_RISE"   ; break;
+  case A::PL_TILT:      os << "PL_TILT"   ; break;
   //
-  case A::CNT:          os << "<COUNT>"   << std::endl; break; // not really needed
+  case A::CNT:          os << "<COUNT>"   ; break; // not really needed
   }
   return os;
 }
