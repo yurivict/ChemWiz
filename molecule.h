@@ -364,6 +364,7 @@ public:
   // high-level append
   void appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &angles); // ASSUME that aa is an amino acid XXX alters aa
   static std::vector<std::array<Angle,AaAngles::CNT>> readAminoAcidAnglesFromAaChain(const std::vector<AaBackbone> &aaBackbones);
+  static void setAminoAcidAnglesInAaChain(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &indices, const std::vector<std::vector<Angle>> &angles);
   // remove
   void removeAtBegin(Atom *a) {
     for (auto i = atoms.begin(), ie = atoms.end(); i != ie; i++)

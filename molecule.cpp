@@ -434,6 +434,23 @@ std::vector<std::array<Molecule::Angle,Molecule::AaAngles::CNT>> Molecule::readA
   return angles;
 }
 
+void Molecule::setAminoAcidAnglesInAaChain(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &indices, const std::vector<std::vector<Angle>> &angles) {
+  // checks
+  if (aaBackbones.size() < 2)
+    ERROR("Molecule::setAminoAcidAnglesInAaChain: aaBackbones should have at least 2 elements for the operation to make sense,"
+                                                  " but it has " << aaBackbones.size() << " elements")
+  if (indices.size() != angles.size())
+    ERROR("Molecule::setAminoAcidAnglesInAaChain: indices array should have the same size as the angles array,"
+                                                  " but got sizes " << indices.size() << " and " << angles.size())
+  for (auto &i : indices)
+    if (i > aaBackbones.size()-2)
+      ERROR("Molecule::setAminoAcidAnglesInAaChain: every index should be in the range of 0.." << aaBackbones.size()-2 <<
+                                                    " but found index=" << i)
+
+  // not yet implemented
+  ERROR("Molecule::setAminoAcidAnglesInAaChain isn't yet implemented")
+}
+
 std::string Molecule::toString() const {
   std::ostringstream ss;
   ss << *this;

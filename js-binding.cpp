@@ -77,8 +77,12 @@ static void ckErr(js_State *J, int err) {
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
-#define GetArgStringArray(n)     objToTypedArray<std::string>(J, n, __func__)
-#define GetArgFloatArray(n)      objToTypedArray<double>(J, n, __func__)
+#define GetArgUnsignedArray(n)      objToTypedArray<unsigned>(J, n, __func__)
+#define GetArgFloatArray(n)         objToTypedArray<double>(J, n, __func__)
+#define GetArgStringArray(n)        objToTypedArray<std::string>(J, n, __func__)
+#define GetArgUnsignedArrayArray(n) objToTypedArray<std::vector<unsigned>>(J, n, __func__)
+#define GetArgFloatArrayArray(n)    objToTypedArray<std::vector<double>>(J, n, __func__)
+#define GetArgStringArrayArray(n)   objToTypedArray<std::vector<std::string>>(J, n, __func__)
 #define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
@@ -212,10 +216,28 @@ static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   return v;
 }
 
+// templetize js_toxx() functions as Jsx<type>::totype(J, idx)
 
-template<typename T> T jsx_totype(js_State *J, int idx);
-template<> std::string jsx_totype<std::string>(js_State *J, int idx) {return js_tostring(J, idx);}
-template<> double jsx_totype<double>(js_State *J, int idx) {return js_tonumber(J, idx);}
+template<typename T> struct Jsx {static T totype(js_State *J, int idx);};
+template<> struct Jsx<unsigned> {
+static unsigned totype(js_State *J, int idx) {
+  auto i = js_tointeger(J, idx);
+  if (i < 0)
+    ERROR("expect unsigned, got a negative value " << i)
+  return (unsigned)i;
+}};
+template<> struct Jsx<double> {static double totype(js_State *J, int idx) {return js_tonumber(J, idx);}};
+template<> struct Jsx<std::string> {static std::string totype(js_State *J, int idx) {return js_tostring(J, idx);}};
+template<typename T> struct Jsx<std::vector<T>> {
+static std::vector<T> totype(js_State *J, int idx) {
+  std::vector<T> v;
+  for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
+    js_getindex(J, idx, i);
+    v.push_back(Jsx<T>::totype(J, -1));
+    js_pop(J, 1);
+  }
+  return v;
+}};
 
 template<typename T>
 static std::vector<T> objToTypedArray(js_State *J, int idx, const char *fname) {
@@ -226,7 +248,7 @@ static std::vector<T> objToTypedArray(js_State *J, int idx, const char *fname) {
 
   for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
     js_getindex(J, idx, i);
-    v.push_back(jsx_totype<T>(J, -1));
+    v.push_back(Jsx<T>::totype(J, -1));
     js_pop(J, 1);
   }
 
@@ -724,6 +746,19 @@ static void pushAaBackboneAsJsObjectZ(js_State *J, const Molecule::AaBackbone &a
     js_pushnull(J); // null is returned when it is not found
 }
 
+static std::vector<Molecule::AaBackbone>* readAaBackboneArray(js_State *J, int argno) {
+  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(new std::vector<Molecule::AaBackbone>);
+  {
+    auto len = js_getlength(J, argno);
+    aaBackboneArray->resize(len);
+    for (unsigned i = 0; i < len; i++) {
+      js_getindex(J, 1/*argno*/, i);
+      (*aaBackboneArray)[i] = popAaBackboneAsJsObject(J);
+    }
+  }
+  return aaBackboneArray.release();
+}
+
 } // helpers
 
 static void xnewo(js_State *J, Molecule *m) {
@@ -800,20 +835,15 @@ static void appendAminoAcid(js_State *J) {
 }
 
 static void readAminoAcidAnglesFromAaChain(js_State *J) {
-  AssertNargs(1) // expect a binary
+  AssertNargs(1)
   // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
+
   // binary is disabled:
   // std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaBackbone>>(*GetArg(Binary, 1)));
+
   // read the AaBackbone array argument
-  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(new std::vector<Molecule::AaBackbone>);
-  {
-    auto len = js_getlength(J, 1/*argno*/);
-    aaBackboneArray->resize(len);
-    for (unsigned i = 0; i < len; i++) {
-      js_getindex(J, 1/*argno*/, i);
-      (*aaBackboneArray)[i] = helpers::popAaBackboneAsJsObject(J);
-    }
-  }
+  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
+
   // return the angles array
   js_newarray(J);
   unsigned idx = 0;
@@ -826,6 +856,18 @@ static void readAminoAcidAnglesFromAaChain(js_State *J) {
     }
     js_setindex(J, -2, idx++);
   }
+}
+
+static void setAminoAcidAnglesInAaChain(js_State *J) {
+  AssertNargs(3)
+  // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
+
+  // read the AaBackbone array argument
+  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
+  // setAminoAcidAnglesInAaChain
+  Molecule::setAminoAcidAnglesInAaChain(*aaBackboneArray, GetArgUnsignedArray(2), GetArgFloatArrayArray(3));
+
+  ReturnVoid(J);
 }
 
 static void detectBonds(js_State *J) {
@@ -963,6 +1005,7 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, addMolecule, 1)
     ADD_METHOD_CPP(Molecule, appendAminoAcid, 2)
     ADD_METHOD_CPP(Molecule, readAminoAcidAnglesFromAaChain, 1)
+    ADD_METHOD_CPP(Molecule, setAminoAcidAnglesInAaChain, 3)
     ADD_METHOD_CPP(Molecule, detectBonds, 0)
     ADD_METHOD_CPP(Molecule, isEqual, 1)
     ADD_METHOD_CPP(Molecule, toXyz, 0)
