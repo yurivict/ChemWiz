@@ -1,4 +1,13 @@
 
+function printStatus(res) {
+  if (res == "OK")
+    printa(["clr.fg.green"], res)
+  else if (res == "FAIL")
+    printa(["clr.fg.red"], res)
+  else
+    printa(["clr.fg.gray"], res)
+}
+
 // run-all-tests.js: runs all tests
 
 var all_tests = ["xyz",
@@ -16,7 +25,7 @@ for (var t = 0; t < all_tests.length; t++) {
   printn("running test: "+all_tests[t]+" ... ")
   var Test = require('qa/'+all_tests[t])
   var res = Test.run()
-  print(res)
+  printStatus(res)
   if (res == "OK")
     nSucc++
   else if (res == "FAIL")
@@ -26,6 +35,6 @@ for (var t = 0; t < all_tests.length; t++) {
 }
 
 if (nSucc == all_tests.length)
-  print("All "+all_tests.length+" tests succeeded")
+  printa(["clr.fg.green"], "All "+all_tests.length+" tests succeeded")
 else
-  print(nFail+" test(s) failed out of "+all_tests.length+" total tests")
+  printa(["clr.fg.red"], nFail+" test(s) failed out of "+all_tests.length+" total tests")
