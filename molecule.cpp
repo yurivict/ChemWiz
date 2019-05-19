@@ -309,7 +309,7 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     a->pos = M*(a->pos - center) + center;
   };
   auto rotateAtoms = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const std::set<Atom*> &atoms) {
-    //LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD)
+    LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD)
     auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
     for (auto a : atoms)
       a->pos = M*(a->pos - center) + center;
