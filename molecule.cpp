@@ -167,16 +167,18 @@ void Molecule::add(Atom *a) { // doesn't detect bonds when one atom is added // 
   atoms.push_back(a->setMolecule(this));
 }
 
-void Molecule::add(const Molecule &m) {
+void Molecule::add(const Molecule &m, bool doDetectBonds) {
   for (auto a : m.atoms)
     atoms.push_back((new Atom(*a))->setMolecule(this));
-  detectBonds();
+  if (doDetectBonds)
+    detectBonds();
 }
 
-void Molecule::add(const Molecule &m, const Vec3 &shft, const Vec3 &rot) { // shift and rotation (normalized)
+void Molecule::add(const Molecule &m, const Vec3 &shft, const Vec3 &rot, bool doDetectBonds) { // shift and rotation (normalized)
   for (auto a : m.atoms)
     atoms.push_back((new Atom(a->transform(shft, rot)))->setMolecule(this));
-  detectBonds();
+  if (doDetectBonds)
+    detectBonds();
 }
 
 std::vector<std::vector<Atom*>> Molecule::findComponents() const {

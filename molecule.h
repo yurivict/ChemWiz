@@ -330,8 +330,8 @@ public:
   unsigned numAtoms() const {return atoms.size();}
   void add(const Atom &a); // doesn't detect bonds when one atom is added
   void add(Atom *a); // doesn't detect bonds when one atom is added // pass ownership of the object
-  void add(const Molecule &m);
-  void add(const Molecule &m, const Vec3 &shft, const Vec3 &rot); // shift and rotation (normalized)
+  void add(const Molecule &m, bool doDetectBonds = true);
+  void add(const Molecule &m, const Vec3 &shft, const Vec3 &rot, bool doDetectBonds = true); // shift and rotation (normalized)
   unsigned getNumAtoms() const {return atoms.size();}
   Atom* getAtom(unsigned idx) const {return atoms[idx];}
   void applyMatrix(const Mat3 &m) {
