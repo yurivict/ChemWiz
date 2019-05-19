@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rang.hpp>
+
 #include <cmath>
 //#include <map>
 //#include <string>
@@ -7,7 +9,7 @@
 typedef double Float;
 
 [[ noreturn ]] void unreachable();
-#define warning(msg...) {std::cerr << "warning: " << msg << std::endl;}
+#define warning(msg...) {std::cerr << rang::fg::yellow << "warning: " << rang::style::reset << msg << std::endl;}
 
 inline bool isFloatEqual(Float f1, Float f2) {
   return fabs(f1 - f2) < 0.001;
