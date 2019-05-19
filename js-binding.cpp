@@ -77,8 +77,8 @@ static void ckErr(js_State *J, int err) {
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
-#define GetArgStringArray(n)     objToStringArray(J, n, __func__)
-#define GetArgFloatArray(n)      objToFloatArray(J, n, __func__)
+#define GetArgStringArray(n)     objToTypedArray<std::string>(J, n, __func__)
+#define GetArgFloatArray(n)      objToTypedArray<double>(J, n, __func__)
 #define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
@@ -212,30 +212,21 @@ static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   return v;
 }
 
-static std::vector<std::string> objToStringArray(js_State *J, int idx, const char *fname) {
+
+template<typename T> T jsx_totype(js_State *J, int idx);
+template<> std::string jsx_totype<std::string>(js_State *J, int idx) {return js_tostring(J, idx);}
+template<> double jsx_totype<double>(js_State *J, int idx) {return js_tonumber(J, idx);}
+
+template<typename T>
+static std::vector<T> objToTypedArray(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
     js_typeerror(J, "not an array in arg#%d of the function '%s'", idx, fname);
 
-  std::vector<std::string> v;
+  std::vector<T> v;
 
   for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
     js_getindex(J, idx, i);
-    v.push_back(js_tostring(J, -1));
-    js_pop(J, 1);
-  }
-
-  return v;
-}
-
-static std::vector<double> objToFloatArray(js_State *J, int idx, const char *fname) {
-  if (!js_isarray(J, idx))
-    js_typeerror(J, "not an array in arg#%d of the function '%s'", idx, fname);
-
-  std::vector<double> v;
-
-  for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
-    js_getindex(J, idx, i);
-    v.push_back(js_tonumber(J, -1));
+    v.push_back(jsx_totype<T>(J, -1));
     js_pop(J, 1);
   }
 
