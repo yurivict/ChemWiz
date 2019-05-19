@@ -1159,23 +1159,14 @@ static void init(js_State *J) {
 //
 
 static void print(js_State *J) {
-  unsigned int i, top = js_gettop(J);
-  for (i = 1; i < top; ++i) {
-    auto s = GetArgString(i);
-    if (i > 1) std::cout << ' ';
-    std::cout << s;
-  }
-  std::cout << std::endl;
+  AssertNargs(1)
+  std::cout << GetArgString(1) << std::endl;
   ReturnVoid(J);
 }
 
 static void printn(js_State *J) {
-  unsigned int i, top = js_gettop(J);
-  for (i = 1; i < top; ++i) {
-    auto s = GetArgString(i);
-    if (i > 1) std::cout << ' ';
-    std::cout << s;
-  }
+  AssertNargs(1)
+  std::cout << GetArgString(1);
   ReturnVoid(J);
 }
 
