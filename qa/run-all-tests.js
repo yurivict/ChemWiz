@@ -1,11 +1,17 @@
 
-function printStatus(res) {
+function printStatus(res, tmStartSec, tmEndSec) {
   if (res == "OK")
-    printa(["clr.fg.green"], res)
+    printna(["clr.fg.green"], res)
   else if (res == "FAIL")
-    printa(["clr.fg.red"], res)
+    printna(["clr.fg.red"], res)
   else
-    printa(["clr.fg.gray"], res)
+    printna(["clr.fg.gray"], res)
+  // time if too long
+  if (tmEndSec > tmStartSec+1) {
+    printa(["clr.fg.reset"], " (in "+(tmEndSec-tmStartSec)+" sec)")
+  } else {
+    printa(["clr.fg.reset"], "")
+  }
 }
 
 // run-all-tests.js: runs all tests
@@ -24,8 +30,10 @@ var nFail = 0
 for (var t = 0; t < all_tests.length; t++) {
   printn("running test: "+all_tests[t]+" ... ")
   var Test = require('qa/'+all_tests[t])
+  var tmStartSec = Time.now()
   var res = Test.run()
-  printStatus(res)
+  var tmEndSec = Time.now()
+  printStatus(res, tmStartSec, tmEndSec)
   if (res == "OK")
     nSucc++
   else if (res == "FAIL")
