@@ -328,22 +328,10 @@ public:
   void setDescr(const std::string &newDescr) {descr = newDescr;}
   void setIdx(const std::string &newIdx) {idx = newIdx;}
   unsigned numAtoms() const {return atoms.size();}
-  void add(const Atom &a) { // doesn't detect bonds when one atom is added
-    atoms.push_back((new Atom(a))->setMolecule(this));
-  }
-  void add(Atom *a) { // doesn't detect bonds when one atom is added // pass ownership of the object
-    atoms.push_back(a->setMolecule(this));
-  }
-  void add(const Molecule &m) {
-    for (auto a : m.atoms)
-      atoms.push_back((new Atom(*a))->setMolecule(this));
-    detectBonds();
-  }
-  void add(const Molecule &m, const Vec3 &shft, const Vec3 &rot) { // shift and rotation (normalized)
-    for (auto a : m.atoms)
-      atoms.push_back((new Atom(a->transform(shft, rot)))->setMolecule(this));
-    detectBonds();
-  }
+  void add(const Atom &a); // doesn't detect bonds when one atom is added
+  void add(Atom *a); // doesn't detect bonds when one atom is added // pass ownership of the object
+  void add(const Molecule &m);
+  void add(const Molecule &m, const Vec3 &shft, const Vec3 &rot); // shift and rotation (normalized)
   unsigned getNumAtoms() const {return atoms.size();}
   Atom* getAtom(unsigned idx) const {return atoms[idx];}
   void applyMatrix(const Mat3 &m) {
