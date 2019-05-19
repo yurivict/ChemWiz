@@ -1162,10 +1162,10 @@ static void print(js_State *J) {
   unsigned int i, top = js_gettop(J);
   for (i = 1; i < top; ++i) {
     auto s = GetArgString(i);
-    if (i > 1) putchar(' ');
-    fputs(s.c_str(), stdout);
+    if (i > 1) std::cout << ' ';
+    std::cout << s;
   }
-  putchar('\n');
+  std::cout << std::endl;
   ReturnVoid(J);
 }
 
@@ -1173,8 +1173,8 @@ static void printn(js_State *J) {
   unsigned int i, top = js_gettop(J);
   for (i = 1; i < top; ++i) {
     auto s = GetArgString(i);
-    if (i > 1) putchar(' ');
-    fputs(s.c_str(), stdout);
+    if (i > 1) std::cout << ' ';
+    std::cout << s;
   }
   ReturnVoid(J);
 }
