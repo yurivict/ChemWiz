@@ -7,6 +7,7 @@
 #include "periodic-table-data.h"
 
 #include <stdio.h>
+#include <rang.hpp>
 
 #include <map>
 #include <set>
@@ -15,6 +16,10 @@
 #include <ostream>
 #include <cmath>
 #include <algorithm> // for std::find
+
+/// (DBG) logging: uncomment to enable
+
+#define LOG_ROTATE_FUNCTIONS(msg...) // std::cout << rang::fg::cyan << msg << rang::style::reset << std::endl;
 
 /// references
 
@@ -298,16 +303,18 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
   auto getAtomAxis = [](const Atom *atom1, const Atom *atom2) {
     return (atom2->pos - atom1->pos).normalize();
   };
-  auto rotateAtom = [](const Vec3 &center, const Vec3 &axis, double angleD, Atom *a) {
+  auto rotateAtom = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Atom *a) {
+    LOG_ROTATE_FUNCTIONS("rotateAtom: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD << " atom=" << *a)
     auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
     a->pos = M*(a->pos - center) + center;
   };
-  auto rotateAtoms = [](const Vec3 &center, const Vec3 &axis, double angleD, const std::set<Atom*> &atoms) {
+  auto rotateAtoms = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const std::set<Atom*> &atoms) {
+    //LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD)
     auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
     for (auto a : atoms)
       a->pos = M*(a->pos - center) + center;
   };
-  auto rotateMolecule = [](const Vec3 &center, const Vec3 &axis, double angleD, Molecule &m, const Atom *except) {
+  auto rotateMolecule = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Molecule &m, const Atom *except) {
     auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
     for (auto a : m.atoms)
       if (a != except)
@@ -335,9 +342,9 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorPhi   = AaAngles::phi(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorPsi   = AaAngles::psi(meAaBackboneCterm, aaAaBackboneNterm);
     // rotate: begin from the most remote from C-term
-    rotateMolecule(aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaBackboneNterm.N);
-    rotateMolecule(aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
-    rotateMolecule(meAaBackboneCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
+    rotateMolecule(A::PSI,   aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaBackboneNterm.N);
+    rotateMolecule(A::PHI,   aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
+    rotateMolecule(A::OMEGA, meAaBackboneCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
   }
 
   // apply adjacencyN, adjacencyCmain, adjacencyCoo when supplied
@@ -346,9 +353,9 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorAdjacencyCmain = AaAngles::adjacencyCmain(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorAdjacencyCoo   = AaAngles::adjacencyCoo(meAaBackboneCterm, aaAaBackboneNterm);
     // rotate: begin from the most remote from C-term
-    rotateMolecule(aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaBackboneNterm.N);
-    rotateMolecule(aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
-    rotateMolecule(aaAaBackboneNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
+    rotateMolecule(A::ADJ_COO,   aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaBackboneNterm.N);
+    rotateMolecule(A::ADJ_CMAIN, aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
+    rotateMolecule(A::ADJ_N,     aaAaBackboneNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
   }
 
   // apply secondary angles when supplied
@@ -359,10 +366,10 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     auto priorSecondaryPlTilt = AaAngles::secondaryPlTilt(aaAaBackboneNterm);
     auto ntermPayload = aaAaBackboneNterm.listPayload();
     // rotate: begin from the most remote from C-term
-    rotateAtom (aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaBackboneNterm.O2);
-    rotateAtom (aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_TILT] - priorSecondaryO2Tilt.angle, aaAaBackboneNterm.O2);
-    rotateAtoms(aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload);
-    rotateAtoms(aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload);
+    rotateAtom (A::O2_RISE, aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaBackboneNterm.O2);
+    rotateAtom (A::O2_TILT, aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_TILT] - priorSecondaryO2Tilt.angle, aaAaBackboneNterm.O2);
+    rotateAtoms(A::PL_RISE, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload);
+    rotateAtoms(A::PL_TILT, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload);
   }
 
   // remove atoms that are excluded by the connection: 1xO and 2xH atoms
@@ -638,6 +645,27 @@ std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::AngleAndAxi
   os << "angle=" << aa.angle;
   os << " axis=" << aa.axis;
   os << "}";
+  return os;
+}
+
+std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::Type &type) {
+  using A = Molecule::AaAngles;
+  switch (type) {
+  case A::OMEGA:        os << "OMEGA"     << std::endl; break;
+  case A::PHI:          os << "PHI"       << std::endl; break;
+  case A::PSI:          os << "PSI"       << std::endl; break;
+  //
+  case A::ADJ_N:        os << "ADJ_N"     << std::endl; break;
+  case A::ADJ_CMAIN:    os << "ADJ_CMAIN" << std::endl; break;
+  case A::ADJ_COO:      os << "ADJ_COO"   << std::endl; break;
+  //
+  case A::O2_RISE:      os << "O2_RISE"   << std::endl; break;
+  case A::O2_TILT:      os << "O2_TILT"   << std::endl; break;
+  case A::PL_RISE:      os << "PL_RISE"   << std::endl; break;
+  case A::PL_TILT:      os << "PL_TILT"   << std::endl; break;
+  //
+  case A::CNT:          os << "<COUNT>"   << std::endl; break; // not really needed
+  }
   return os;
 }
 

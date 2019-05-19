@@ -314,6 +314,7 @@ public: // structs and types
     static Vec3 atomPairToVecN(const Atom *a1, const Atom *a2);
     // printing
     friend std::ostream& operator<<(std::ostream &os, const AngleAndAxis &aa);
+    friend std::ostream& operator<<(std::ostream &os, const Type &type);
   }; // AaAngles
 public:
   std::string        idx;
