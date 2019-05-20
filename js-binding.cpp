@@ -1271,6 +1271,11 @@ static void printna(js_State *J) {
   ReturnVoid(J);
 }
 
+static void flush(js_State *J) {
+  AssertNargs(0)
+  std::cout.flush();
+}
+
 namespace JsSystem {
 
 static void numCPUs(js_State *J) {
@@ -1824,6 +1829,7 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(printn, 1)
   ADD_JS_FUNCTION(printa, 2)
   ADD_JS_FUNCTION(printna, 2)
+  ADD_JS_FUNCTION(flush, 0)
   BEGIN_NAMESPACE(System)
     ADD_NS_FUNCTION_CPP(System, numCPUs,            JsSystem::numCPUs, 0)
     ADD_NS_FUNCTION_CPP(System, setCtlParam,        JsSystem::setCtlParam, 2)

@@ -29,6 +29,7 @@ var nSucc = 0
 var nFail = 0
 for (var t = 0; t < all_tests.length; t++) {
   printn("running test: "+all_tests[t]+" ... ")
+  flush()
   var Test = require('qa/'+all_tests[t])
   var tmStartSec = Time.now()
   var res = Test.run()
