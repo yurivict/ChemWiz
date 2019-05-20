@@ -359,7 +359,7 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     assert((meAaBackboneCterm.O1->pos - meAaBackboneCterm.N->pos).isParallel((aaAaBackboneNterm.O1->pos - aaAaBackboneNterm.N->pos)));
   }
 
-  { // apply omega, phi, psi angles
+  if (angles.size() >= A::MAX_RAM+1) { // apply omega, phi, psi angles
     // compute prior angles
     auto priorOmega = AaAngles::omega(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorPhi   = AaAngles::phi(meAaBackboneCterm, aaAaBackboneNterm);
