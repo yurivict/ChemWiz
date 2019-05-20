@@ -27,14 +27,15 @@ var all_tests = ["xyz",
 
 var nSucc = 0
 var nFail = 0
+var tmAllStartSec = Time.now()
 for (var t = 0; t < all_tests.length; t++) {
   printn("running test: "+all_tests[t]+" ... ")
   flush()
   var Test = require('qa/'+all_tests[t])
-  var tmStartSec = Time.now()
+  var tmCaseStartSec = Time.now()
   var res = Test.run()
-  var tmEndSec = Time.now()
-  printStatus(res, tmStartSec, tmEndSec)
+  var tmCaseEndSec = Time.now()
+  printStatus(res, tmCaseStartSec, tmCaseEndSec)
   if (res == "OK")
     nSucc++
   else if (res == "FAIL")
@@ -42,8 +43,10 @@ for (var t = 0; t < all_tests.length; t++) {
   else
     throw "Invalid test output '"+res+"' for the test '"+all_tests[t]+"'"
 }
+var tmAllEndSec = Time.now()
 
 if (nSucc == all_tests.length)
-  printa(["clr.fg.green"], "All "+all_tests.length+" tests succeeded")
+  printna(["clr.fg.green"], "All "+all_tests.length+" tests succeeded")
 else
-  printa(["clr.fg.red"], nFail+" test(s) failed out of "+all_tests.length+" total tests")
+  printna(["clr.fg.red"], nFail+" test(s) failed out of "+all_tests.length+" total tests")
+printa(["clr.fg.reset"], " (in "+(tmAllEndSec-tmAllStartSec)+" secs)")
