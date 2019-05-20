@@ -77,9 +77,12 @@ static void ckErr(js_State *J, int err) {
 #define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
-#define GetArgUnsignedArray(n)      objToTypedArray<unsigned>(J, n, __func__)
-#define GetArgFloatArray(n)         objToTypedArray<double>(J, n, __func__)
-#define GetArgStringArray(n)        objToTypedArray<std::string>(J, n, __func__)
+#define GetArgUnsignedArray(n)      objToTypedArray<unsigned,false>(J, n, __func__)
+#define GetArgUnsignedArrayZ(n)     objToTypedArray<unsigned,true>(J, n, __func__)
+#define GetArgFloatArray(n)         objToTypedArray<double, false>(J, n, __func__)
+#define GetArgFloatArrayZ(n)        objToTypedArray<double, true>(J, n, __func__)
+#define GetArgStringArray(n)        objToTypedArray<std::string,false>(J, n, __func__)
+#define GetArgStringArrayZ(n)       objToTypedArray<std::string,true>(J, n, __func__)
 #define GetArgUnsignedArrayArray(n) objToTypedArray<std::vector<unsigned>>(J, n, __func__)
 #define GetArgFloatArrayArray(n)    objToTypedArray<std::vector<double>>(J, n, __func__)
 #define GetArgStringArrayArray(n)   objToTypedArray<std::vector<std::string>>(J, n, __func__)
@@ -239,16 +242,22 @@ static std::vector<T> totype(js_State *J, int idx) {
   return v;
 }};
 
-template<typename T>
+template<typename T, bool AllowMissingAll = false, bool AllowMissingElt = false>
 static std::vector<T> objToTypedArray(js_State *J, int idx, const char *fname) {
+  // checks
+  if (AllowMissingAll && js_isundefined(J, idx))
+    return std::vector<T>();
   if (!js_isarray(J, idx))
     js_typeerror(J, "not an array in arg#%d of the function '%s'", idx, fname);
 
+  // read the array
   std::vector<T> v;
-
   for (unsigned i = 0, len = js_getlength(J, idx); i < len; i++) {
     js_getindex(J, idx, i);
-    v.push_back(Jsx<T>::totype(J, -1));
+    if (AllowMissingElt && js_isundefined(J, -1))
+      v.push_back(T());
+    else
+      v.push_back(Jsx<T>::totype(J, -1));
     js_pop(J, 1);
   }
 
@@ -831,7 +840,7 @@ static void addMolecule(js_State *J) {
 static void appendAminoAcid(js_State *J) {
   AssertNargs(2)
   Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
-  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloatArray(2));
+  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloatArrayZ(2));
 }
 
 static void readAminoAcidAnglesFromAaChain(js_State *J) {
