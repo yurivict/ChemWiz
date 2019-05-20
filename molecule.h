@@ -411,6 +411,11 @@ public:
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
   bool findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone);
+private: // internals
+  static Vec3 getAtomAxis(const Atom *atom1, const Atom *atom2);
+  static void rotateAtom(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Atom *a);
+  template<typename Atoms>
+  static void rotateAtoms(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const Atoms &atoms, const Atom *except);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule

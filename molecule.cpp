@@ -323,26 +323,6 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
   auto meAaBackboneCterm = me.findAaBackboneLast();
   auto aaAaBackboneNterm = aa.findAaBackboneFirst();
   // local functions in a form of lambda functions
-  auto getAtomAxis = [](const Atom *atom1, const Atom *atom2) {
-    return (atom2->pos - atom1->pos).normalize();
-  };
-  auto rotateAtom = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Atom *a) {
-    LOG_ROTATE_FUNCTIONS("rotateAtom: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD << " atom=" << *a)
-    auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
-    a->pos = M*(a->pos - center) + center;
-  };
-  auto rotateAtoms = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const std::set<Atom*> &atoms) {
-    LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD)
-    auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
-    for (auto a : atoms)
-      a->pos = M*(a->pos - center) + center;
-  };
-  auto rotateMolecule = [](AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Molecule &m, const Atom *except) {
-    auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
-    for (auto a : m.atoms)
-      if (a != except)
-        a->pos = M*(a->pos - center) + center;
-  };
   // center them both at the junction point
   me.centerAt(meAaBackboneCterm.O1->pos); // XXX should not center it
   aa.centerAt(aaAaBackboneNterm.N->pos);
@@ -367,9 +347,9 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     LOG_ROTATE_FUNCTIONS("appendAaChain: priorOmega=" << priorOmega.angle << " priorPhi=" << priorPhi.angle << " priorPsi=" << priorPsi.angle)
     LOG_ROTATE_FUNCTIONS("appendAaChain: newOmega=" << angles[A::OMEGA] << " newPhi=" << angles[A::PHI] << " newPsi=" << angles[A::PSI])
     // rotate: begin from the most remote from C-term
-    rotateMolecule(A::PSI,   aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa, aaAaBackboneNterm.N);
-    rotateMolecule(A::PHI,   aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa, nullptr);
-    rotateMolecule(A::OMEGA, meAaBackboneCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa, nullptr);
+    rotateAtoms(A::PSI,   aaAaBackboneNterm.Cmain->pos, priorPsi.axis,   angles[A::PSI]   - priorPsi.angle,   aa.atoms, aaAaBackboneNterm.N);
+    rotateAtoms(A::PHI,   aaAaBackboneNterm.N->pos,     priorPhi.axis,   angles[A::PHI]   - priorPhi.angle,   aa.atoms, nullptr);
+    rotateAtoms(A::OMEGA, meAaBackboneCterm.Coo->pos,   priorOmega.axis, angles[A::OMEGA] - priorOmega.angle, aa.atoms, nullptr);
   }
 
   // apply adjacencyN, adjacencyCmain, adjacencyCoo when supplied
@@ -380,9 +360,9 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     LOG_ROTATE_FUNCTIONS("appendAaChain: priorAdjacencyN=" << priorAdjacencyN.angle << " priorAdjacencyCmain=" << priorAdjacencyCmain.angle << " priorAdjacencyCoo=" << priorAdjacencyCoo.angle)
     LOG_ROTATE_FUNCTIONS("appendAaChain: newAdjacencyN=" << angles[A::ADJ_N] << " newAdjacencyCmain=" << angles[A::ADJ_CMAIN] << " newAdjacencyCoo=" << angles[A::ADJ_COO])
     // rotate: begin from the most remote from C-term
-    rotateMolecule(A::ADJ_COO,   aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa, aaAaBackboneNterm.N);
-    rotateMolecule(A::ADJ_CMAIN, aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa, nullptr);
-    rotateMolecule(A::ADJ_N,     aaAaBackboneNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa, nullptr);
+    rotateAtoms(A::ADJ_COO,   aaAaBackboneNterm.Coo->pos,   priorAdjacencyCoo.axis,   angles[A::ADJ_COO]   - priorAdjacencyCoo.angle,   aa.atoms, aaAaBackboneNterm.N);
+    rotateAtoms(A::ADJ_CMAIN, aaAaBackboneNterm.Cmain->pos, priorAdjacencyCmain.axis, angles[A::ADJ_CMAIN] - priorAdjacencyCmain.angle, aa.atoms, nullptr);
+    rotateAtoms(A::ADJ_N,     aaAaBackboneNterm.N->pos,     priorAdjacencyN.axis,     angles[A::ADJ_N]     - priorAdjacencyN.angle,     aa.atoms, nullptr);
   }
 
   // apply secondary angles when supplied
@@ -397,8 +377,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     // rotate: begin from the most remote from C-term
     rotateAtom (A::O2_RISE, aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_RISE] - priorSecondaryO2Rise.angle, aaAaBackboneNterm.O2);
     rotateAtom (A::O2_TILT, aaAaBackboneNterm.Coo->pos,   priorSecondaryO2Rise.axis, angles[A::O2_TILT] - priorSecondaryO2Tilt.angle, aaAaBackboneNterm.O2);
-    rotateAtoms(A::PL_RISE, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload);
-    rotateAtoms(A::PL_TILT, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload);
+    rotateAtoms(A::PL_RISE, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_RISE] - priorSecondaryPlRise.angle, ntermPayload, nullptr);
+    rotateAtoms(A::PL_TILT, aaAaBackboneNterm.Cmain->pos, priorSecondaryO2Rise.axis, angles[A::PL_TILT] - priorSecondaryPlTilt.angle, ntermPayload, nullptr);
   }
 
   // remove atoms that are excluded by the connection: 1xO and 2xH atoms
@@ -549,6 +529,27 @@ bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
   // found
   aaBackbone = {aN, aHCn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
   return true;
+}
+
+/// internals
+
+Vec3 Molecule::getAtomAxis(const Atom *atom1, const Atom *atom2) {
+  return (atom2->pos - atom1->pos).normalize();
+}
+
+void Molecule::rotateAtom(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Atom *a) {
+  LOG_ROTATE_FUNCTIONS("rotateAtom: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD << " atom=" << *a)
+  auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
+  a->pos = M*(a->pos - center) + center;
+}
+
+template<typename Atoms>
+void Molecule::rotateAtoms(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const Atoms &atoms, const Atom *except) {
+  LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD << " except=" << except)
+  auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
+  for (auto a : atoms)
+    if (a != except)
+      a->pos = M*(a->pos - center) + center;
 }
 
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {
