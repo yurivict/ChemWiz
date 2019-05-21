@@ -630,14 +630,16 @@ void Molecule::AaAngles::checkAngles(const std::vector<Angle> &angles, const cha
     return checkAngle(angle, -90, +90, aname);
   };
   // check size
-  if (angles.size() != MAX_RAM+1 && angles.size() != MAX_ADJ+1 && angles.size() != CNT)
+  if (!angles.empty() && angles.size() != MAX_RAM+1 && angles.size() != MAX_ADJ+1 && angles.size() != CNT)
     ERROR(loc << ": angles argument is expected to have either "
-            << MAX_RAM+1 << " or " << MAX_ADJ+1 << " or " << MAX_SEC+1
+            << "0 or " << MAX_RAM+1 << " or " << MAX_ADJ+1 << " or " << MAX_SEC+1
             << " angle values, supplied " << angles.size() << " values")
   // check values
-  checkAngleR(angles[OMEGA], "omega");
-  checkAngleR(angles[PHI],   "phi");
-  checkAngleR(angles[PSI],   "psi");
+  if (angles.size() >= MAX_RAM+1) {
+    checkAngleR(angles[OMEGA], "omega");
+    checkAngleR(angles[PHI],   "phi");
+    checkAngleR(angles[PSI],   "psi");
+  }
   if (angles.size() >= MAX_ADJ+1) {
     checkAngleA(angles[ADJ_N],     "adj-N");
     checkAngleA(angles[ADJ_CMAIN], "adj-Cmain");

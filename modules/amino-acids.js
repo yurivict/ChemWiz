@@ -23,12 +23,7 @@ function decodePeptide(peptide, f) {
 }
 
 function combine(peptide, angles) {
-  // internal functions
-  function defaultAngles(aaCode1, aaCode2) {
-    throw "defaultAngles isn't implemented yet"
-  }
-  //
-  if (angles != undefined && angles.length != peptide.length-1)
+  if (angles != undefined && angles.length != 0 && angles.length != peptide.length-1)
     throw "peptide combine: unmatching angles array provided, angles.length=" + angles.length + ", expected " + (peptide.length-1)
   var peptideChain
   decodePeptide(peptide, function(i,code) {
@@ -36,7 +31,7 @@ function combine(peptide, angles) {
     if (i == 0) {
       peptideChain = aaMolecule
     } else {
-      var anglesOne = angles != undefined ? angles[i-1] : defaultAngles(prevCode, code)
+      var anglesOne = angles != undefined ? angles[i-1] : undefined
       peptideChain.appendAminoAcid(aaMolecule, anglesOne)
     }
     var prevCode = code
