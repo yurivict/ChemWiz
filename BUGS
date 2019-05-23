@@ -1,2 +1,5 @@
 * Why are local symbols available when module functions are invoked (inside these modules)?
 * OpenBabel outputs aren't repeatable: https://github.com/openbabel/openbabel/issues/1934
+* QA fails when run under perftools:
+  - ERROR(Erkale) energy calculation failed: no signature found in the output file (last-line=Dumping heap profile to my-google-profile-pid10013_10016.0001.heap (Exiting, 18 kB in use))
+
