@@ -285,7 +285,7 @@ public: // structs and types
       PL_TILT   = 9, // payload tilt: how is it tilted towards Coo along the N+Cmain+Coo plain
       MAX_SEC   = 9,
       CNT       = 10 // total count
-    };
+    }; // Type
     struct AngleAndAxis {
       Angle  angle;
       Vec3   axis;
@@ -315,6 +315,7 @@ public: // structs and types
     // printing
     friend std::ostream& operator<<(std::ostream &os, const AngleAndAxis &aa);
     friend std::ostream& operator<<(std::ostream &os, const Type &type);
+    friend std::istream& operator>>(std::istream &is, Type &type);
   }; // AaAngles
 public:
   std::string        idx;

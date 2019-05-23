@@ -5,6 +5,7 @@
 #include "Vec3-ext.h"
 #include "Mat3.h"
 #include "periodic-table-data.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <rang.hpp>
@@ -339,7 +340,8 @@ void Molecule::appendAsAminoAcidChain(Molecule &aa, const std::vector<Angle> &an
     assert((meAaBackboneCterm.O1->pos - meAaBackboneCterm.N->pos).isParallel((aaAaBackboneNterm.O1->pos - aaAaBackboneNterm.N->pos)));
   }
 
-  if (angles.size() >= A::MAX_RAM+1) { // apply omega, phi, psi angles
+  // apply omega, phi, psi angles
+  if (angles.size() >= A::MAX_RAM+1) {
     // compute prior angles
     auto priorOmega = AaAngles::omega(meAaBackboneCterm, aaAaBackboneNterm);
     auto priorPhi   = AaAngles::phi(meAaBackboneCterm, aaAaBackboneNterm);
@@ -571,6 +573,41 @@ Atom* Molecule::AaBackbone::nextN() const {
 
 /// Molecule::AaAngles // see https://en.wikipedia.org/wiki/Ramachandran_plot#/media/File:Protein_backbone_PhiPsiOmega_drawing.svg
 
+class DoubleMap : protected Util::DoubleMap<Molecule::AaAngles::Type,std::string> {
+public:
+  DoubleMap() {
+    typedef Molecule::AaAngles A;
+    add(A::OMEGA, "OMEGA");
+    add(A::PHI,   "PHI");
+    add(A::PSI,   "PSI");
+
+    add(A::ADJ_N,     "ADJ_N");
+    add(A::ADJ_CMAIN, "ADJ_CMAIN");
+    add(A::ADJ_COO,   "ADJ_COO");
+
+    add(A::O2_RISE,   "O2_RISE");
+    add(A::O2_TILT,   "O2_TILT");
+    add(A::PL_RISE,   "PL_RISE");
+    add(A::PL_TILT,   "PL_TILT");
+  }
+  const char* getStr(type1 e) const {
+    auto pv = get12(e);
+    if (pv)
+      return pv->c_str();
+    else
+      ERROR("Invalid angle type supplied: " << e)
+  }
+  const type1 getEnum(const type2 &s) const {
+    auto pv = get21(s);
+    if (pv)
+      return *pv;
+    else
+      ERROR("Invalid angle string supplied: " << s)
+  }
+}; // DoubleMap
+
+static const DoubleMap doubleMap;
+
 Molecule::AaAngles::AngleAndAxis Molecule::AaAngles::omega(const AaBackbone &cterm, const AaBackbone &nterm) {
   return ramachandranFromChain(cterm.Cmain, cterm.Coo, nterm.N, nterm.Cmain);
 }
@@ -700,23 +737,14 @@ std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::AngleAndAxi
 }
 
 std::ostream& operator<<(std::ostream &os, const Molecule::AaAngles::Type &type) {
-  using A = Molecule::AaAngles;
-  switch (type) {
-  case A::OMEGA:        os << "OMEGA"     ; break;
-  case A::PHI:          os << "PHI"       ; break;
-  case A::PSI:          os << "PSI"       ; break;
-  //
-  case A::ADJ_N:        os << "ADJ_N"     ; break;
-  case A::ADJ_CMAIN:    os << "ADJ_CMAIN" ; break;
-  case A::ADJ_COO:      os << "ADJ_COO"   ; break;
-  //
-  case A::O2_RISE:      os << "O2_RISE"   ; break;
-  case A::O2_TILT:      os << "O2_TILT"   ; break;
-  case A::PL_RISE:      os << "PL_RISE"   ; break;
-  case A::PL_TILT:      os << "PL_TILT"   ; break;
-  //
-  case A::CNT:          os << "<COUNT>"   ; break; // not really needed
-  }
+  os << doubleMap.getStr(type);
   return os;
+}
+
+std::istream& operator>>(std::istream &is, Molecule::AaAngles::Type &type) {
+  std::string s;
+  is >> s;
+  type = doubleMap.getEnum(s);
+  return is;
 }
 

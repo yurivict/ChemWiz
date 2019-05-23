@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <sstream>
 #include <fstream>
 #include <cstring>
@@ -72,5 +73,23 @@ inline bool realEof(std::ifstream &f) {
 }
 
 bool strAsBool(const std::string &str);
+
+// DoubleMap maps objects of two types back and forth
+template<typename T1, typename T2>
+class DoubleMap {
+protected:
+  typedef T1 type1;
+  typedef T2 type2;
+private:
+  std::map<T1,T2> m12;
+  std::map<T2,T1> m21;
+public: // iface
+  void add(const T1 &t1, const T2 &t2) {
+    m12[t1] = t2;
+    m21[t2] = t1;
+  }
+  const T2* get12(const T1 &t1) const {auto f = m12.find(t1); return f != m12.end() ? &f->second : nullptr;}
+  const T1* get21(const T2 &t2) const {auto f = m21.find(t2); return f != m21.end() ? &f->second : nullptr;}
+}; // DoubleMap
 
 }; // Util

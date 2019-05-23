@@ -1074,6 +1074,23 @@ static void fromSMILES(js_State *J) {
 }
 #endif
 
+static void angleIntToStr(js_State *J) {
+  AssertNargs(1)
+  std::ostringstream ss;
+  ss << (Molecule::AaAngles::Type)GetArgUInt32(1);
+  ReturnString(J, ss.str());
+}
+
+static void angleStrToInt(js_State *J) {
+  AssertNargs(1)
+  std::string str = GetArgString(1);
+  std::istringstream is;
+  is.str(str);
+  Molecule::AaAngles::Type t;
+  is >> t;
+  ReturnUnsigned(J, (unsigned)t);
+}
+
 } // JsMolecule
 
 namespace JsTempFile {
@@ -1937,6 +1954,8 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Moleculex, fromSMILES, JsMolecule::fromSMILES, 2)
 #endif
     ADD_NS_FUNCTION_JS (Moleculex, rmsd, function(m1, m2) {return Vec3.rmsd(m1.extractCoords(), m2.extractCoords())})
+    ADD_NS_FUNCTION_CPP(Moleculex, angleIntToStr, JsMolecule::angleIntToStr, 1)
+    ADD_NS_FUNCTION_CPP(Moleculex, angleStrToInt, JsMolecule::angleStrToInt, 1)
   END_NAMESPACE(Moleculex)
   BEGIN_NAMESPACE(Arrayx)
     ADD_NS_FUNCTION_JS (Arrayx, min, function(arr) {
