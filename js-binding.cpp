@@ -326,45 +326,58 @@ static void ReturnVoid(js_State *J) {
   js_pushundefined(J);
 }
 
+// Return helpers
+
+template<typename T>
+static void Return(js_State *J, const T &val);
+
 //static void ReturnNull(js_State *J) {
 //  js_pushnull(J);
 //}
 
-static void ReturnBoolean(js_State *J, bool b) {
-  js_pushboolean(J, b ? 1 : 0);
+template<>
+void Return<bool>(js_State *J, const bool &val) {
+  js_pushboolean(J, val ? 1 : 0);
 }
 
-static void ReturnFloat(js_State *J, Float f) {
-  js_pushnumber(J, f);
+template<>
+void Return<Float>(js_State *J, const Float &val) {
+  js_pushnumber(J, val);
 }
 
-static void ReturnUnsigned(js_State *J, unsigned u) {
-  js_pushnumber(J, u);
+template<>
+void Return<unsigned>(js_State *J, const unsigned &val) {
+  js_pushnumber(J, val);
 }
 
-static void ReturnNumber(js_State *J, int i) {
-  js_pushnumber(J, i);
+template<>
+void Return<int>(js_State *J, const int &val) {
+  js_pushnumber(J, val);
 }
 
-static void ReturnString(js_State *J, const std::string &s) {
-  js_pushstring(J, s.c_str());
+template<>
+void Return<std::string>(js_State *J, const std::string &val) {
+  js_pushstring(J, val.c_str());
 }
 
-static void ReturnVec(js_State *J, const Vec3 &v) {
-  PushVec(J, v);
+template<>
+void Return<Vec3>(js_State *J, const Vec3 &val) {
+  PushVec(J, val);
 }
 
-static void ReturnMat(js_State *J, const Mat3 &m) {
+template<>
+void Return<Mat3>(js_State *J, const Mat3 &val) {
   js_newarray(J);
   unsigned idx = 0;
-  for (auto &r : m) {
+  for (auto &r : val) {
     PushVec(J, r);
     js_setindex(J, -2, idx++);
   }
 }
 
-static void ReturnPtr(js_State *J, void *ptr) {
-  ReturnString(J, StrPtr::p2s(ptr));
+template<>
+void Return<void*>(js_State *J, void* const &val) {
+  Return<std::string>(J, StrPtr::p2s(val));
 }
 
 // convenience macro to return objects
@@ -392,7 +405,7 @@ namespace prototype {
 
 static void id(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, GetArg(Obj, 0)->id());
+  Return<std::string>(J, GetArg(Obj, 0)->id());
 }
 
 }
@@ -440,7 +453,7 @@ static void dupl(js_State *J) {
 
 static void size(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Binary, 0)->size());
+  Return<unsigned>(J, GetArg(Binary, 0)->size());
 }
 
 static void resize(js_State *J) {
@@ -468,7 +481,7 @@ static void concatenate(js_State *J) {
 static void toString(js_State *J) {
   AssertNargs(0)
   auto b = GetArg(Binary, 0);
-  ReturnString(J, std::string(b->begin(), b->end()));
+  Return<std::string>(J, std::string(b->begin(), b->end()));
 }
 
 static void toFile(js_State *J) {
@@ -529,7 +542,7 @@ namespace prototype {
 
 static void id(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, GetArg(Atom, 0)->id());
+  Return<std::string>(J, GetArg(Atom, 0)->id());
 }
 
 static void dupl(js_State *J) {
@@ -540,22 +553,22 @@ static void dupl(js_State *J) {
 static void str(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
-  ReturnString(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
+  Return<std::string>(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
 }
 
 static void isEqual(js_State *J) {
   AssertNargs(1)
-  ReturnBoolean(J, GetArg(Atom, 0)->isEqual(*GetArg(Atom, 1)));
+  Return<bool>(J, GetArg(Atom, 0)->isEqual(*GetArg(Atom, 1)));
 }
 
 static void getElement(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
+  Return<std::string>(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
 }
 
 static void getPos(js_State *J) {
   AssertNargs(0)
-  ReturnVec(J, GetArg(Atom, 0)->pos);
+  Return<Vec3>(J, GetArg(Atom, 0)->pos);
 }
 
 static void setPos(js_State *J) {
@@ -566,7 +579,7 @@ static void setPos(js_State *J) {
 
 static void getName(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, GetArg(Atom, 0)->name);
+  Return<std::string>(J, GetArg(Atom, 0)->name);
 }
 
 static void setName(js_State *J) {
@@ -577,7 +590,7 @@ static void setName(js_State *J) {
 
 static void getHetAtm(js_State *J) {
   AssertNargs(0)
-  ReturnBoolean(J, GetArg(Atom, 0)->isHetAtm);
+  Return<bool>(J, GetArg(Atom, 0)->isHetAtm);
 }
 
 static void setHetAtm(js_State *J) {
@@ -589,7 +602,7 @@ static void setHetAtm(js_State *J) {
 static void getNumBonds(js_State *J) {
   AssertNargs(0)
   auto a = GetArg(Atom, 0);
-  ReturnUnsigned(J, a->nbonds());
+  Return<unsigned>(J, a->nbonds());
 }
 
 static void getBonds(js_State *J) {
@@ -600,7 +613,7 @@ static void getBonds(js_State *J) {
 
 static void hasBond(js_State *J) {
   AssertNargs(1)
-  ReturnBoolean(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
+  Return<bool>(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
 }
 
 static void getOtherBondOf3(js_State *J) {
@@ -626,24 +639,24 @@ static void snapToGrid(js_State *J) {
 
 static void getChain(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Atom, 0)->chain);
+  Return<unsigned>(J, GetArg(Atom, 0)->chain);
 }
 
 static void getGroup(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Atom, 0)->group);
+  Return<unsigned>(J, GetArg(Atom, 0)->group);
 }
 
 static void getSecStruct(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Atom, 0)->secStructKind);
+  Return<unsigned>(J, GetArg(Atom, 0)->secStructKind);
 }
 
 static void getSecStructStr(js_State *J) {
   AssertNargs(0)
   std::ostringstream ss;
   ss << GetArg(Atom, 0)->secStructKind;
-  ReturnString(J, ss.str());
+  Return<std::string>(J, ss.str());
 }
 
 } // prototype
@@ -786,7 +799,7 @@ namespace prototype {
 
 static void id(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, GetArg(Molecule, 0)->id());
+  Return<std::string>(J, GetArg(Molecule, 0)->id());
 }
 
 static void dupl(js_State *J) {
@@ -797,12 +810,12 @@ static void dupl(js_State *J) {
 static void str(js_State *J) {
   AssertNargs(0)
   auto m = GetArg(Molecule, 0);
-  ReturnString(J, str(boost::format("molecule{%1%, id=%2%}") % m % m->idx.c_str()));
+  Return<std::string>(J, str(boost::format("molecule{%1%, id=%2%}") % m % m->idx.c_str()));
 }
 
 static void numAtoms(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Molecule, 0)->getNumAtoms());
+  Return<unsigned>(J, GetArg(Molecule, 0)->getNumAtoms());
 }
 
 static void getAtom(js_State *J) {
@@ -824,12 +837,12 @@ static void addAtom(js_State *J) {
 
 static void numChains(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Molecule, 0)->numChains());
+  Return<unsigned>(J, GetArg(Molecule, 0)->numChains());
 }
 
 static void numGroups(js_State *J) {
   AssertNargs(0)
-  ReturnUnsigned(J, GetArg(Molecule, 0)->numGroups());
+  Return<unsigned>(J, GetArg(Molecule, 0)->numGroups());
 }
 
 static void addMolecule(js_State *J) {
@@ -887,21 +900,21 @@ static void detectBonds(js_State *J) {
 
 static void isEqual(js_State *J) {
   AssertNargs(1)
-  ReturnBoolean(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
+  Return<bool>(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
 }
 
 static void toXyz(js_State *J) {
   AssertNargs(0)
   std::ostringstream ss;
   ss << *GetArg(Molecule, 0);
-  ReturnString(J, ss.str());
+  Return<std::string>(J, ss.str());
 }
 
 static void toXyzCoords(js_State *J) {
   AssertNargs(0)
   std::ostringstream ss;
   GetArg(Molecule, 0)->prnCoords(ss);
-  ReturnString(J, ss.str());
+  Return<std::string>(J, ss.str());
 }
 
 static void findComponents(js_State *J) {
@@ -922,7 +935,7 @@ static void computeConvexHullFacets(js_State *J) { // arguments: (withFurthestdi
   {
     unsigned idx = 0;
     for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets(withFurthestdist.get())) {
-      ReturnVec(J, facetNormal);
+      Return<Vec3>(J, facetNormal);
       js_setindex(J, -2, idx++);
     }
   }
@@ -938,7 +951,7 @@ static void computeConvexHullFacets(js_State *J) { // arguments: (withFurthestdi
 
 static void centerOfMass(js_State *J) {
   AssertNargs(0)
-  ReturnVec(J, GetArg(Molecule, 0)->centerOfMass());
+  Return<Vec3>(J, GetArg(Molecule, 0)->centerOfMass());
 }
 
 static void centerAt(js_State *J) {
@@ -1078,7 +1091,7 @@ static void angleIntToStr(js_State *J) {
   AssertNargs(1)
   std::ostringstream ss;
   ss << (Molecule::AaAngles::Type)GetArgUInt32(1);
-  ReturnString(J, ss.str());
+  Return<std::string>(J, ss.str());
 }
 
 static void angleStrToInt(js_State *J) {
@@ -1088,7 +1101,7 @@ static void angleStrToInt(js_State *J) {
   is.str(str);
   Molecule::AaAngles::Type t;
   is >> t;
-  ReturnUnsigned(J, (unsigned)t);
+  Return<unsigned>(J, (unsigned)t);
 }
 
 } // JsMolecule
@@ -1121,12 +1134,12 @@ namespace prototype {
 static void str(js_State *J) {
   AssertNargs(0)
   auto f = GetArg(TempFile, 0);
-  ReturnString(J, str(boost::format("temp-file{%1%}") % f->getFname()));
+  Return<std::string>(J, str(boost::format("temp-file{%1%}") % f->getFname()));
 }
 
 static void fname(js_State *J) {
   AssertNargs(0)
-  ReturnString(J, GetArg(TempFile, 0)->getFname());
+  Return<std::string>(J, GetArg(TempFile, 0)->getFname());
 }
 
 static void toBinary(js_State *J) {
@@ -1180,13 +1193,13 @@ namespace prototype {
 static void str(js_State *J) {
   AssertNargs(0)
   auto sdb = GetArg(StructureDb, 0);
-  ReturnString(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+  Return<std::string>(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
 }
 
 static void toString(js_State *J) {
   AssertNargs(0)
   auto sdb = GetArg(StructureDb, 0);
-  ReturnString(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+  Return<std::string>(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
 }
 
 static void add(js_State *J) {
@@ -1197,7 +1210,7 @@ static void add(js_State *J) {
 
 static void find(js_State *J) {
   AssertNargs(1)
-  ReturnString(J, GetArg(StructureDb, 0)->find(GetArg(Molecule, 1)));
+  Return<std::string>(J, GetArg(StructureDb, 0)->find(GetArg(Molecule, 1)));
 }
 
 static void moleculeSignature(js_State *J) {
@@ -1206,7 +1219,7 @@ static void moleculeSignature(js_State *J) {
   auto signature = StructureDb::computeMoleculeSignature(GetArg(Molecule, 1));
   std::ostringstream ss;
   ss << signature;
-  ReturnString(J, ss.str());
+  Return<std::string>(J, ss.str());
 }
 
 }
@@ -1303,7 +1316,7 @@ static void numCPUs(js_State *J) {
   auto res = sysctlbyname("hw.ncpu", &buf, &size, NULL, 0);
   if (res)
     ERROR_SYSCALL(sysctlbyname)
-  ReturnUnsigned(J, (unsigned) buf);
+  Return<unsigned>(J, (unsigned) buf);
 #else
 #  error "numCPUs not defined for your system"
 #endif
@@ -1333,7 +1346,7 @@ namespace JsFile {
 
 static void exists(js_State *J) {
   AssertNargs(1)
-  ReturnBoolean(J, std::ifstream(GetArgString(1)).good());
+  Return<bool>(J, std::ifstream(GetArgString(1)).good());
 }
 
 static void read(js_State *J) { // reads file into a string
@@ -1346,7 +1359,7 @@ static void read(js_State *J) { // reads file into a string
   file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
   try {
     file.open(fname, std::ios::in);
-    ReturnString(J, std::string(it(file), it()));
+    Return<std::string>(J, std::string(it(file), it()));
     file.close();
   } catch (std::ifstream::failure e) {
     ERROR(str(boost::format("can't read the file '%1%': %2%") % fname % e.what()));
@@ -1379,7 +1392,7 @@ static void mkdir(js_State *J) { // creates a directory
 static void ckdir(js_State *J) { // checks if the directory exists
   AssertNargs(1)
   struct stat fileStat;
-  ReturnBoolean(J, ::stat(GetArgString(1).c_str(), &fileStat)==0 && S_ISDIR(fileStat.st_mode));
+  Return<bool>(J, ::stat(GetArgString(1).c_str(), &fileStat)==0 && S_ISDIR(fileStat.st_mode));
 }
 
 } // JsFile
@@ -1415,7 +1428,7 @@ static void currentDateTimeToSec(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
   char       buf[80];
   tstruct = *localtime(&now);
   strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-  ReturnString(J, buf);
+  Return<std::string>(J, buf);
 }
 
 static void currentDateTimeToMs(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
@@ -1431,21 +1444,21 @@ static void currentDateTimeToMs(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
   strftime(bufs, sizeof(bufs), "%Y-%m-%d.%X", &tstruct);
   sprintf(bufms, "%s.%03ld", bufs, curTime.tv_usec/1000);
 
-  ReturnString(J, bufms);
+  Return<std::string>(J, bufms);
 }
 
 } // JsTime
 
 static void system(js_State *J) {
   AssertNargs(1)
-  ReturnString(J, Process::exec(GetArgString(1)));
+  Return<std::string>(J, Process::exec(GetArgString(1)));
 }
 
 static void formatFp(js_State *J) {
   AssertNargs(2)
   char buf[32];
   ::sprintf(buf, "%.*lf", GetArgUInt32(2), GetArgFloat(1));
-  ReturnString(J, buf);
+  Return<std::string>(J, buf);
 }
 
 static void download(js_State *J) {
@@ -1549,106 +1562,106 @@ namespace JsVec3 {
 
 static void almostEquals(js_State *J) {
   AssertNargs(3)
-  ReturnBoolean(J, Vec3::almostEquals(GetArgVec3(1), GetArgVec3(2), GetArgFloat(3)));
+  Return<bool>(J, Vec3::almostEquals(GetArgVec3(1), GetArgVec3(2), GetArgFloat(3)));
 }
 
 static void zero(js_State *J) {
   AssertNargs(0)
-  ReturnVec(J, Vec3::zero());
+  Return<Vec3>(J, Vec3::zero());
 }
 
 static void length(js_State *J) {
   AssertNargs(1)
-  ReturnFloat(J, GetArgVec3(1).len());
+  Return<Float>(J, GetArgVec3(1).len());
 }
 
 static void normalize(js_State *J) {
   AssertNargs(1)
-  ReturnVec(J, GetArgVec3(1).normalize());
+  Return<Vec3>(J, GetArgVec3(1).normalize());
 }
 
 static void normalizeZ(js_State *J) {
   AssertNargs(1)
-  ReturnVec(J, GetArgVec3(1).normalizeZ());
+  Return<Vec3>(J, GetArgVec3(1).normalizeZ());
 }
 
 static void normalizeZl(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1).normalizeZ(GetArgFloat(2)));
+  Return<Vec3>(J, GetArgVec3(1).normalizeZ(GetArgFloat(2)));
 }
 
 static void plus(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1)+GetArgVec3(2));
+  Return<Vec3>(J, GetArgVec3(1)+GetArgVec3(2));
 }
 
 static void minus(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1)-GetArgVec3(2));
+  Return<Vec3>(J, GetArgVec3(1)-GetArgVec3(2));
 }
 
 static void muln(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1)*GetArgFloat(2));
+  Return<Vec3>(J, GetArgVec3(1)*GetArgFloat(2));
 }
 
 static void dot(js_State *J) {
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec3(1)*GetArgVec3(2));
+  Return<Float>(J, GetArgVec3(1)*GetArgVec3(2));
 }
 
 static void cross(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1).cross(GetArgVec3(2)));
+  Return<Vec3>(J, GetArgVec3(1).cross(GetArgVec3(2)));
 }
 
 static void angleRad(js_State *J) { // angle in radians between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2)));
+  Return<Float>(J, GetArgVec3(1).angle(GetArgVec3(2)));
 }
 
 static void angleDeg(js_State *J) { // angle in degrees between v1-v and v2-v, ASSUMES that v1!=v and v2!=v
   AssertNargs(2)
-  ReturnFloat(J, GetArgVec3(1).angle(GetArgVec3(2))/M_PI*180);
+  Return<Float>(J, GetArgVec3(1).angle(GetArgVec3(2))/M_PI*180);
 }
 
 static void rmsd(js_State *J) {
   AssertNargs(2)
   std::unique_ptr<std::valarray<double>> v1(GetArgMatNxX(1, 3/*N=3*/));
   std::unique_ptr<std::valarray<double>> v2(GetArgMatNxX(2, 3/*N=3*/));
-  ReturnFloat(J, Op::rmsd(*v1, *v2));
+  Return<Float>(J, Op::rmsd(*v1, *v2));
 }
 
 static void snapToGrid(js_State *J) {
   AssertNargs(2)
   auto v = GetArgVec3(1);
   v.snapToGrid(GetArgVec3(2));
-  ReturnVec(J, v);
+  Return<Vec3>(J, v);
 }
 
 static void project(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1).project(GetArgVec3(2)));
+  Return<Vec3>(J, GetArgVec3(1).project(GetArgVec3(2)));
 }
 
 static void orthogonal(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgVec3(1).orthogonal(GetArgVec3(2)));
+  Return<Vec3>(J, GetArgVec3(1).orthogonal(GetArgVec3(2)));
 }
 
 static void rotateCornerToCorner(js_State *J) {
   AssertNargs(4)
-  ReturnMat(J, Vec3Extra::rotateCornerToCorner(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
+  Return<Mat3>(J, Vec3Extra::rotateCornerToCorner(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
 }
 
 static void angleAxis1x1(js_State *J) {
   AssertNargs(3)
-  ReturnFloat(J, Vec3Extra::angleAxis1x1(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3)));
+  Return<Float>(J, Vec3Extra::angleAxis1x1(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3)));
 }
 
 static void angleAxis2x1(js_State *J) {
   AssertNargs(4)
-  ReturnFloat(J, Vec3Extra::angleAxis2x1(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
+  Return<Float>(J, Vec3Extra::angleAxis2x1(GetArgVec3(1), GetArgVec3(2), GetArgVec3(3), GetArgVec3(4)));
 }
 
 } // JsVec3
@@ -1657,52 +1670,52 @@ namespace JsMat3 {
 
 static void almostEquals(js_State *J) {
   AssertNargs(3)
-  ReturnBoolean(J, Mat3::almostEquals(GetArgMat3x3(1), GetArgMat3x3(2), GetArgFloat(3)));
+  Return<bool>(J, Mat3::almostEquals(GetArgMat3x3(1), GetArgMat3x3(2), GetArgFloat(3)));
 }
 
 static void zero(js_State *J) {
   AssertNargs(0)
-  ReturnMat(J, Mat3::zero());
+  Return<Mat3>(J, Mat3::zero());
 }
 
 static void identity(js_State *J) {
   AssertNargs(0)
-  ReturnMat(J, Mat3::identity());
+  Return<Mat3>(J, Mat3::identity());
 }
 
 static void transpose(js_State *J) {
   AssertNargs(1)
-  ReturnMat(J, GetArgMat3x3(1).transpose());
+  Return<Mat3>(J, GetArgMat3x3(1).transpose());
 }
 
 static void plus(js_State *J) {
   AssertNargs(2)
-  ReturnMat(J, GetArgMat3x3(1)+GetArgMat3x3(2));
+  Return<Mat3>(J, GetArgMat3x3(1)+GetArgMat3x3(2));
 }
 
 static void minus(js_State *J) {
   AssertNargs(2)
-  ReturnMat(J, GetArgMat3x3(1)-GetArgMat3x3(2));
+  Return<Mat3>(J, GetArgMat3x3(1)-GetArgMat3x3(2));
 }
 
 static void muln(js_State *J) {
   AssertNargs(2)
-  ReturnMat(J, GetArgMat3x3(1)*GetArgFloat(2));
+  Return<Mat3>(J, GetArgMat3x3(1)*GetArgFloat(2));
 }
 
 static void mulv(js_State *J) {
   AssertNargs(2)
-  ReturnVec(J, GetArgMat3x3(1)*GetArgVec3(2));
+  Return<Vec3>(J, GetArgMat3x3(1)*GetArgVec3(2));
 }
 
 static void mul(js_State *J) {
   AssertNargs(2)
-  ReturnMat(J, GetArgMat3x3(1)*GetArgMat3x3(2));
+  Return<Mat3>(J, GetArgMat3x3(1)*GetArgMat3x3(2));
 }
 
 static void rotate(js_State *J) {
   AssertNargs(1)
-  ReturnMat(J, Mat3::rotate(GetArgVec3(1)));
+  Return<Mat3>(J, Mat3::rotate(GetArgVec3(1)));
 }
 
 } // JsMat3
@@ -1714,12 +1727,12 @@ static void open(js_State *J) {
   auto handle = dlopen(GetArgString(1).c_str(), GetArgUInt32(2));
   if (handle == 0)
     ERROR("dlopen for '" << GetArgString(1) << "' failed: " << dlerror())
-  ReturnPtr(J, handle);
+  Return<void*>(J, handle);
 }
 
 static void sym(js_State *J) {
   AssertNargs(2)
-  ReturnPtr(J, dlsym(GetArgPtr(1), GetArgString(2).c_str()));
+  Return<void*>(J, dlsym(GetArgPtr(1), GetArgString(2).c_str()));
 }
 
 static void close(js_State *J) {
@@ -1802,13 +1815,13 @@ static void intPtrStrCb4intOpaqueIntSArrSArrPtrOStr(js_State *J) {
 static void intPtr(js_State *J) {
   typedef int(*Fn)(void*);
   AssertNargs(2)
-  ReturnNumber(J, Fn(GetArgPtr(1))(GetArgPtr(2)));
+  Return<int>(J, Fn(GetArgPtr(1))(GetArgPtr(2)));
 }
 
 static void strInt(js_State *J) {
   typedef char*(*Fn)(int);
   AssertNargs(2)
-  ReturnString(J, Fn(GetArgPtr(1))(GetArgInt32(2)));
+  Return<std::string>(J, Fn(GetArgPtr(1))(GetArgInt32(2)));
 }
 
 } // JsInvoke
