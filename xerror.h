@@ -32,3 +32,4 @@ public:
 
 // syscall failure reporting
 #define ERROR_SYSCALL(syscall) ERROR("system call '" << #syscall << "' failed: " << strerror(errno))
+#define ERROR_SYSCALL1(syscall, details...) ERROR("system call '" << #syscall << "' failed: " << strerror(errno) << ": " << details)

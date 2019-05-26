@@ -1395,6 +1395,13 @@ static void ckdir(js_State *J) { // checks if the directory exists
   Return<bool>(J, ::stat(GetArgString(1).c_str(), &fileStat)==0 && S_ISDIR(fileStat.st_mode));
 }
 
+static void unlink(js_State *J) { // removes a single file
+  AssertNargs(1)
+  if (::unlink(GetArgString(1).c_str()) != 0)
+    ERROR_SYSCALL1(unlink, "file '" << GetArgString(1) << "'")
+  ReturnVoid(J);
+}
+
 } // JsFile
 
 static void sleep(js_State *J) {
@@ -1870,6 +1877,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(File, write,  JsFile::write, 2)
     ADD_NS_FUNCTION_CPP(File, mkdir,  JsFile::mkdir, 1)
     ADD_NS_FUNCTION_CPP(File, ckdir,  JsFile::ckdir, 1)
+    ADD_NS_FUNCTION_CPP(File, unlink, JsFile::unlink, 1)
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
   BEGIN_NAMESPACE(Time)
