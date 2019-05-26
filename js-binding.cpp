@@ -1413,7 +1413,7 @@ static void sleep(js_State *J) {
 
 static void waitForUserInput(js_State *J) {
   AssertNargs(0)
-  std::cout << "press Enter ..." << std::endl;
+  std::cout << "{pid=" << getpid() << "} press Enter ..." << std::endl;
   (void)::getc(stdin);
   ReturnVoid(J);
 }
