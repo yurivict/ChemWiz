@@ -8,6 +8,7 @@ var all_tests = ["xyz",
                  "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
                  "web-ui-http", "web-ui-https", "web-ui-url",
                  "gzip", "mmtf",
+                 "sqlite3",
                  "calc-erkale", "calc-nwchem"
                 ]
 
