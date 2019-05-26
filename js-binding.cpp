@@ -1411,6 +1411,13 @@ static void sleep(js_State *J) {
   ReturnVoid(J);
 }
 
+static void waitForUserInput(js_State *J) {
+  AssertNargs(0)
+  std::cout << "press Enter ..." << std::endl;
+  (void)::getc(stdin);
+  ReturnVoid(J);
+}
+
 namespace JsTime {
 
 static void start(js_State *J) {
@@ -1880,6 +1887,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(File, unlink, JsFile::unlink, 1)
   END_NAMESPACE(File)
   ADD_JS_FUNCTION(sleep, 1)
+  ADD_JS_FUNCTION(waitForUserInput, 0)
   BEGIN_NAMESPACE(Time)
     ADD_NS_FUNCTION_CPP(Time, start,                JsTime::start, 0)
     ADD_NS_FUNCTION_CPP(Time, now,                  JsTime::now, 0)
