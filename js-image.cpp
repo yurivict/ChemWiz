@@ -96,7 +96,7 @@ static void plasma(js_State *J) {
   plasma(*GetArg(Image, 0),
          GetArgFloat(1), GetArgFloat(2),
          GetArgFloat(3), GetArgFloat(4),
-         GetArgFloat(4), GetArgFloat(6),
+         GetArgFloat(5), GetArgFloat(6),
          GetArgFloat(7), GetArgFloat(8),
          GetArgFloat(9),
          strToColormap(GetArgString(10)));
@@ -106,6 +106,12 @@ static void plasma(js_State *J) {
 static void checkeredPattern(js_State *J) {
   AssertNargs(4)
   checkered_pattern(GetArgUInt32(1), GetArgUInt32(2), GetArgUInt32(3), (bitmap_image::color_plane)GetArgUInt32(4), *GetArg(Image, 0));
+  ReturnVoid(J);
+}
+
+static void equal(js_State *J) {
+  AssertNargs(1)
+  *GetArg(Image, 0) = *GetArg(Image, 1);
   ReturnVoid(J);
 }
 
@@ -137,6 +143,7 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Image, setPixel, 3)
     ADD_METHOD_CPP(Image, plasma, 10)
     ADD_METHOD_CPP(Image, checkeredPattern, 4)
+    ADD_METHOD_CPP(Image, equal, 1)
     ADD_METHOD_CPP(Image, clear, 0)
     ADD_METHOD_CPP(Image, saveImage, 1)
   }
