@@ -313,72 +313,73 @@ static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   return m;
 }
 
-static void PushVec(js_State *J, const Vec3 &v) {
+// Return helpers
+
+template<typename T>
+static void Push(js_State *J, const T &val); // Push is like Return, but it isn't technically Return, this is why we have it separate here
+
+template<>
+void Push<bool>(js_State *J, const bool &val) {
+  js_pushboolean(J, val ? 1 : 0);
+}
+
+template<>
+void Push<Float>(js_State *J, const Float &val) {
+  js_pushnumber(J, val);
+}
+
+template<>
+void Push<unsigned>(js_State *J, const unsigned &val) {
+  js_pushnumber(J, val);
+}
+
+template<>
+void Push<int>(js_State *J, const int &val) {
+  js_pushnumber(J, val);
+}
+
+template<>
+void Push<std::string>(js_State *J, const std::string &val) {
+  js_pushstring(J, val.c_str());
+}
+
+template<>
+void Push<Vec3>(js_State *J, const Vec3 &val) {
   js_newarray(J);
   unsigned idx = 0;
-  for (auto c : v) {
+  for (auto c : val) {
     js_pushnumber(J, c);
     js_setindex(J, -2, idx++);
   }
+}
+
+template<>
+void Push<Mat3>(js_State *J, const Mat3 &val) {
+  js_newarray(J);
+  unsigned idx = 0;
+  for (auto &r : val) {
+    Push<Vec3>(J, r);
+    js_setindex(J, -2, idx++);
+  }
+}
+
+template<>
+void Push<void*>(js_State *J, void* const &val) {
+  Push<std::string>(J, StrPtr::p2s(val));
+}
+
+template<typename T>
+static void Return(js_State *J, const T &val) {
+  Push<T>(J, val);
 }
 
 static void ReturnVoid(js_State *J) {
   js_pushundefined(J);
 }
 
-// Return helpers
-
-template<typename T>
-static void Return(js_State *J, const T &val);
-
 //static void ReturnNull(js_State *J) {
 //  js_pushnull(J);
 //}
-
-template<>
-void Return<bool>(js_State *J, const bool &val) {
-  js_pushboolean(J, val ? 1 : 0);
-}
-
-template<>
-void Return<Float>(js_State *J, const Float &val) {
-  js_pushnumber(J, val);
-}
-
-template<>
-void Return<unsigned>(js_State *J, const unsigned &val) {
-  js_pushnumber(J, val);
-}
-
-template<>
-void Return<int>(js_State *J, const int &val) {
-  js_pushnumber(J, val);
-}
-
-template<>
-void Return<std::string>(js_State *J, const std::string &val) {
-  js_pushstring(J, val.c_str());
-}
-
-template<>
-void Return<Vec3>(js_State *J, const Vec3 &val) {
-  PushVec(J, val);
-}
-
-template<>
-void Return<Mat3>(js_State *J, const Mat3 &val) {
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto &r : val) {
-    PushVec(J, r);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-template<>
-void Return<void*>(js_State *J, void* const &val) {
-  Return<std::string>(J, StrPtr::p2s(val));
-}
 
 // convenience macro to return objects
 #define Return(type, v) Js##type::xnewo(J, v)
