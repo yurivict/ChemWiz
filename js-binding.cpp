@@ -991,6 +991,54 @@ static void findAaBackbones(js_State *J) {
     js_setindex(J, -2, idx++);
   }
 }
+
+static void getAminoAcidSingleAngle(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, unsigned angleId)
+  AssertNargs(3)
+  Return(J, GetArg(Molecule, 0)->getAminoAcidSingleAngle(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUInt32(2), // idx
+    (Molecule::AaAngles::Type)GetArgUInt32(3))); // angleId
+}
+
+static void getAminoAcidSingleJunctionAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx)
+  AssertNargs(2)
+  Return(J, GetArg(Molecule, 0)->getAminoAcidSingleJunctionAngles(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUInt32(2))); // idx
+}
+
+static void getAminoAcidSequenceAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned[] idxs)
+  AssertNargs(2)
+  Return(J, GetArg(Molecule, 0)->getAminoAcidSequenceAngles(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUnsignedArray(2))); // idxs
+}
+
+static void setAminoAcidSingleAngle(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, unsigned angleId, double newAngle)
+  AssertNargs(4)
+  Return(J, GetArg(Molecule, 0)->setAminoAcidSingleAngle(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUInt32(2), // idx
+    (Molecule::AaAngles::Type)GetArgUInt32(3), // angleId
+    GetArgFloat(4))); // newAngle
+}
+
+static void setAminoAcidSingleJunctionAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, double[] newAngles)
+  AssertNargs(3)
+  GetArg(Molecule, 0)->setAminoAcidSingleJunctionAngles(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUInt32(2), // idx
+    GetArgFloatArray(3)); // newAngles
+}
+
+static void setAminoAcidSequenceAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned[] idxs, double[][] newAngles)
+  AssertNargs(3)
+  GetArg(Molecule, 0)->setAminoAcidSequenceAngles(
+    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+    GetArgUnsignedArray(2), // idxs
+    GetArgFloatArrayArray(3)); // newAngles
+}
+
 /* binary methods are disabled for now
 static void findAaBackbonesBin(js_State *J) { // returns the same as findAaBackbones but as a binary array in order to pass it to other functions easily
   AssertNargs(0)
@@ -1041,6 +1089,12 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, findAaBackboneFirst, 0)
     ADD_METHOD_CPP(Molecule, findAaBackboneLast, 0)
     ADD_METHOD_CPP(Molecule, findAaBackbones, 0)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSingleAngle, 3)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSingleJunctionAngles, 2)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSequenceAngles, 2)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSingleAngle, 4)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSingleJunctionAngles, 3)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSequenceAngles, 3)
     //ADD_METHOD_CPP(Molecule, findAaBackbonesBin, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];

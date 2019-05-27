@@ -261,7 +261,7 @@ public: // structs and types
     Atom    *Ho;        // H in OH group (optional, missing when bonded at C)
     Atom    *payload;   // the first atom of the rest of the amino acid
     // methods
-    std::set<Atom*> listPayload();  // list all payload atoms
+    std::set<Atom*> listPayload() const;  // list all payload atoms
     Atom* nextN() const;                  // next N if connected, otherwise our O1
   }; // AaBackbone
   typedef double Angle;
@@ -317,6 +317,7 @@ public: // structs and types
     friend std::ostream& operator<<(std::ostream &os, const Type &type);
     friend std::istream& operator>>(std::istream &is, Type &type);
   }; // AaAngles
+  typedef std::array<Angle, Molecule::AaAngles::CNT> AngleArray;
 public:
   std::string        idx;
   std::string        descr;
@@ -359,6 +360,12 @@ public:
   AaBackbone findAaBackboneFirst();
   AaBackbone findAaBackboneLast();
   std::vector<AaBackbone> findAaBackbones();  // finds all AA cores
+  Angle getAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId);
+  AngleArray getAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx);
+  std::vector<Molecule::AngleArray> getAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs);
+  Angle setAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId, Angle newAngle);
+  void setAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx, const std::vector<Angle> &newAngles);
+  void setAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs, const std::vector<std::vector<Angle>> &newAngles);
   void detectBonds();
   bool isEqual(const Molecule &other) const; // compares if the data is exactly the same (including the order of atoms)
   static std::set<Atom*> listNeighborsHierarchically(Atom *self, bool includeSelf, const Atom *except1, const Atom *except2);
@@ -417,6 +424,7 @@ private: // internals
   static void rotateAtom(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, Atom *a);
   template<typename Atoms>
   static void rotateAtoms(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const Atoms &atoms, const Atom *except);
+  static AngleArray computeAnglesBetweenBackbones(const AaBackbone &cterm, const AaBackbone &nterm);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule

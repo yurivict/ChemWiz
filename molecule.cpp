@@ -6,6 +6,7 @@
 #include "Mat3.h"
 #include "periodic-table-data.h"
 #include "util.h"
+#include "stl-ext.h"
 
 #include <stdio.h>
 #include <rang.hpp>
@@ -257,6 +258,108 @@ std::vector<Molecule::AaBackbone> Molecule::findAaBackbones() {  // finds all AA
       if (findAaBackbone(aO2, aaBackbone))
         aaBackbones.push_back(aaBackbone);
   return aaBackbones;
+}
+
+Molecule::Angle Molecule::getAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::setAminoAcidSingleAngle: aaBackbones argument can't be empty")
+  if (idx >= aaBackbones.size()-1)
+    ERROR("Molecule::setAminoAcidSingleAngle: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  typedef AaAngles A;
+
+  // get relevant backbone elements
+  const AaBackbone &cterm = aaBackbones[idx];
+  const AaBackbone &nterm = aaBackbones[idx+1];
+
+  // compute and return
+  switch (angleId) {
+  case A::OMEGA: {
+    return AaAngles::omega(cterm, nterm).angle;
+  } case A::PHI: {
+    return AaAngles::phi(cterm, nterm).angle;
+  } case A::PSI: {
+    return AaAngles::psi(cterm, nterm).angle;
+  } case A::ADJ_N: {
+    return AaAngles::adjacencyN(cterm, nterm).angle;
+  } case A::ADJ_CMAIN: {
+    return AaAngles::adjacencyCmain(cterm, nterm).angle;
+  } case A::ADJ_COO: {
+    return AaAngles::adjacencyCoo(cterm, nterm).angle;
+  } case A::O2_RISE: {
+    return AaAngles::secondaryO2Rise(cterm).angle;
+  } case A::O2_TILT: {
+    return AaAngles::secondaryO2Tilt(cterm).angle;
+  } case A::PL_RISE: {
+    return AaAngles::secondaryPlRise(cterm).angle;
+  } case A::PL_TILT: {
+    return AaAngles::secondaryPlTilt(cterm).angle;
+  } default: {
+    ERROR("Molecule::getAminoAcidSingleAngle got invalid angleId=" << angleId)
+  }}
+}
+
+Molecule::AngleArray Molecule::getAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::getAminoAcidSingleJunctionAngles: aaBackbones argument can't be empty")
+  if (idx >= aaBackbones.size()-1)
+    ERROR("Molecule::getAminoAcidSingleJunctionAngles: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  // compute and return
+  return computeAnglesBetweenBackbones(aaBackbones[idx], aaBackbones[idx+1]);
+}
+
+std::vector<Molecule::AngleArray> Molecule::getAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::getAminoAcidSequenceAngles: aaBackbones argument can't be empty")
+  for (auto idx : idxs)
+    if (idx >= aaBackbones.size()-1)
+      ERROR("Molecule::getAminoAcidSequenceAngles: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  // compute
+  std::vector<Molecule::AngleArray> res;
+  for (auto idx : idxs)
+    res.push_back(computeAnglesBetweenBackbones(aaBackbones[idx], aaBackbones[idx+1]));
+
+  return res;
+}
+
+Molecule::Angle Molecule::setAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId, Angle newAngle) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::setAminoAcidSingleAngle: aaBackbones argument can't be empty")
+  if (idx >= aaBackbones.size()-1)
+    ERROR("Molecule::setAminoAcidSingleAngle: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  typedef AaAngles A;
+
+  const AaBackbone &cterm = aaBackbones[idx];
+  const AaBackbone &nterm = aaBackbones[idx+1];
+
+  AaAngles::AngleAndAxis priorAngle;
+  switch (angleId) {
+  case A::OMEGA: {
+    priorAngle = AaAngles::omega(cterm, nterm);
+    rotateAtoms(A::OMEGA, cterm.Coo->pos, priorAngle.axis, newAngle - priorAngle.angle,
+      std_ext::vector_range<AaBackbone>(&aaBackbones, aaBackbones.begin() + idx + 1, aaBackbones.end()),
+      nullptr);
+    break;
+  } default: {
+    ERROR("UNIMPLEMENTED Molecule::setAminoAcidSingleAngle for angleId=" << angleId)
+  }}
+
+  return priorAngle.angle;
+}
+
+void Molecule::setAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx, const std::vector<Angle> &newAngles) {
+  ERROR("UNIMPLEMENTED Molecule::setAminoAcidSingleJunctionAngles")
+}
+
+void Molecule::setAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs, const std::vector<std::vector<Angle>> &newAngles) {
+  ERROR("UNIMPLEMENTED Molecule::setAminoAcidSequenceAngles")
 }
 
 void Molecule::detectBonds() {
@@ -545,13 +648,67 @@ void Molecule::rotateAtom(AaAngles::Type atype, const Vec3 &center, const Vec3 &
   a->pos = M*(a->pos - center) + center;
 }
 
+template<typename Atoms, typename Fn>
+void iterate(const Atoms &atoms, Fn &&fn);
+
+template<typename Fn>
+inline void iterate(const std::vector<Atom*> &atoms, Fn &&fn) {
+  for (auto a : atoms)
+    fn(a);
+}
+
+template<typename Fn>
+inline void iterate(const std::set<Atom*> &atoms, Fn &&fn) {
+  for (auto a : atoms)
+    fn(a);
+}
+
+template<typename Fn>
+inline void iterate(const Molecule::AaBackbone &aaBackbone, Fn &&fn) {
+  fn(aaBackbone.N);
+  fn(aaBackbone.HCn1);
+  if (aaBackbone.Hn2)
+    fn(aaBackbone.HCn1);
+  fn(aaBackbone.Cmain);
+  fn(aaBackbone.Hc);
+  fn(aaBackbone.Coo);
+  fn(aaBackbone.O2);
+  if (aaBackbone.O1)
+    fn(aaBackbone.O1);
+  if (aaBackbone.Ho)
+    fn(aaBackbone.Ho);
+  iterate(aaBackbone.listPayload(), fn);
+}
+
+template<typename Fn>
+inline void iterate(const std_ext::vector_range<Molecule::AaBackbone> &aaBackbones, Fn &&fn) {
+  for (auto a : aaBackbones)
+    iterate(a, fn);
+}
+
 template<typename Atoms>
 void Molecule::rotateAtoms(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const Atoms &atoms, const Atom *except) {
   LOG_ROTATE_FUNCTIONS("rotateAtoms: atype=" << atype << " center=" << center << " axis=" << axis << " angleD=" << angleD << " except=" << except)
   auto M = Mat3::rotate(axis, Vec3::degToRad(angleD));
-  for (auto a : atoms)
+  iterate(atoms, [&center,except,&M](Atom *a) {
     if (a != except)
       a->pos = M*(a->pos - center) + center;
+  });
+}
+
+Molecule::AngleArray Molecule::computeAnglesBetweenBackbones(const AaBackbone &cterm, const AaBackbone &nterm) {
+  return {{
+    AaAngles::omega(cterm, nterm).angle,
+    AaAngles::phi(cterm, nterm).angle,
+    AaAngles::psi(cterm, nterm).angle,
+    AaAngles::adjacencyN(cterm, nterm).angle,
+    AaAngles::adjacencyCmain(cterm, nterm).angle,
+    AaAngles::adjacencyCoo(cterm, nterm).angle,
+    AaAngles::secondaryO2Rise(cterm).angle,
+    AaAngles::secondaryO2Tilt(cterm).angle,
+    AaAngles::secondaryPlRise(cterm).angle,
+    AaAngles::secondaryPlTilt(cterm).angle
+  }};
 }
 
 std::ostream& operator<<(std::ostream &os, const Molecule &m) {
@@ -563,7 +720,7 @@ std::ostream& operator<<(std::ostream &os, const Molecule &m) {
 
 /// Molecule::AaBackbone
 
-std::set<Atom*> Molecule::AaBackbone::listPayload() {
+std::set<Atom*> Molecule::AaBackbone::listPayload() const {
   return Molecule::listNeighborsHierarchically(payload, true/*includeSelf*/, Cmain, N); // except Cmain,N (N is only for Proline)
 }
 
@@ -595,7 +752,7 @@ public:
     if (pv)
       return pv->c_str();
     else
-      ERROR("Invalid angle type supplied: " << e)
+      ERROR("Invalid angle type supplied: " << int(e))
   }
   const type1 getEnum(const type2 &s) const {
     auto pv = get21(s);
