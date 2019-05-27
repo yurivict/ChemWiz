@@ -1,6 +1,5 @@
 
 #include <stdio.h>
-#include <assert.h>
 #include <math.h>
 #include <unistd.h>
 #include <string.h>
@@ -50,11 +49,12 @@ static const char *TAG_Atom        = "Atom";
 static const char *TAG_TempFile    = "TempFile";
 static const char *TAG_StructureDb = "StructureDb";
 
+// externally defined types
+namespace JsImage {
+  extern void init(js_State *J);
+}
+
 // helper macros
-#define AssertNargs(n)           assert(js_gettop(J) == n+1);
-#define AssertNargsRange(n1,n2)  assert(n1+1 <= js_gettop(J) && js_gettop(J) <= n2+1);
-#define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
-#define AssertStack(n)           assert(js_gettop(J) == n);
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
 #define DbgPrintStackObject(loc, idx) std::cout << "DBG JS Stack: @" << loc << " stack[" << idx << "]=" << js_tostring(J, idx) << std::endl
 #define DbgPrintStack(loc)       std::cout << "DBG JS Stack: @" << loc << ">>>" << std::endl; \
@@ -86,27 +86,12 @@ static const char *TAG_StructureDb = "StructureDb";
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
-#define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
 
 namespace JsBinding {
 
 //
 // helper classes and functions
 //
-
-class StrPtr { // class that maps pointer<->string for the purpose of passing pointers to JS
-public:
-  static void* s2p(const std::string &s) {
-    void *ptr = 0;
-    ::sscanf(s.c_str(), "%p", &ptr);
-    return ptr;
-  }
-  static std::string p2s(void *ptr) {
-    char buf[sizeof(void*)*2+1];
-    ::sprintf(buf, "%p", ptr);
-    return buf;
-  }
-}; // StrPtr
 
 static void binaryFinalize(js_State *J, void *p) {
   delete (Binary*)p;
@@ -275,87 +260,6 @@ static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   return m;
 }
 
-// Return helpers
-
-static void Push(js_State *J, const bool &val) {
-  js_pushboolean(J, val ? 1 : 0);
-}
-
-static void Push(js_State *J, const Float &val) {
-  js_pushnumber(J, val);
-}
-
-static void Push(js_State *J, const unsigned &val) {
-  js_pushnumber(J, val);
-}
-
-static void Push(js_State *J, const int &val) {
-  js_pushnumber(J, val);
-}
-
-static void Push(js_State *J, const std::string &val) {
-  js_pushstring(J, val.c_str());
-}
-
-static void Push(js_State *J, const Vec3 &val) {
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto c : val) {
-    js_pushnumber(J, c);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-static void Push(js_State *J, const Mat3 &val) {
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto &r : val) {
-    Push(J, r);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-static void Push(js_State *J, void* const &val) {
-  Push(J, StrPtr::p2s(val));
-}
-
-template<typename T, std::size_t SZ>
-static void Push(js_State *J, const std::array<T, SZ> &val) {
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto const &v : val) {
-    Push(J, v);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-template<typename T>
-static void Push(js_State *J, const std::vector<T> &val) {
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto const &v : val) {
-    Push(J, v);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-template<typename T>
-static void Return(js_State *J, const T &val) {
-  Push(J, val);
-}
-
-static void ReturnVoid(js_State *J) {
-  js_pushundefined(J);
-}
-
-//static void ReturnNull(js_State *J) {
-//  js_pushnull(J);
-//}
-
-// convenience macro to return objects
-#define ReturnObj(type, v) Js##type::xnewo(J, v)
-#define ReturnObjZ(type, v) Js##type::xnewoZ(J, v)
-
 //
 // Define object types
 //
@@ -388,7 +292,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Obj)
   js_getglobal(J, TAG_Obj);
   js_getproperty(J, -1, "prototype");
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(Obj, id, 0)
   }
@@ -472,7 +376,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Binary)
   js_getglobal(J, TAG_Binary);
   js_getproperty(J, -1, "prototype");
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(Binary, dupl, 0)
     ADD_METHOD_CPP(Binary, size, 0)
@@ -639,7 +543,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Atom)
   js_getglobal(J, TAG_Atom);              // PUSH Object => {-1: Atom}
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(Atom, id, 0)
     ADD_METHOD_CPP(Atom, dupl, 0)
@@ -1016,7 +920,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(Molecule)
   js_getglobal(J, TAG_Molecule);          // PUSH Object => {-1: Molecule}
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(Molecule, id, 0)
     ADD_METHOD_CPP(Molecule, dupl, 0)
@@ -1177,7 +1081,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(TempFile)
   js_getglobal(J, TAG_TempFile);
   js_getproperty(J, -1, "prototype");
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(TempFile, str, 0)
     ADD_METHOD_CPP(TempFile, fname, 0)
@@ -1246,7 +1150,7 @@ static void init(js_State *J) {
   ADD_JS_CONSTRUCTOR(StructureDb)
   js_getglobal(J, TAG_StructureDb);
   js_getproperty(J, -1, "prototype");
-  StackPopPrevious()
+  JsSupport::StackPopPrevious(J);
   { // methods
     ADD_METHOD_CPP(StructureDb, str, 0)
     ADD_METHOD_CPP(StructureDb, toString, 0)
@@ -1868,6 +1772,8 @@ void registerFunctions(js_State *J) {
   JsMolecule::init(J);
   JsTempFile::init(J);
   JsStructureDb::init(J);
+  // externally defined
+  JsImage::init(J);
 
   //
   // Misc

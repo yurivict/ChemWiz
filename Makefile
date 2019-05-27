@@ -7,10 +7,11 @@ USE_OPENBABEL=  yes
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
-SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp molecule-pdb.cpp js-binding.cpp util.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp \
-		op-rmsd.cpp molecule-qhull.cpp periodic-table-data.cpp structure-db.cpp js-support.cpp
+SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp molecule-pdb.cpp util.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp \
+		js-binding.cpp js-support.cpp js-image.cpp \
+		op-rmsd.cpp molecule-qhull.cpp periodic-table-data.cpp structure-db.cpp
 HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h op-rmsd.h periodic-table-data.h \
-		structure-db.h stl-ext.h js-support.h
+		structure-db.h stl-ext.h js-support.h mytypes.h
 APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date

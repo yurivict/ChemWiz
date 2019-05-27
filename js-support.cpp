@@ -82,3 +82,8 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
   js_defproperty(J, -2, fnNameStr, JS_DONTENUM);
 }
 
+void JsSupport::StackPopPrevious(js_State *J) {
+  js_rot2(J);
+  js_pop(J, 1);
+}
+
