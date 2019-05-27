@@ -1374,6 +1374,21 @@ static void currentDateTimeToMs(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
 
 } // JsTime
 
+namespace JsLegacyRng {
+
+static void srand(js_State *J) {
+  AssertNargs(1)
+  ::srand(GetArgUInt32(1));
+  ReturnVoid(J);
+}
+
+static void rand(js_State *J) {
+  AssertNargs(0)
+  Return(J, ::rand());
+}
+
+} // JsLegacyRng
+
 static void system(js_State *J) {
   AssertNargs(1)
   Return(J, Process::exec(GetArgString(1)));
@@ -1802,6 +1817,10 @@ void registerFunctions(js_State *J) {
       print("-- tm: step "+name+" took "+(t2-t1)+" sec(s) (wallclock) --");
     })
   END_NAMESPACE(Time)
+  BEGIN_NAMESPACE(LegacyRng)
+    ADD_NS_FUNCTION_CPP(LegacyRng, srand, JsLegacyRng::srand, 1)
+    ADD_NS_FUNCTION_CPP(LegacyRng, rand,  JsLegacyRng::rand, 0)
+  END_NAMESPACE(LegacyRng)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)
   ADD_JS_FUNCTION(download, 3)
