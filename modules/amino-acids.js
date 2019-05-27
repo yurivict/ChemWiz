@@ -74,6 +74,13 @@ function anglesArraysToObjects(angleArrays) {
 }
 
 //
+// Returns all possible amino acid angle names as an array
+//
+function allAngleNames() {
+  return ["OMEGA", "PHI", "PSI", "ADJ_N", "ADJ_CMAIN", "ADJ_COO", "O2_RISE", "O2_TILT", "PL_RISE", "PL_TILT"]
+}
+
+//
 // exports
 //
 
@@ -83,3 +90,4 @@ exports.decodePeptide = decodePeptide
 exports.combine = combine
 exports.anglesArrayToObject = anglesArrayToObject
 exports.anglesArraysToObjects = anglesArraysToObjects
+exports.allAngleNames = allAngleNames
