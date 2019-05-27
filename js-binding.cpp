@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <map>
@@ -24,6 +25,7 @@
 #include <rang.hpp>
 
 #include "js-binding.h"
+#include "js-support.h"
 #include "obj.h"
 #include "molecule.h"
 #include "temp-file.h"
@@ -40,6 +42,7 @@
 // types defined locally
 typedef std::vector<uint8_t> Binary;
 
+// tag strings of all objects
 static const char *TAG_Obj         = "Obj";
 static const char *TAG_Binary      = "Binary";
 static const char *TAG_Molecule    = "Molecule";
@@ -47,14 +50,7 @@ static const char *TAG_Atom        = "Atom";
 static const char *TAG_TempFile    = "TempFile";
 static const char *TAG_StructureDb = "StructureDb";
 
-static void ckErr(js_State *J, int err) {
-  if (err) {
-    std::cerr << js_trystring(J, -1, "Error") << std::endl;
-    js_pop(J, 1);
-    abort();
-  }
-}
-
+// helper macros
 #define AssertNargs(n)           assert(js_gettop(J) == n+1);
 #define AssertNargsRange(n1,n2)  assert(n1+1 <= js_gettop(J) && js_gettop(J) <= n2+1);
 #define AssertNargs2(nmin,nmax)  assert(nmin+1 <= js_gettop(J) && js_gettop(J) <= nmax+1);
@@ -91,40 +87,6 @@ static void ckErr(js_State *J, int err) {
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
 #define StackPopPrevious(n)      {js_rot2(J); js_pop(J, 1);}
-
-// add method defined by the C++ code
-#define ADD_METHOD_CPP(cls, method, nargs) \
-  AssertStack(2); \
-  js_newcfunction(J, prototype::method, #cls ".prototype." #method, nargs); /*PUSH a function object wrapping a C function pointer*/ \
-  js_defproperty(J, -2, #method, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
-  AssertStack(2);
-
-// add method defined in JavaScript
-#define ADD_METHOD_JS(cls, method, code...) \
-  js_dostring(J, str(boost::format("%1%.prototype['%2%'] = %3%") % #cls % #method % #code).c_str());
-
-static void InitObjectRegistry(js_State *J, const char *tag) {
-  js_newobject(J);
-  js_setregistry(J, tag);
-}
-
-#define ADD_JS_CONSTRUCTOR(cls) /*@lev=1, a generic constructor, nargs=0 below doesn't seem to enforce number of args, or differentiate constructors by number of args*/ \
-  js_getregistry(J, TAG_##cls);                                               /*@lev=2*/ \
-  js_newcconstructor(J, Js##cls::xnew, Js##cls::xnew, TAG_##cls, 0/*nargs*/); /*@lev=2*/ \
-  js_defproperty(J, -2, TAG_##cls, JS_DONTENUM);                              /*@lev=1*/
-
-namespace MuJS {
-
-// code borrowed from the MuJS sources
-
-static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) {
-  const char *pname = strrchr(name, '.');
-  pname = pname ? pname + 1 : name;
-  js_newcfunction(J, cfun, name, n);
-  js_defproperty(J, -2, pname, JS_DONTENUM);
-}
-
-} // MuJS
 
 namespace JsBinding {
 
@@ -421,7 +383,7 @@ static void id(js_State *J) {
 }
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_Obj);
+  JsSupport::InitObjectRegistry(J, TAG_Obj);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Obj)
   js_getglobal(J, TAG_Obj);
@@ -505,7 +467,7 @@ static void toFile(js_State *J) {
 }
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_Binary);
+  JsSupport::InitObjectRegistry(J, TAG_Binary);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Binary)
   js_getglobal(J, TAG_Binary);
@@ -672,7 +634,7 @@ static void getSecStructStr(js_State *J) {
 } // prototype
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_Atom);
+  JsSupport::InitObjectRegistry(J, TAG_Atom);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Atom)
   js_getglobal(J, TAG_Atom);              // PUSH Object => {-1: Atom}
@@ -1049,7 +1011,7 @@ static void findAaBackbonesBin(js_State *J) { // returns the same as findAaBackb
 } // prototype
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_Molecule);
+  JsSupport::InitObjectRegistry(J, TAG_Molecule);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(Molecule)
   js_getglobal(J, TAG_Molecule);          // PUSH Object => {-1: Molecule}
@@ -1210,7 +1172,7 @@ static void toPermanent(js_State *J) {
 }
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_TempFile);
+  JsSupport::InitObjectRegistry(J, TAG_TempFile);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(TempFile)
   js_getglobal(J, TAG_TempFile);
@@ -1279,7 +1241,7 @@ static void moleculeSignature(js_State *J) {
 }
 
 static void init(js_State *J) {
-  InitObjectRegistry(J, TAG_StructureDb);
+  JsSupport::InitObjectRegistry(J, TAG_StructureDb);
   js_pushglobal(J);
   ADD_JS_CONSTRUCTOR(StructureDb)
   js_getglobal(J, TAG_StructureDb);
@@ -1907,18 +1869,6 @@ void registerFunctions(js_State *J) {
   JsTempFile::init(J);
   JsStructureDb::init(J);
 
-#define ADD_JS_FUNCTION(name, num) \
-  js_newcfunction(J, JsBinding::name, #name, num); \
-  js_setglobal(J, #name);
-
-// macros to define static functions in global namespaces
-#define BEGIN_NAMESPACE(ns)                       js_newobject(J);
-#define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) MuJS::jsB_propf(J, #ns "." #jsfn, cfn, nargs);
-#define ADD_NS_FUNCTION_JS(ns, func, code...)     ckErr(J, js_ploadstring(J, "[static function " #ns "." #func "]", "(" #code ")")); \
-                                                  js_call(J, -1); \
-                                                  js_defproperty(J, -2, #func, JS_DONTENUM);
-#define END_NAMESPACE(name)                       js_defglobal(J, #name, JS_DONTENUM);
-
   //
   // Misc
   //
@@ -2079,12 +2029,6 @@ void registerFunctions(js_State *J) {
       })
     })
   END_NAMESPACE(Arrayx)
-
-#undef BEGIN_NAMESPACE
-#undef ADD_NS_FUNCTION_CPP
-#undef ADD_NS_FUNCTION_JS
-#undef END_NAMESPACE
-#undef ADD_JS_FUNCTION
 
   //
   // require() inspired from mujs
