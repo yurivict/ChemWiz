@@ -166,7 +166,24 @@ inline void ReturnVoid(js_State *J) {
 //  js_pushnull(J);
 //}
 
-// convenience macro to return objects
+//
+// convenience macros to return object
+//
 #define ReturnObj(type, v) Js##type::xnewo(J, v)
 #define ReturnObjZ(type, v) Js##type::xnewoZ(J, v)
+
+
+//
+// convenience macro to access arguments
+//
+
+#define GetNArgs()               (js_gettop(J)-1)
+#define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
+#define GetArgZ(type, n)         (!js_isundefined(J, n) ? (type*)js_touserdata(J, n, TAG_##type) : nullptr)
+#define GetArgBoolean(n)         js_toboolean(J, n)
+#define GetArgFloat(n)           js_tonumber(J, n)
+#define GetArgString(n)          std::string(js_tostring(J, n))
+#define GetArgStringCptr(n)      js_tostring(J, n)
+#define GetArgInt32(n)           js_toint32(J, n)
+#define GetArgUInt32(n)          js_touint32(J, n)
 

@@ -62,15 +62,6 @@ namespace JsImage {
                                    std::cout << "  -- @idx=" << -i << ": " << js_tostring(J, -i)  << std::endl; \
                                  std::cout << "DBG JS Stack: @" << loc << "<<<" << std::endl; \
                                  abort(); // because DbgPrintStack damages stack by converting all values to strings
-#define GetNArgs()               (js_gettop(J)-1)
-#define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
-#define GetArgZ(type, n)         (!js_isundefined(J, n) ? (type*)js_touserdata(J, n, TAG_##type) : nullptr)
-#define GetArgBoolean(n)         js_toboolean(J, n)
-#define GetArgFloat(n)           js_tonumber(J, n)
-#define GetArgString(n)          std::string(js_tostring(J, n))
-#define GetArgStringCptr(n)      js_tostring(J, n)
-#define GetArgInt32(n)           js_toint32(J, n)
-#define GetArgUInt32(n)          js_touint32(J, n)
 #define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgVec3(n)            objToVec3(J, n, __func__)
 #define GetArgUnsignedArray(n)      objToTypedArray<unsigned,false>(J, n, __func__)
