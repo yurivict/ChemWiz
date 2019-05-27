@@ -28,8 +28,8 @@ exports.run = function() {
   //
   var sumVal1 = 0
   var sumCnt1 = 0
-  db.run("SELECT sum(fldi) FROM tbl1;", function(opaque,nCols,arg3,arg4) {
-    sumVal1 = arg3
+  db.run("SELECT sum(fldi) FROM tbl1;", function(opaque,nCols,fldValues,fldNamesValues) {
+    sumVal1 = fldValues[0]
     sumCnt1++
     return 0
   })
@@ -44,8 +44,8 @@ exports.run = function() {
   //
   var sumVal2 = 0
   var sumCnt2 = 0
-  db.run("SELECT sum(fldi) FROM tbl1;", function(opaque,nCols,arg3,arg4) {
-    sumVal2 = arg3
+  db.run("SELECT sum(fldi) FROM tbl1;", function(opaque,nCols,fldValues,fldNamesValues) {
+    sumVal2 = fldValues[0]
     sumCnt2++
     return 0
   })
