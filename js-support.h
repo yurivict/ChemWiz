@@ -45,10 +45,7 @@ public:
   JsSupport::addJsConstructor(J, TAG_##cls, Js##cls::xnew);
 
 // add method defined by the C++ code
-#define ADD_METHOD_CPP(cls, method, nargs) \
-  JsSupport::addMethodCpp(J, #cls, #method, prototype::method, nargs);
-
-#define ADD_METHOD_CPP_new(cls, methodName, methodBody, nargs) \
+#define ADD_METHOD_CPP(cls, methodName, methodBody, nargs) \
   JsSupport::addMethodCpp(J, #cls, #methodName, [](js_State *J) methodBody,  nargs);
 
 // add method defined in JavaScript

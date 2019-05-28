@@ -271,15 +271,6 @@ static void xnew(js_State *J) {
   ReturnObj(Obj, new Obj);
 }
 
-namespace prototype {
-
-static void id(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Obj, 0)->id());
-}
-
-}
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_Obj);
   js_pushglobal(J);
@@ -288,7 +279,10 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(Obj, id, 0)
+    ADD_METHOD_CPP(Obj, id, {
+      AssertNargs(0)
+      Return(J, GetArg(Obj, 0)->id());
+    }, 0)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -314,56 +308,6 @@ static void xnew(js_State *J) {
   ReturnObj(Binary, b);
 }
 
-namespace prototype {
-
-static void dupl(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(Binary, new Binary(*GetArg(Binary, 0)));
-}
-
-static void size(js_State *J) {
-  AssertNargs(0)
-  Return(J, (unsigned)GetArg(Binary, 0)->size());
-}
-
-static void resize(js_State *J) {
-  AssertNargs(1)
-  GetArg(Binary, 0)->resize(GetArgUInt32(1));
-  ReturnVoid(J);
-}
-
-static void append(js_State *J) {
-  AssertNargs(1)
-  auto b = GetArg(Binary, 0);
-  auto b1 = GetArg(Binary, 1);
-  b->insert(b->end(), b1->begin(), b1->end());
-  ReturnVoid(J);
-}
-
-static void concatenate(js_State *J) {
-  AssertNargs(1)
-  auto b = new Binary(*GetArg(Binary, 0));
-  auto b1 = GetArg(Binary, 1);
-  b->insert(b->end(), b1->begin(), b1->end());
-  ReturnObj(Binary, b);
-}
-
-static void toString(js_State *J) {
-  AssertNargs(0)
-  auto b = GetArg(Binary, 0);
-  Return(J, std::string(b->begin(), b->end()));
-}
-
-static void toFile(js_State *J) {
-  AssertNargs(1)
-  std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
-  auto b = GetArg(Binary, 0);
-  file.write((char*)&(*b)[0], b->size());
-  ReturnVoid(J);
-}
-
-}
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_Binary);
   js_pushglobal(J);
@@ -372,13 +316,45 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(Binary, dupl, 0)
-    ADD_METHOD_CPP(Binary, size, 0)
-    ADD_METHOD_CPP(Binary, resize, 1)
-    ADD_METHOD_CPP(Binary, append, 1)
-    ADD_METHOD_CPP(Binary, concatenate, 1)
-    ADD_METHOD_CPP(Binary, toString, 0)
-    ADD_METHOD_CPP(Binary, toFile, 1)
+    ADD_METHOD_CPP(Binary, dupl, {
+      AssertNargs(0)
+      ReturnObj(Binary, new Binary(*GetArg(Binary, 0)));
+    }, 0)
+    ADD_METHOD_CPP(Binary, size, {
+      AssertNargs(0)
+      Return(J, (unsigned)GetArg(Binary, 0)->size());
+    }, 0)
+    ADD_METHOD_CPP(Binary, resize, {
+      AssertNargs(1)
+      GetArg(Binary, 0)->resize(GetArgUInt32(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, append, {
+      AssertNargs(1)
+      auto b = GetArg(Binary, 0);
+      auto b1 = GetArg(Binary, 1);
+      b->insert(b->end(), b1->begin(), b1->end());
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, concatenate, {
+      AssertNargs(1)
+      auto b = new Binary(*GetArg(Binary, 0));
+      auto b1 = GetArg(Binary, 1);
+      b->insert(b->end(), b1->begin(), b1->end());
+      ReturnObj(Binary, b);
+    }, 1)
+    ADD_METHOD_CPP(Binary, toString, {
+      AssertNargs(0)
+      auto b = GetArg(Binary, 0);
+      Return(J, std::string(b->begin(), b->end()));
+    }, 0)
+    ADD_METHOD_CPP(Binary, toFile, {
+      AssertNargs(1)
+      std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
+      auto b = GetArg(Binary, 0);
+      file.write((char*)&(*b)[0], b->size());
+      ReturnVoid(J);
+    }, 1)
   }
   js_pop(J, 2);
   AssertStack(0);
@@ -408,129 +384,6 @@ static void xnew(js_State *J) {
   ReturnObj(Atom, new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
 }
 
-namespace prototype {
-
-static void id(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->id());
-}
-
-static void dupl(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(Atom, new Atom(*GetArg(Atom, 0)));
-}
-
-static void str(js_State *J) {
-  AssertNargs(0)
-  auto a = GetArg(Atom, 0);
-  Return(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
-}
-
-static void isEqual(js_State *J) {
-  AssertNargs(1)
-  Return(J, GetArg(Atom, 0)->isEqual(*GetArg(Atom, 1)));
-}
-
-static void getElement(js_State *J) {
-  AssertNargs(0)
-  Return(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
-}
-
-static void getPos(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->pos);
-}
-
-static void setPos(js_State *J) {
-  AssertNargs(1)
-  GetArg(Atom, 0)->pos = GetArgVec3(1);
-  ReturnVoid(J);
-}
-
-static void getName(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->name);
-}
-
-static void setName(js_State *J) {
-  AssertNargs(1)
-  GetArg(Atom, 0)->name = GetArgString(1);
-  ReturnVoid(J);
-}
-
-static void getHetAtm(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->isHetAtm);
-}
-
-static void setHetAtm(js_State *J) {
-  AssertNargs(1)
-  GetArg(Atom, 0)->isHetAtm = GetArgBoolean(1);
-  ReturnVoid(J);
-}
-
-static void getNumBonds(js_State *J) {
-  AssertNargs(0)
-  auto a = GetArg(Atom, 0);
-  Return(J, a->nbonds());
-}
-
-static void getBonds(js_State *J) {
-  AssertNargs(0)
-  auto a = GetArg(Atom, 0);
-  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
-static void hasBond(js_State *J) {
-  AssertNargs(1)
-  Return(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
-}
-
-static void getOtherBondOf3(js_State *J) {
-  AssertNargs(2)
-  ReturnObj(Atom, GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
-}
-
-static void findSingleNeighbor(js_State *J) {
-  AssertNargs(1)
-  ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));
-}
-
-static void findSingleNeighbor2(js_State *J) {
-  AssertNargs(2)
-  ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
-}
-
-static void snapToGrid(js_State *J) {
-  AssertNargs(1)
-  GetArg(Atom, 0)->snapToGrid(GetArgVec3(1));
-  ReturnVoid(J);
-}
-
-static void getChain(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->chain);
-}
-
-static void getGroup(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->group);
-}
-
-static void getSecStruct(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Atom, 0)->secStructKind);
-}
-
-static void getSecStructStr(js_State *J) {
-  AssertNargs(0)
-  std::ostringstream ss;
-  ss << GetArg(Atom, 0)->secStructKind;
-  Return(J, ss.str());
-}
-
-} // prototype
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_Atom);
   js_pushglobal(J);
@@ -539,28 +392,103 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(Atom, id, 0)
-    ADD_METHOD_CPP(Atom, dupl, 0)
-    ADD_METHOD_CPP(Atom, str, 0)
-    ADD_METHOD_CPP(Atom, isEqual, 1)
-    ADD_METHOD_CPP(Atom, getElement, 0)
-    ADD_METHOD_CPP(Atom, getPos, 0)
-    ADD_METHOD_CPP(Atom, setPos, 1)
-    ADD_METHOD_CPP(Atom, getName, 0)
-    ADD_METHOD_CPP(Atom, setName, 1)
-    ADD_METHOD_CPP(Atom, getHetAtm, 0)
-    ADD_METHOD_CPP(Atom, setHetAtm, 1)
-    ADD_METHOD_CPP(Atom, getNumBonds, 0)
-    ADD_METHOD_CPP(Atom, getBonds, 0)
-    ADD_METHOD_CPP(Atom, hasBond, 1)
-    ADD_METHOD_CPP(Atom, getOtherBondOf3, 2)
-    ADD_METHOD_CPP(Atom, findSingleNeighbor, 1)
-    ADD_METHOD_CPP(Atom, findSingleNeighbor2, 2)
-    ADD_METHOD_CPP(Atom, snapToGrid, 1)
-    ADD_METHOD_CPP(Atom, getChain, 0)
-    ADD_METHOD_CPP(Atom, getGroup, 0)
-    ADD_METHOD_CPP(Atom, getSecStruct, 0)
-    ADD_METHOD_CPP(Atom, getSecStructStr, 0)
+    ADD_METHOD_CPP(Atom, id, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->id());
+    }, 0)
+    ADD_METHOD_CPP(Atom, dupl, {
+      AssertNargs(0)
+      ReturnObj(Atom, new Atom(*GetArg(Atom, 0)));
+    }, 0)
+    ADD_METHOD_CPP(Atom, str, {
+      AssertNargs(0)
+      auto a = GetArg(Atom, 0);
+      Return(J, str(boost::format("atom{%1% elt=%2% pos=%3%}") % a % a->elt % a->pos));
+    }, 0)
+    ADD_METHOD_CPP(Atom, isEqual, {
+      AssertNargs(1)
+      Return(J, GetArg(Atom, 0)->isEqual(*GetArg(Atom, 1)));
+    }, 1)
+    ADD_METHOD_CPP(Atom, getElement, {
+      AssertNargs(0)
+      Return(J, str(boost::format("%1%") % GetArg(Atom, 0)->elt));
+    }, 0)
+    ADD_METHOD_CPP(Atom, getPos, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->pos);
+    }, 0)
+    ADD_METHOD_CPP(Atom, setPos, {
+      AssertNargs(1)
+      GetArg(Atom, 0)->pos = GetArgVec3(1);
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Atom, getName, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->name);
+    }, 0)
+    ADD_METHOD_CPP(Atom, setName, {
+      AssertNargs(1)
+      GetArg(Atom, 0)->name = GetArgString(1);
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Atom, getHetAtm, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->isHetAtm);
+    }, 0)
+    ADD_METHOD_CPP(Atom, setHetAtm, {
+      AssertNargs(1)
+      GetArg(Atom, 0)->isHetAtm = GetArgBoolean(1);
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Atom, getNumBonds, {
+      AssertNargs(0)
+      auto a = GetArg(Atom, 0);
+      Return(J, a->nbonds());
+    }, 0)
+    ADD_METHOD_CPP(Atom, getBonds, {
+      AssertNargs(0)
+      auto a = GetArg(Atom, 0);
+      returnArrayOfUserData(J, a->bonds, TAG_Atom, atomFinalize, JsAtom::xnewo);
+    }, 0)
+    ADD_METHOD_CPP(Atom, hasBond, {
+      AssertNargs(1)
+      Return(J, GetArg(Atom, 0)->hasBond(GetArg(Atom, 1)));
+    }, 1)
+    ADD_METHOD_CPP(Atom, getOtherBondOf3, {
+      AssertNargs(2)
+      ReturnObj(Atom, GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
+    }, 2)
+    ADD_METHOD_CPP(Atom, findSingleNeighbor, {
+      AssertNargs(1)
+      ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));
+    }, 1)
+    ADD_METHOD_CPP(Atom, findSingleNeighbor2, {
+      AssertNargs(2)
+      ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
+    }, 2)
+    ADD_METHOD_CPP(Atom, snapToGrid, {
+      AssertNargs(1)
+      GetArg(Atom, 0)->snapToGrid(GetArgVec3(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Atom, getChain, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->chain);
+    }, 0)
+    ADD_METHOD_CPP(Atom, getGroup, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->group);
+    }, 0)
+    ADD_METHOD_CPP(Atom, getSecStruct, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->secStructKind);
+    }, 0)
+    ADD_METHOD_CPP(Atom, getSecStructStr, {
+      AssertNargs(0)
+      std::ostringstream ss;
+      ss << GetArg(Atom, 0)->secStructKind;
+      Return(J, ss.str());
+    }, 0)
     ADD_METHOD_JS (Atom, findBonds, function(filter) {return this.getBonds().filter(filter)})
     ADD_METHOD_JS (Atom, angleBetweenRad, function(a1, a2) {var p = this.getPos(); return Vec3.angleRad(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
@@ -665,249 +593,6 @@ static void xnew(js_State *J) {
   ReturnObj(Molecule, new Molecule("created-in-script"));
 }
 
-namespace prototype {
-
-static void id(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Molecule, 0)->id());
-}
-
-static void dupl(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(Molecule, new Molecule(*GetArg(Molecule, 0)));
-}
-
-static void str(js_State *J) {
-  AssertNargs(0)
-  auto m = GetArg(Molecule, 0);
-  Return(J, str(boost::format("molecule{%1%, id=%2%}") % m % m->idx.c_str()));
-}
-
-static void numAtoms(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Molecule, 0)->getNumAtoms());
-}
-
-static void getAtom(js_State *J) {
-  AssertNargs(1)
-  ReturnObj(Atom, GetArg(Molecule, 0)->getAtom(GetArgUInt32(1)));
-}
-
-static void getAtoms(js_State *J) {
-  AssertNargs(0)
-  auto m = GetArg(Molecule, 0);
-  returnArrayOfUserData<std::vector<Atom*>, void(*)(js_State*,Atom*)>(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
-static void addAtom(js_State *J) {
-  AssertNargs(1)
-  GetArg(Molecule, 0)->add(GetArg(Atom, 1));
-  ReturnVoid(J);
-}
-
-static void numChains(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Molecule, 0)->numChains());
-}
-
-static void numGroups(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Molecule, 0)->numGroups());
-}
-
-static void addMolecule(js_State *J) {
-  AssertNargs(1)
-  GetArg(Molecule, 0)->add(*GetArg(Molecule, 1));
-}
-
-static void appendAminoAcid(js_State *J) {
-  AssertNargs(2)
-  Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
-  GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloatArrayZ(2));
-}
-
-static void readAminoAcidAnglesFromAaChain(js_State *J) {
-  AssertNargs(1)
-  // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
-
-  // binary is disabled:
-  // std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaBackbone>>(*GetArg(Binary, 1)));
-
-  // read the AaBackbone array argument
-  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
-
-  // return the angles array
-  Return(J, Molecule::readAminoAcidAnglesFromAaChain(*aaBackboneArray));
-}
-
-static void setAminoAcidAnglesInAaChain(js_State *J) {
-  AssertNargs(3)
-  // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
-
-  // read the AaBackbone array argument
-  std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
-  // setAminoAcidAnglesInAaChain
-  Molecule::setAminoAcidAnglesInAaChain(*aaBackboneArray, GetArgUnsignedArray(2), GetArgFloatArrayArray(3));
-
-  ReturnVoid(J);
-}
-
-static void detectBonds(js_State *J) {
-  AssertNargs(0)
-  GetArg(Molecule, 0)->detectBonds();
-  ReturnVoid(J);
-}
-
-static void isEqual(js_State *J) {
-  AssertNargs(1)
-  Return(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
-}
-
-static void toXyz(js_State *J) {
-  AssertNargs(0)
-  std::ostringstream ss;
-  ss << *GetArg(Molecule, 0);
-  Return(J, ss.str());
-}
-
-static void toXyzCoords(js_State *J) {
-  AssertNargs(0)
-  std::ostringstream ss;
-  GetArg(Molecule, 0)->prnCoords(ss);
-  Return(J, ss.str());
-}
-
-static void findComponents(js_State *J) {
-  AssertNargs(0)
-  returnArrayOfArrayOfUserData<std::vector<std::vector<Atom*>>, void(*)(js_State*,Atom*)>(J, GetArg(Molecule, 0)->findComponents(), TAG_Atom, atomFinalize, JsAtom::xnewo);
-}
-
-static void computeConvexHullFacets(js_State *J) { // arguments: (withFurthestdist)
-  AssertNargs(1)
-  // withFurthestdist argument
-  std::unique_ptr<std::vector<double>> withFurthestdist;
-  if (js_isarray(J, 1))
-    withFurthestdist.reset(new std::vector<double>);
-  else if (!js_isundefined(J, 1))
-    js_typeerror(J, "withFurthestdist should be either an array or undefined");
-  // call the C++ function and fill the array
-  js_newarray(J);
-  {
-    unsigned idx = 0;
-    for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets(withFurthestdist.get())) {
-      Return(J, facetNormal);
-      js_setindex(J, -2, idx++);
-    }
-  }
-  // return withFurthestdist when requested
-  if (withFurthestdist.get()) {
-    unsigned idx = 0;
-    for (auto d : *withFurthestdist.get()) {
-      js_pushnumber(J, d);
-      js_setindex(J, 1, idx++);
-    }
-  }
-}
-
-static void centerOfMass(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(Molecule, 0)->centerOfMass());
-}
-
-static void centerAt(js_State *J) {
-  AssertNargs(1)
-  GetArg(Molecule, 0)->centerAt(GetArgVec3(1));
-  ReturnVoid(J);
-}
-
-static void snapToGrid(js_State *J) {
-  AssertNargs(1)
-  GetArg(Molecule, 0)->snapToGrid(GetArgVec3(1));
-  ReturnVoid(J);
-}
-
-static void findAaBackbone1(js_State *J) {
-  AssertNargs(0)
-  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackbone1());
-}
-
-static void findAaBackboneFirst(js_State *J) {
-  AssertNargs(0)
-  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneFirst());
-}
-
-static void findAaBackboneLast(js_State *J) {
-  AssertNargs(0)
-  helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneLast());
-}
-
-static void findAaBackbones(js_State *J) {
-  AssertNargs(0)
-  // return array
-  js_newarray(J);
-  unsigned idx = 0;
-  for (auto &aaBackbone : GetArg(Molecule, 0)->findAaBackbones()) {
-    helpers::pushAaBackboneAsJsObject(J, aaBackbone);
-    js_setindex(J, -2, idx++);
-  }
-}
-
-static void getAminoAcidSingleAngle(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, unsigned angleId)
-  AssertNargs(3)
-  Return(J, GetArg(Molecule, 0)->getAminoAcidSingleAngle(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUInt32(2), // idx
-    (Molecule::AaAngles::Type)GetArgUInt32(3))); // angleId
-}
-
-static void getAminoAcidSingleJunctionAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx)
-  AssertNargs(2)
-  Return(J, GetArg(Molecule, 0)->getAminoAcidSingleJunctionAngles(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUInt32(2))); // idx
-}
-
-static void getAminoAcidSequenceAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned[] idxs)
-  AssertNargs(2)
-  Return(J, GetArg(Molecule, 0)->getAminoAcidSequenceAngles(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUnsignedArray(2))); // idxs
-}
-
-static void setAminoAcidSingleAngle(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, unsigned angleId, double newAngle)
-  AssertNargs(4)
-  Return(J, GetArg(Molecule, 0)->setAminoAcidSingleAngle(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUInt32(2), // idx
-    (Molecule::AaAngles::Type)GetArgUInt32(3), // angleId
-    GetArgFloat(4))); // newAngle
-}
-
-static void setAminoAcidSingleJunctionAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned idx, double[] newAngles)
-  AssertNargs(3)
-  GetArg(Molecule, 0)->setAminoAcidSingleJunctionAngles(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUInt32(2), // idx
-    GetArgFloatArray(3)); // newAngles
-}
-
-static void setAminoAcidSequenceAngles(js_State *J) { // (Molecule*, AaBackbones *, unsigned[] idxs, double[][] newAngles)
-  AssertNargs(3)
-  GetArg(Molecule, 0)->setAminoAcidSequenceAngles(
-    *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-    GetArgUnsignedArray(2), // idxs
-    GetArgFloatArrayArray(3)); // newAngles
-}
-
-/* binary methods are disabled for now
-static void findAaBackbonesBin(js_State *J) { // returns the same as findAaBackbones but as a binary array in order to pass it to other functions easily
-  AssertNargs(0)
-  auto aaBackbonesBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaBackbone>, Binary>(GetArg(Molecule, 0)->findAaBackbones());
-  Return(Binary, aaBackbonesBinary);
-}
-*/
-} // prototype
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_Molecule);
   js_pushglobal(J);
@@ -916,15 +601,45 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(Molecule, id, 0)
-    ADD_METHOD_CPP(Molecule, dupl, 0)
-    ADD_METHOD_CPP(Molecule, str, 0)
-    ADD_METHOD_CPP(Molecule, numAtoms, 0)
-    ADD_METHOD_CPP(Molecule, getAtom, 1)
-    ADD_METHOD_CPP(Molecule, getAtoms, 0)
-    ADD_METHOD_CPP(Molecule, addAtom, 1)
-    ADD_METHOD_CPP(Molecule, numChains, 0)
-    ADD_METHOD_CPP(Molecule, numGroups, 0)
+    ADD_METHOD_CPP(Molecule, id, {
+      AssertNargs(0)
+      Return(J, GetArg(Molecule, 0)->id());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, dupl, {
+      AssertNargs(0)
+      ReturnObj(Molecule, new Molecule(*GetArg(Molecule, 0)));
+    }, 0)
+    ADD_METHOD_CPP(Molecule, str, {
+      AssertNargs(0)
+      auto m = GetArg(Molecule, 0);
+      Return(J, str(boost::format("molecule{%1%, id=%2%}") % m % m->idx.c_str()));
+    }, 0)
+    ADD_METHOD_CPP(Molecule, numAtoms, {
+      AssertNargs(0)
+      Return(J, GetArg(Molecule, 0)->getNumAtoms());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, getAtom, {
+      AssertNargs(1)
+      ReturnObj(Atom, GetArg(Molecule, 0)->getAtom(GetArgUInt32(1)));
+    }, 1)
+    ADD_METHOD_CPP(Molecule, getAtoms, {
+      AssertNargs(0)
+      auto m = GetArg(Molecule, 0);
+      returnArrayOfUserData(J, m->atoms, TAG_Atom, atomFinalize, JsAtom::xnewo);
+    }, 0)
+    ADD_METHOD_CPP(Molecule, addAtom, {
+      AssertNargs(1)
+      GetArg(Molecule, 0)->add(GetArg(Atom, 1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Molecule, numChains, {
+      AssertNargs(0)
+      Return(J, GetArg(Molecule, 0)->numChains());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, numGroups, {
+      AssertNargs(0)
+      Return(J, GetArg(Molecule, 0)->numGroups());
+    }, 0)
     ADD_METHOD_JS (Molecule, findAtoms, function(filter) {return this.getAtoms().filter(filter)})
     ADD_METHOD_JS (Molecule, transform, function(rot,shift) {
       for (var i = 0; i < this.numAtoms(); i++) {
@@ -932,30 +647,172 @@ static void init(js_State *J) {
         a.setPos(Vec3.plus(Mat3.mulv(rot, a.getPos()), shift));
       }
     })
-    ADD_METHOD_CPP(Molecule, addMolecule, 1)
-    ADD_METHOD_CPP(Molecule, appendAminoAcid, 2)
-    ADD_METHOD_CPP(Molecule, readAminoAcidAnglesFromAaChain, 1)
-    ADD_METHOD_CPP(Molecule, setAminoAcidAnglesInAaChain, 3)
-    ADD_METHOD_CPP(Molecule, detectBonds, 0)
-    ADD_METHOD_CPP(Molecule, isEqual, 1)
-    ADD_METHOD_CPP(Molecule, toXyz, 0)
-    ADD_METHOD_CPP(Molecule, toXyzCoords, 0)
-    ADD_METHOD_CPP(Molecule, findComponents, 0)
-    ADD_METHOD_CPP(Molecule, computeConvexHullFacets, 1)
-    ADD_METHOD_CPP(Molecule, centerOfMass, 0)
-    ADD_METHOD_CPP(Molecule, centerAt, 1)
-    ADD_METHOD_CPP(Molecule, snapToGrid, 1)
-    ADD_METHOD_CPP(Molecule, findAaBackbone1, 0)
-    ADD_METHOD_CPP(Molecule, findAaBackboneFirst, 0)
-    ADD_METHOD_CPP(Molecule, findAaBackboneLast, 0)
-    ADD_METHOD_CPP(Molecule, findAaBackbones, 0)
-    ADD_METHOD_CPP(Molecule, getAminoAcidSingleAngle, 3)
-    ADD_METHOD_CPP(Molecule, getAminoAcidSingleJunctionAngles, 2)
-    ADD_METHOD_CPP(Molecule, getAminoAcidSequenceAngles, 2)
-    ADD_METHOD_CPP(Molecule, setAminoAcidSingleAngle, 4)
-    ADD_METHOD_CPP(Molecule, setAminoAcidSingleJunctionAngles, 3)
-    ADD_METHOD_CPP(Molecule, setAminoAcidSequenceAngles, 3)
-    //ADD_METHOD_CPP(Molecule, findAaBackbonesBin, 0)
+    ADD_METHOD_CPP(Molecule, addMolecule, {
+      AssertNargs(1)
+      GetArg(Molecule, 0)->add(*GetArg(Molecule, 1));
+    }, 1)
+    ADD_METHOD_CPP(Molecule, appendAminoAcid, {
+      AssertNargs(2)
+      Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
+      GetArg(Molecule, 0)->appendAsAminoAcidChain(aa, GetArgFloatArrayZ(2));
+    }, 2)
+    ADD_METHOD_CPP(Molecule, readAminoAcidAnglesFromAaChain, {
+      AssertNargs(1)
+      // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
+
+      // binary is disabled:
+      // std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(Util::createContainerFromBufferOfDifferentType<Binary, std::vector<Molecule::AaBackbone>>(*GetArg(Binary, 1)));
+
+      // read the AaBackbone array argument
+      std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
+
+      // return the angles array
+      Return(J, Molecule::readAminoAcidAnglesFromAaChain(*aaBackboneArray));
+    }, 1)
+    ADD_METHOD_CPP(Molecule, setAminoAcidAnglesInAaChain, {
+      AssertNargs(3)
+      // GetArg(Molecule, 0); // semi-static: "this" argument isn't used
+
+      // read the AaBackbone array argument
+      std::unique_ptr<std::vector<Molecule::AaBackbone>> aaBackboneArray(helpers::readAaBackboneArray(J, 1/*argno*/));
+      // setAminoAcidAnglesInAaChain
+      Molecule::setAminoAcidAnglesInAaChain(*aaBackboneArray, GetArgUnsignedArray(2), GetArgFloatArrayArray(3));
+
+      ReturnVoid(J);
+    }, 3)
+    ADD_METHOD_CPP(Molecule, detectBonds, {
+      AssertNargs(0)
+      GetArg(Molecule, 0)->detectBonds();
+      ReturnVoid(J);
+    }, 0)
+    ADD_METHOD_CPP(Molecule, isEqual, {
+      AssertNargs(1)
+      Return(J, GetArg(Molecule, 0)->isEqual(*GetArg(Molecule, 1)));
+    }, 1)
+    ADD_METHOD_CPP(Molecule, toXyz, {
+      AssertNargs(0)
+      std::ostringstream ss;
+      ss << *GetArg(Molecule, 0);
+      Return(J, ss.str());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, toXyzCoords, {
+      AssertNargs(0)
+      std::ostringstream ss;
+      GetArg(Molecule, 0)->prnCoords(ss);
+      Return(J, ss.str());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, findComponents, {
+      AssertNargs(0)
+      returnArrayOfArrayOfUserData(J, GetArg(Molecule, 0)->findComponents(), TAG_Atom, atomFinalize, JsAtom::xnewo);
+    }, 0)
+    ADD_METHOD_CPP(Molecule, computeConvexHullFacets, {
+      AssertNargs(1)
+      // withFurthestdist argument
+      std::unique_ptr<std::vector<double>> withFurthestdist;
+      if (js_isarray(J, 1))
+        withFurthestdist.reset(new std::vector<double>);
+      else if (!js_isundefined(J, 1))
+        js_typeerror(J, "withFurthestdist should be either an array or undefined");
+      // call the C++ function and fill the array
+      js_newarray(J);
+      {
+        unsigned idx = 0;
+        for (auto &facetNormal : GetArg(Molecule, 0)->computeConvexHullFacets(withFurthestdist.get())) {
+          Return(J, facetNormal);
+          js_setindex(J, -2, idx++);
+        }
+      }
+      // return withFurthestdist when requested
+      if (withFurthestdist.get()) {
+        unsigned idx = 0;
+        for (auto d : *withFurthestdist.get()) {
+          js_pushnumber(J, d);
+          js_setindex(J, 1, idx++);
+        }
+      }
+    }, 1)
+    ADD_METHOD_CPP(Molecule, centerOfMass, {
+      AssertNargs(0)
+      Return(J, GetArg(Molecule, 0)->centerOfMass());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, centerAt, {
+      AssertNargs(1)
+      GetArg(Molecule, 0)->centerAt(GetArgVec3(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Molecule, snapToGrid, {
+      AssertNargs(1)
+      GetArg(Molecule, 0)->snapToGrid(GetArgVec3(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Molecule, findAaBackbone1, {
+      AssertNargs(0)
+      helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackbone1());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackboneFirst, {
+      AssertNargs(0)
+      helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneFirst());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackboneLast, {
+      AssertNargs(0)
+      helpers::pushAaBackboneAsJsObjectZ(J, GetArg(Molecule, 0)->findAaBackboneLast());
+    }, 0)
+    ADD_METHOD_CPP(Molecule, findAaBackbones, {
+      AssertNargs(0)
+      // return array
+      js_newarray(J);
+      unsigned idx = 0;
+      for (auto &aaBackbone : GetArg(Molecule, 0)->findAaBackbones()) {
+        helpers::pushAaBackboneAsJsObject(J, aaBackbone);
+        js_setindex(J, -2, idx++);
+      }
+    }, 0)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSingleAngle, {
+      AssertNargs(3)
+      Return(J, GetArg(Molecule, 0)->getAminoAcidSingleAngle(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUInt32(2), // idx
+        (Molecule::AaAngles::Type)GetArgUInt32(3))); // angleId
+    }, 3)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSingleJunctionAngles, {
+      AssertNargs(2)
+      Return(J, GetArg(Molecule, 0)->getAminoAcidSingleJunctionAngles(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUInt32(2))); // idx
+    }, 2)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSequenceAngles, {
+      AssertNargs(2)
+      Return(J, GetArg(Molecule, 0)->getAminoAcidSequenceAngles(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUnsignedArray(2))); // idxs
+    }, 2)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSingleAngle, {
+      AssertNargs(4)
+      Return(J, GetArg(Molecule, 0)->setAminoAcidSingleAngle(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUInt32(2), // idx
+        (Molecule::AaAngles::Type)GetArgUInt32(3), // angleId
+        GetArgFloat(4))); // newAngle
+    }, 4)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSingleJunctionAngles, {
+      AssertNargs(3)
+      GetArg(Molecule, 0)->setAminoAcidSingleJunctionAngles(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUInt32(2), // idx
+        GetArgFloatArray(3)); // newAngles
+    }, 3)
+    ADD_METHOD_CPP(Molecule, setAminoAcidSequenceAngles, {
+      AssertNargs(3)
+      GetArg(Molecule, 0)->setAminoAcidSequenceAngles(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUnsignedArray(2), // idxs
+        GetArgFloatArrayArray(3)); // newAngles
+    }, 3)
+    //ADD_METHOD_CPP(Molecule, findAaBackbonesBin, {
+    //  AssertNargs(0)
+    //  auto aaBackbonesBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaBackbone>, Binary>(GetArg(Molecule, 0)->findAaBackbones());
+    //  Return(Binary, aaBackbonesBinary);
+    //}, 0)
     ADD_METHOD_JS (Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
@@ -1043,32 +900,6 @@ static void xnew(js_State *J) {
   }
 }
 
-namespace prototype {
-
-static void str(js_State *J) {
-  AssertNargs(0)
-  auto f = GetArg(TempFile, 0);
-  Return(J, str(boost::format("temp-file{%1%}") % f->getFname()));
-}
-
-static void fname(js_State *J) {
-  AssertNargs(0)
-  Return(J, GetArg(TempFile, 0)->getFname());
-}
-
-static void toBinary(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(Binary, GetArg(TempFile, 0)->toBinary());
-}
-
-static void toPermanent(js_State *J) {
-  AssertNargs(1)
-  GetArg(TempFile, 0)->toPermanent(GetArgString(1));
-  ReturnVoid(J);
-}
-
-}
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_TempFile);
   js_pushglobal(J);
@@ -1077,10 +908,24 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(TempFile, str, 0)
-    ADD_METHOD_CPP(TempFile, fname, 0)
-    ADD_METHOD_CPP(TempFile, toBinary, 0)
-    ADD_METHOD_CPP(TempFile, toPermanent, 1)
+    ADD_METHOD_CPP(TempFile, str, {
+      AssertNargs(0)
+      auto f = GetArg(TempFile, 0);
+      Return(J, str(boost::format("temp-file{%1%}") % f->getFname()));
+    }, 0)
+    ADD_METHOD_CPP(TempFile, fname, {
+      AssertNargs(0)
+      Return(J, GetArg(TempFile, 0)->getFname());
+    }, 0)
+    ADD_METHOD_CPP(TempFile, toBinary, {
+      AssertNargs(0)
+      ReturnObj(Binary, GetArg(TempFile, 0)->toBinary());
+    }, 0)
+    ADD_METHOD_CPP(TempFile, toPermanent, {
+      AssertNargs(1)
+      GetArg(TempFile, 0)->toPermanent(GetArgString(1));
+      ReturnVoid(J);
+    }, 1)
     //ADD_METHOD_CPP(TempFile, writeBinary, 1) // to write binary data into the temp file
   }
   js_pop(J, 2);
@@ -1102,42 +947,6 @@ static void xnew(js_State *J) {
   ReturnObj(StructureDb, new StructureDb);
 }
 
-namespace prototype {
-
-static void str(js_State *J) {
-  AssertNargs(0)
-  auto sdb = GetArg(StructureDb, 0);
-  Return(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
-}
-
-static void toString(js_State *J) {
-  AssertNargs(0)
-  auto sdb = GetArg(StructureDb, 0);
-  Return(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
-}
-
-static void add(js_State *J) {
-  AssertNargs(2)
-  GetArg(StructureDb, 0)->add(GetArg(Molecule, 1), GetArgString(2));
-  ReturnVoid(J);
-}
-
-static void find(js_State *J) {
-  AssertNargs(1)
-  Return(J, GetArg(StructureDb, 0)->find(GetArg(Molecule, 1)));
-}
-
-static void moleculeSignature(js_State *J) {
-  AssertNargs(1)
-  /*XXX StructureDb::moleculeSignature is static, and "this" argument isn't used*/
-  auto signature = StructureDb::computeMoleculeSignature(GetArg(Molecule, 1));
-  std::ostringstream ss;
-  ss << signature;
-  Return(J, ss.str());
-}
-
-}
-
 static void init(js_State *J) {
   JsSupport::InitObjectRegistry(J, TAG_StructureDb);
   js_pushglobal(J);
@@ -1146,11 +955,33 @@ static void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP(StructureDb, str, 0)
-    ADD_METHOD_CPP(StructureDb, toString, 0)
-    ADD_METHOD_CPP(StructureDb, add, 2)
-    ADD_METHOD_CPP(StructureDb, find, 1)
-    ADD_METHOD_CPP(StructureDb, moleculeSignature, 1)
+    ADD_METHOD_CPP(StructureDb, str, {
+      AssertNargs(0)
+      auto sdb = GetArg(StructureDb, 0);
+      Return(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+    }, 0)
+    ADD_METHOD_CPP(StructureDb, toString, {
+      AssertNargs(0)
+      auto sdb = GetArg(StructureDb, 0);
+      Return(J, str(boost::format("structure-db{size=%1%}") % sdb->size()));
+    }, 0)
+    ADD_METHOD_CPP(StructureDb, add, {
+      AssertNargs(2)
+      GetArg(StructureDb, 0)->add(GetArg(Molecule, 1), GetArgString(2));
+      ReturnVoid(J);
+    }, 2)
+    ADD_METHOD_CPP(StructureDb, find, {
+      AssertNargs(1)
+      Return(J, GetArg(StructureDb, 0)->find(GetArg(Molecule, 1)));
+    }, 1)
+    ADD_METHOD_CPP(StructureDb, moleculeSignature, {
+      AssertNargs(1)
+      /*XXX StructureDb::moleculeSignature is static, and "this" argument isn't used*/
+      auto signature = StructureDb::computeMoleculeSignature(GetArg(Molecule, 1));
+      std::ostringstream ss;
+      ss << signature;
+      Return(J, ss.str());
+    }, 1)
   }
   js_pop(J, 2);
   AssertStack(0);

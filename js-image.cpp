@@ -80,24 +80,24 @@ void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP_new(Image, width, {
+    ADD_METHOD_CPP(Image, width, {
       AssertNargs(0)
       Return(J, GetArg(Image, 0)->width());
     }, 0)
-    ADD_METHOD_CPP_new(Image, height, {
+    ADD_METHOD_CPP(Image, height, {
       AssertNargs(0)
       Return(J, GetArg(Image, 0)->height());
     }, 0)
-    ADD_METHOD_CPP_new(Image, getPixel, {
+    ADD_METHOD_CPP(Image, getPixel, {
       AssertNargs(2)
       Return(J, Rgb::rgbToUnsigned(GetArg(Image, 0)->get_pixel(GetArgUInt32(1), GetArgUInt32(2))));
     }, 2)
-    ADD_METHOD_CPP_new(Image, setPixel, {
+    ADD_METHOD_CPP(Image, setPixel, {
       AssertNargs(3)
       GetArg(Image, 0)->set_pixel(GetArgUInt32(1), GetArgUInt32(2), Rgb::unsignedToRgb(GetArgUInt32(3)));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP_new(Image, plasma, {
+    ADD_METHOD_CPP(Image, plasma, {
       AssertNargs(10)
       auto strToColormap = [](const std::string &name) {
         // TODO other colormaps
@@ -120,22 +120,22 @@ void init(js_State *J) {
              strToColormap(GetArgString(10)));
       ReturnVoid(J);
     }, 10)
-    ADD_METHOD_CPP_new(Image, checkeredPattern, {
+    ADD_METHOD_CPP(Image, checkeredPattern, {
       AssertNargs(4)
       checkered_pattern(GetArgUInt32(1), GetArgUInt32(2), GetArgUInt32(3), (bitmap_image::color_plane)GetArgUInt32(4), *GetArg(Image, 0));
       ReturnVoid(J);
     }, 4)
-    ADD_METHOD_CPP_new(Image, equal, {
+    ADD_METHOD_CPP(Image, equal, {
       AssertNargs(1)
       *GetArg(Image, 0) = *GetArg(Image, 1);
       ReturnVoid(J);
     }, 1)
-    ADD_METHOD_CPP_new(Image, clear, {
+    ADD_METHOD_CPP(Image, clear, {
       AssertNargs(0)
       GetArg(Image, 0)->clear();
       ReturnVoid(J);
     }, 0)
-    ADD_METHOD_CPP_new(Image, cryptoHash, {
+    ADD_METHOD_CPP(Image, cryptoHash, {
       AssertNargs(0)
       // cryptopp
       using namespace CryptoPP;
@@ -157,13 +157,13 @@ void init(js_State *J) {
       //
       Return(J, hash);
     }, 0)
-    ADD_METHOD_CPP_new(Image, saveImage, {
+    ADD_METHOD_CPP(Image, saveImage, {
       AssertNargs(1)
       GetArg(Image, 0)->save_image(GetArgString(1));
       ReturnVoid(J);
     }, 1)
     // drawing functions
-    ADD_METHOD_CPP_new(Image, setRegion, {
+    ADD_METHOD_CPP(Image, setRegion, {
       AssertNargs(7)
       GetArg(Image, 0)->set_region(
         GetArgUInt32(1), GetArgUInt32(2), // x y
@@ -171,22 +171,22 @@ void init(js_State *J) {
         GetArgUInt32(5), GetArgUInt32(6), GetArgUInt32(7)); // red green blue
       ReturnVoid(J);
     }, 7)
-    ADD_METHOD_CPP_new(Image, reflectiveImage, {
+    ADD_METHOD_CPP(Image, reflectiveImage, {
       AssertNargs(2)
       GetArg(Image, 0)->reflective_image(*GetArg(Image, 1), GetArgBoolean(2));
       ReturnVoid(J);
     }, 2)
-    ADD_METHOD_CPP_new(Image, convertToGrayscale, {
+    ADD_METHOD_CPP(Image, convertToGrayscale, {
       AssertNargs(0)
       GetArg(Image, 0)->convert_to_grayscale();
       ReturnVoid(J);
     }, 0)
-    ADD_METHOD_CPP_new(Image, horizontalFlip, {
+    ADD_METHOD_CPP(Image, horizontalFlip, {
       AssertNargs(0)
       GetArg(Image, 0)->horizontal_flip();
       ReturnVoid(J);
     }, 0)
-    ADD_METHOD_CPP_new(Image, verticalFlip, {
+    ADD_METHOD_CPP(Image, verticalFlip, {
       AssertNargs(0)
       GetArg(Image, 0)->vertical_flip();
       ReturnVoid(J);
@@ -222,27 +222,27 @@ void init(js_State *J) {
   js_getproperty(J, -1, "prototype");
   JsSupport::StackPopPrevious(J);
   { // methods
-    ADD_METHOD_CPP_new(ImageDrawer, penWidth, {
+    ADD_METHOD_CPP(ImageDrawer, penWidth, {
       AssertNargs(1)
       GetArg(ImageDrawer, 0)->pen_width(GetArgUInt32(1));
       ReturnVoid(J);
     }, 1)
-    ADD_METHOD_CPP_new(ImageDrawer, penColor, {
+    ADD_METHOD_CPP(ImageDrawer, penColor, {
       AssertNargs(3)
       GetArg(ImageDrawer, 0)->pen_color(GetArgUInt32(1), GetArgUInt32(2), GetArgUInt32(3));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP_new(ImageDrawer, rectangle, {
+    ADD_METHOD_CPP(ImageDrawer, rectangle, {
       AssertNargs(4)
       GetArg(ImageDrawer, 0)->rectangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
       ReturnVoid(J);
     }, 4)
-    ADD_METHOD_CPP_new(ImageDrawer, triangle, {
+    ADD_METHOD_CPP(ImageDrawer, triangle, {
       AssertNargs(8)
       GetArg(ImageDrawer, 0)->triangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4), GetArgFloat(5), GetArgFloat(6));
       ReturnVoid(J);
     }, 6)
-    ADD_METHOD_CPP_new(ImageDrawer, quadix, {
+    ADD_METHOD_CPP(ImageDrawer, quadix, {
       AssertNargs(8)
       GetArg(ImageDrawer, 0)->quadix(
         GetArgFloat(1), GetArgFloat(2),
@@ -251,27 +251,27 @@ void init(js_State *J) {
         GetArgFloat(7), GetArgFloat(8));
       ReturnVoid(J);
     }, 8)
-    ADD_METHOD_CPP_new(ImageDrawer, lineSegment, {
+    ADD_METHOD_CPP(ImageDrawer, lineSegment, {
       AssertNargs(4)
       GetArg(ImageDrawer, 0)->line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
       ReturnVoid(J);
     }, 4)
-    ADD_METHOD_CPP_new(ImageDrawer, horiztonalLineSegment, {
+    ADD_METHOD_CPP(ImageDrawer, horiztonalLineSegment, {
       AssertNargs(3)
       GetArg(ImageDrawer, 0)->horiztonal_line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP_new(ImageDrawer, verticalLineSegment, {
+    ADD_METHOD_CPP(ImageDrawer, verticalLineSegment, {
       AssertNargs(3)
       GetArg(ImageDrawer, 0)->vertical_line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP_new(ImageDrawer, ellipse, {
+    ADD_METHOD_CPP(ImageDrawer, ellipse, {
       AssertNargs(4)
       GetArg(ImageDrawer, 0)->ellipse(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
       ReturnVoid(J);
     }, 4)
-    ADD_METHOD_CPP_new(ImageDrawer, circle, {
+    ADD_METHOD_CPP(ImageDrawer, circle, {
       AssertNargs(3)
       GetArg(ImageDrawer, 0)->circle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
       ReturnVoid(J);
