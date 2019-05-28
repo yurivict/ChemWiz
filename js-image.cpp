@@ -135,7 +135,7 @@ static void cryptoHash(js_State *J) {
   typedef Weak::MD5 Algo; // workaround for crash with SHA256
   // get image data buffer
   auto *img  = GetArg(Image, 0);
-  auto imgData = (byte*)img->row(0);
+  auto imgData = (byte*)img->data();
   size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
   // compute hash
   byte digest[Algo::DIGESTSIZE];
@@ -153,6 +153,39 @@ static void cryptoHash(js_State *J) {
 static void saveImage(js_State *J) {
   AssertNargs(1)
   GetArg(Image, 0)->save_image(GetArgString(1));
+  ReturnVoid(J);
+}
+
+static void setRegion(js_State *J) {
+  AssertNargs(7)
+  GetArg(Image, 0)->set_region(
+    GetArgUInt32(1), GetArgUInt32(2), // x y
+    GetArgUInt32(3), GetArgUInt32(4), // width height
+    GetArgUInt32(5), GetArgUInt32(6), GetArgUInt32(7)); // red green blue
+  ReturnVoid(J);
+}
+
+static void reflectiveImage(js_State *J) {
+  AssertNargs(2)
+  GetArg(Image, 0)->reflective_image(*GetArg(Image, 1), GetArgBoolean(2));
+  ReturnVoid(J);
+}
+
+static void convertToGrayscale(js_State *J) {
+  AssertNargs(0)
+  GetArg(Image, 0)->convert_to_grayscale();
+  ReturnVoid(J);
+}
+
+static void horizontalFlip(js_State *J) {
+  AssertNargs(0)
+  GetArg(Image, 0)->horizontal_flip();
+  ReturnVoid(J);
+}
+
+static void verticalFlip(js_State *J) {
+  AssertNargs(0)
+  GetArg(Image, 0)->vertical_flip();
   ReturnVoid(J);
 }
 
@@ -176,6 +209,12 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Image, clear, 0)
     ADD_METHOD_CPP(Image, cryptoHash, 0)
     ADD_METHOD_CPP(Image, saveImage, 1)
+    // drawing functions
+    ADD_METHOD_CPP(Image, setRegion, 7)
+    ADD_METHOD_CPP(Image, reflectiveImage, 2)
+    ADD_METHOD_CPP(Image, convertToGrayscale, 0)
+    ADD_METHOD_CPP(Image, horizontalFlip, 0)
+    ADD_METHOD_CPP(Image, verticalFlip, 0)
   }
   js_pop(J, 2);
 }
