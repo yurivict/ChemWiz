@@ -53,6 +53,9 @@ static const char *TAG_StructureDb = "StructureDb";
 namespace JsImage {
   extern void init(js_State *J);
 }
+namespace JsImageDrawer {
+  extern void init(js_State *J);
+}
 
 // helper macros
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
@@ -1780,6 +1783,7 @@ void registerFunctions(js_State *J) {
   JsStructureDb::init(J);
   // externally defined
   JsImage::init(J);
+  JsImageDrawer::init(J);
 
   //
   // Misc

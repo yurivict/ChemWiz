@@ -14,12 +14,22 @@
 #include <cryptopp/hex.h>
 
 static const char *TAG_Image         = "Image";
+static const char *TAG_ImageDrawer   = "ImageDrawer";
+
+//
+// wrapper classes // TODO get rid of them by extending the framework to accept arvitrary classes
+//
 
 class Image : public bitmap_image {
 public:
   Image(const std::string& filename) : bitmap_image(filename) { }
   Image(unsigned int width, unsigned int height) : bitmap_image(width, height) { }
 }; // Image
+
+class ImageDrawer : public image_drawer {
+public:
+  ImageDrawer(Image &image) : image_drawer(image) { }
+}; // ImageDrawer
 
 namespace Rgb {
 
@@ -220,3 +230,126 @@ void init(js_State *J) {
 }
 
 } // JsImage
+
+namespace JsImageDrawer {
+
+static void imageDrawerFinalize(js_State *J, void *p) {
+  delete (ImageDrawer*)p;
+}
+
+static void xnewo(js_State *J, ImageDrawer *d) {
+  js_getglobal(J, TAG_ImageDrawer);
+  js_getproperty(J, -1, "prototype");
+  js_newuserdata(J, TAG_ImageDrawer, d, imageDrawerFinalize);
+}
+
+static void xnew(js_State *J) {
+  AssertNargs(1)
+  ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 0)));
+}
+
+namespace prototype {
+
+static void penWidth(js_State *J) {
+  AssertNargs(1)
+  GetArg(ImageDrawer, 0)->pen_width(GetArgUInt32(1));
+  ReturnVoid(J);
+}
+
+static void penColor(js_State *J) {
+  AssertNargs(3)
+  GetArg(ImageDrawer, 0)->pen_color(GetArgUInt32(1), GetArgUInt32(2), GetArgUInt32(3));
+  ReturnVoid(J);
+}
+
+static void rectangle(js_State *J) {
+  AssertNargs(4)
+  GetArg(ImageDrawer, 0)->rectangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+  ReturnVoid(J);
+}
+
+static void triangle(js_State *J) {
+  AssertNargs(8)
+  GetArg(ImageDrawer, 0)->triangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4), GetArgFloat(5), GetArgFloat(6));
+  ReturnVoid(J);
+}
+
+static void quadix(js_State *J) {
+  AssertNargs(8)
+  GetArg(ImageDrawer, 0)->quadix(
+    GetArgFloat(1), GetArgFloat(2),
+    GetArgFloat(3), GetArgFloat(4),
+    GetArgFloat(5), GetArgFloat(6),
+    GetArgFloat(7), GetArgFloat(8));
+  ReturnVoid(J);
+}
+
+static void lineSegment(js_State *J) {
+  AssertNargs(4)
+  GetArg(ImageDrawer, 0)->line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+  ReturnVoid(J);
+}
+
+static void horiztonalLineSegment(js_State *J) {
+  AssertNargs(3)
+  GetArg(ImageDrawer, 0)->horiztonal_line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
+  ReturnVoid(J);
+}
+
+static void verticalLineSegment(js_State *J) {
+  AssertNargs(3)
+  GetArg(ImageDrawer, 0)->vertical_line_segment(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
+  ReturnVoid(J);
+}
+
+static void ellipse(js_State *J) {
+  AssertNargs(4)
+  GetArg(ImageDrawer, 0)->ellipse(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+  ReturnVoid(J);
+}
+
+static void circle(js_State *J) {
+  AssertNargs(3)
+  GetArg(ImageDrawer, 0)->circle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3));
+  ReturnVoid(J);
+}
+
+//static void fillRectangle(js_State *J) {
+//  AssertNargs(4)
+//  GetArg(ImageDrawer, 0)->fill_rectangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4));
+//  ReturnVoid(J);
+//}
+
+//static void fillTriangle(js_State *J) {
+//  AssertNargs(6)
+//  GetArg(ImageDrawer, 0)->fill_triangle(GetArgFloat(1), GetArgFloat(2), GetArgFloat(3), GetArgFloat(4), GetArgFloat(5), GetArgFloat(6));
+//  ReturnVoid(J);
+//}
+
+}
+
+void init(js_State *J) {
+  JsSupport::InitObjectRegistry(J, TAG_ImageDrawer);
+  js_pushglobal(J);
+  ADD_JS_CONSTRUCTOR(ImageDrawer)
+  js_getglobal(J, TAG_ImageDrawer);
+  js_getproperty(J, -1, "prototype");
+  JsSupport::StackPopPrevious(J);
+  { // methods
+    ADD_METHOD_CPP(ImageDrawer, penWidth, 1)
+    ADD_METHOD_CPP(ImageDrawer, penColor, 3)
+    ADD_METHOD_CPP(ImageDrawer, rectangle, 4)
+    ADD_METHOD_CPP(ImageDrawer, triangle, 6)
+    ADD_METHOD_CPP(ImageDrawer, quadix, 8)
+    ADD_METHOD_CPP(ImageDrawer, lineSegment, 4)
+    ADD_METHOD_CPP(ImageDrawer, horiztonalLineSegment, 3)
+    ADD_METHOD_CPP(ImageDrawer, verticalLineSegment, 3)
+    ADD_METHOD_CPP(ImageDrawer, ellipse, 4)
+    ADD_METHOD_CPP(ImageDrawer, circle, 3)
+    //ADD_METHOD_CPP(ImageDrawer, fillRectangle, 4)
+    //ADD_METHOD_CPP(ImageDrawer, fillTriangle, 6)
+  }
+  js_pop(J, 2);
+}
+
+} // JsImageDrawer
