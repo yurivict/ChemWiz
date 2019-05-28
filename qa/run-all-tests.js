@@ -10,6 +10,7 @@ var all_tests = ["xyz",
                  "gzip", "mmtf",
                  "sqlite3",
                  "image",
+                 "animate",
                  "calc-erkale", "calc-nwchem"
                 ]
 
