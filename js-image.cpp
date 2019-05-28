@@ -207,7 +207,7 @@ static void xnewo(js_State *J, ImageDrawer *d) {
 
 static void xnew(js_State *J) {
   AssertNargs(1)
-  ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 0)));
+  ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 1)));
 }
 
 void init(js_State *J) {
