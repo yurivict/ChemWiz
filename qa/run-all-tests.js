@@ -9,6 +9,7 @@ var all_tests = ["xyz",
                  "web-ui-http", "web-ui-https", "web-ui-url",
                  "gzip", "mmtf",
                  "sqlite3",
+                 "image",
                  "calc-erkale", "calc-nwchem"
                 ]
 
