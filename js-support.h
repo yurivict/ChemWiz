@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <functional>
 
 #include <assert.h>
 
@@ -46,6 +47,9 @@ public:
 // add method defined by the C++ code
 #define ADD_METHOD_CPP(cls, method, nargs) \
   JsSupport::addMethodCpp(J, #cls, #method, prototype::method, nargs);
+
+#define ADD_METHOD_CPP_new(cls, methodName, methodBody, nargs) \
+  JsSupport::addMethodCpp(J, #cls, #methodName, [](js_State *J) methodBody,  nargs);
 
 // add method defined in JavaScript
 #define ADD_METHOD_JS(cls, method, code...) \
