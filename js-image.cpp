@@ -17,7 +17,7 @@ static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
 
 //
-// wrapper classes // TODO get rid of them by extending the framework to accept arvitrary classes
+// wrapper classes // TODO get rid of them by extending the framework to accept arbitrary classes
 //
 
 class Image : public bitmap_image {
@@ -50,14 +50,12 @@ static rgb_t unsignedToRgb(const unsigned &u) {
 
 namespace JsImage {
 
-static void imageFinalize(js_State *J, void *p) {
-  delete (Image*)p;
-}
-
 static void xnewo(js_State *J, Image *i) {
   js_getglobal(J, TAG_Image);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_Image, i, imageFinalize);
+  js_newuserdata(J, TAG_Image, i, [](js_State *J, void *p) {
+    delete (Image*)p;
+  });
 }
 
 static void xnew(js_State *J) {
@@ -199,14 +197,12 @@ void init(js_State *J) {
 
 namespace JsImageDrawer {
 
-static void imageDrawerFinalize(js_State *J, void *p) {
-  delete (ImageDrawer*)p;
-}
-
 static void xnewo(js_State *J, ImageDrawer *d) {
   js_getglobal(J, TAG_ImageDrawer);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_ImageDrawer, d, imageDrawerFinalize);
+  js_newuserdata(J, TAG_ImageDrawer, d, [](js_State *J, void *p) {
+    delete (ImageDrawer*)p;
+  });
 }
 
 static void xnew(js_State *J) {

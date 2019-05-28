@@ -87,10 +87,6 @@ namespace JsBinding {
 // helper classes and functions
 //
 
-static void binaryFinalize(js_State *J, void *p) {
-  delete (Binary*)p;
-}
-
 static void moleculeFinalize(js_State *J, void *p) {
   delete (Molecule*)p;
 }
@@ -100,10 +96,6 @@ static void atomFinalize(js_State *J, void *p) {
   // delete only unattached atoms, otherwise they are deteled by their Molecule object
   if (!a->molecule)
     delete a;
-}
-
-static void tempFileFinalize(js_State *J, void *p) {
-  delete (TempFile*)p;
 }
 
 template<typename A, typename FnNew>
@@ -295,7 +287,9 @@ namespace JsBinary {
 static void xnewo(js_State *J, Binary *b) {
   js_getglobal(J, TAG_Binary);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_Binary, b, binaryFinalize);
+  js_newuserdata(J, TAG_Binary, b, [](js_State *J, void *p) {
+    delete (Binary*)p;
+  });
 }
 
 static void xnew(js_State *J) {
@@ -882,7 +876,9 @@ namespace JsTempFile {
 static void xnewo(js_State *J, TempFile *f) {
   js_getglobal(J, TAG_TempFile);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_TempFile, f, tempFileFinalize);
+  js_newuserdata(J, TAG_TempFile, f, [](js_State *J, void *p) {
+    delete (TempFile*)p;
+  });
 }
 
 static void xnew(js_State *J) {
@@ -939,7 +935,9 @@ namespace JsStructureDb {
 static void xnewo(js_State *J, StructureDb *f) {
   js_getglobal(J, TAG_StructureDb);
   js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_StructureDb, f, tempFileFinalize);
+  js_newuserdata(J, TAG_StructureDb, f, [](js_State *J, void *p) {
+    delete (StructureDb*)p;
+  });
 }
 
 static void xnew(js_State *J) {
