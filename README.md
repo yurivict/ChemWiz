@@ -17,7 +17,7 @@ Program for manipulations with molecules and performing computations with them
 * Qhull: to compute convex hulls of molecules (https://github.com/qhull/qhull)
 * rang: to print colored and styled text to the terminal (https://github.com/agauniyal/rang)
 * C++ Bitmap Library: to support the "Image" type (https://github.com/ArashPartow/bitmap) (build: header-only library)
-* Crypto++ Library: to compute cryptographic hashes (https://www.cryptopp.com/)
+* PicoSHA2: to compute cryptographic hashes (https://github.com/okdshin/PicoSHA2) (build: header-only library)
 * (optional, library) OpenBabel: for parsing molecules in SMILES format (http://openbabel.org/wiki/Main_Page)
 * (optional, library) libdsrpdb: for parsing proteins in the PDB format (or perhaps any large and complex molecules) (https://graphics.stanford.edu/~drussel/pdb/)
 * (optional, build-time headers-only) mmtf-cpp: for parsing chemical structures in the MMTF format (https://github.com/rcsb/mmtf-cpp)

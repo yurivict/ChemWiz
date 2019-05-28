@@ -55,7 +55,7 @@ exports.run = function() {
   //glass_image.saveImage("glass_effect.bmp");
   //print("exampleFrostedGlassEffect().hash="+glass_image.cryptoHash())
 
-  if (glass_image.cryptoHash() == "B4CE3FAF139F97D2ECBAD951FDBA5C84")
+  if (glass_image.cryptoHash() == "692aea73afe291dd2a69c2970e382d1d0a7b926d4efb052636731219ef00a898")
     return "OK"
   else
     return "FAIL"

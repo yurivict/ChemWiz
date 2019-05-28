@@ -36,7 +36,7 @@ exports.run = function() {
   //img.saveImage("animate.bmp");
   //print("evolveDim2WaveSquare().cryptoHash()="+img.cryptoHash())
 
-  if (img.cryptoHash() == "C09139415E25BAA1FD8E6ED36927BB2A")
+  if (img.cryptoHash() == "75278270ac8ec59234d3ac49c7fe75e333425d36ee08f6554b21acf302454700")
     return "OK"
   else
     return "FAIL"

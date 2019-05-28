@@ -7,11 +7,7 @@
 
 #include <mujs.h>
 #include <bitmap_image.hpp>
-#include <cryptopp/cryptlib.h>
-#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1 // workaround for crash with SHA256, see at Algo
-//#include <cryptopp/sha.h>
-#include <cryptopp/md5.h> // workaround for crash with SHA256, see at Algo
-#include <cryptopp/hex.h>
+#include <picosha2.h>
 
 static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
@@ -135,25 +131,14 @@ void init(js_State *J) {
     }, 0)
     ADD_METHOD_CPP(Image, cryptoHash, {
       AssertNargs(0)
-      // cryptopp
-      using namespace CryptoPP;
-      //typedef SHA256 Algo; // SHA256 crashes, need to investigate why
-      typedef Weak::MD5 Algo; // workaround for crash with SHA256
       // get image data buffer
       auto *img  = GetArg(Image, 0);
-      auto imgData = (byte*)img->data();
+      auto imgData = (uint8_t*)img->data();
       size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
       // compute hash
-      byte digest[Algo::DIGESTSIZE];
-      Algo().CalculateDigest(digest, (byte*)imgData, imgDataSize);
-      // convert hash to string
-      std::string hash;
-      HexEncoder encoder;
-      encoder.Attach(new StringSink(hash));
-      encoder.Put(digest, sizeof(digest));
-      encoder.MessageEnd();
+      auto hash_hex_str = picosha2::hash256_hex_string(imgData, imgData+imgDataSize);
       //
-      Return(J, hash);
+      Return(J, hash_hex_str);
     }, 0)
     ADD_METHOD_CPP(Image, saveImage, {
       AssertNargs(1)
