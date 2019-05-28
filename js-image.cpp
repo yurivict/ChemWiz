@@ -3,9 +3,15 @@
 #include "xerror.h"
 
 #include <string>
+#include <sstream>
 
 #include <mujs.h>
 #include <bitmap_image.hpp>
+#include <cryptopp/cryptlib.h>
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1 // workaround for crash with SHA256, see at Algo
+//#include <cryptopp/sha.h>
+#include <cryptopp/md5.h> // workaround for crash with SHA256, see at Algo
+#include <cryptopp/hex.h>
 
 static const char *TAG_Image         = "Image";
 
@@ -121,6 +127,29 @@ static void clear(js_State *J) {
   ReturnVoid(J);
 }
 
+static void cryptoHash(js_State *J) {
+  AssertNargs(0)
+  // cryptopp
+  using namespace CryptoPP;
+  //typedef SHA256 Algo; // SHA256 crashes, need to investigate why
+  typedef Weak::MD5 Algo; // workaround for crash with SHA256
+  // get image data buffer
+  auto *img  = GetArg(Image, 0);
+  auto imgData = (byte*)img->row(0);
+  size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
+  // compute hash
+  byte digest[Algo::DIGESTSIZE];
+  Algo().CalculateDigest(digest, (byte*)imgData, imgDataSize);
+  // convert hash to string
+  std::string hash;
+  HexEncoder encoder;
+  encoder.Attach(new StringSink(hash));
+  encoder.Put(digest, sizeof(digest));
+  encoder.MessageEnd();
+  //
+  Return(J, hash);
+}
+
 static void saveImage(js_State *J) {
   AssertNargs(1)
   GetArg(Image, 0)->save_image(GetArgString(1));
@@ -145,6 +174,7 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Image, checkeredPattern, 4)
     ADD_METHOD_CPP(Image, equal, 1)
     ADD_METHOD_CPP(Image, clear, 0)
+    ADD_METHOD_CPP(Image, cryptoHash, 0)
     ADD_METHOD_CPP(Image, saveImage, 1)
   }
   js_pop(J, 2);

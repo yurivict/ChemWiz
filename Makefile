@@ -18,8 +18,8 @@ CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"C
 CXXFLAGS=	$(CFLAGS) -std=c++17
 
 # for MuJS
-LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs)
-LDLIBS=		$(shell pkg-config --static --libs-only-l mujs)
+LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs libcryptopp)
+LDLIBS=		$(shell pkg-config --static --libs-only-l mujs libcryptopp)
 
 ifeq ($(USE_DSRPDB), yes)
 SRCS_CPP+=	molecule-dsrpdb.cpp
