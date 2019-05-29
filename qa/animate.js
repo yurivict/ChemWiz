@@ -1,33 +1,22 @@
 var Animate = require("animate")
+var PV = require("point-visualizer-3d")
+
+var pv = PV.create()
 
 function evolveDim2WaveSquare() {
   // params
-  var sz = 800
   var numCycles = 15
   var numSamplesPerCycle = 400
-  var scaleCoef = 200
   var viewRot = Vec3.muln(Vec3.normalize([+1,-1,0]), Math.PI/5)
 
-  var img = new Image(sz, sz)
-  img.setRegion(0,0, img.width(), img.height(), 255,255,255)
-
-  var M = Mat3.rotate(viewRot)
-  var ctr = [sz/2, sz/2, sz/2]
-
-  function rotate(pt) {
-    return Vec3.plus(Mat3.mulv(M, Vec3.minus(pt, ctr)), ctr)
-  }
-
-  var z = (sz - 2*scaleCoef)/2
-  var dz = 2*scaleCoef/(numSamplesPerCycle*numCycles)
+  var z = -1
+  var dz = 1./(numSamplesPerCycle*numCycles)
   Animate.dim2WaveSquare(-1,-1,+1,+1, numSamplesPerCycle, numCycles, function(x,y) {
-    //print("x="+x+" y="+y)
-    var pt = rotate([x*scaleCoef+sz/2, y*scaleCoef+sz/2, z])
-    img.setPixel(pt[0], pt[1], 0) // 0=black
+    pv.add(x, y, z)
     z += dz
   })
 
-  return img // return the visual representation
+  return pv.toImage(viewRot) // return the visual representation
 }
 
 exports.run = function() {
@@ -36,7 +25,7 @@ exports.run = function() {
   //img.saveImage("animate.bmp");
   //print("evolveDim2WaveSquare().cryptoHash()="+img.cryptoHash())
 
-  if (img.cryptoHash() == "75278270ac8ec59234d3ac49c7fe75e333425d36ee08f6554b21acf302454700")
+  if (img.cryptoHash() == "6c807fd5851ef438cc53a749d6ab4d2b064833eaf5a91eddf1aeb20c5c7a32b9")
     return "OK"
   else
     return "FAIL"
