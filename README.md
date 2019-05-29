@@ -9,12 +9,12 @@ Program for manipulations with molecules and performing computations with them
 * C++ compiler
 
 #### Header-only libraries
-* Boost: for some container types and string formatting (build: header-only library)
-* C++ Bitmap Library: to support the "Image" type (https://github.com/ArashPartow/bitmap) (build: header-only library)
+* Boost: for some container types and string formatting
+* C++ Bitmap Library: to support the "Image" type (https://github.com/ArashPartow/bitmap)
 * PicoSHA2: to compute cryptographic hashes (https://github.com/okdshin/PicoSHA2)
 * Cblas: headers used by the rmsd++ headers, actual functions come from OpenBlas
 * Lapacke: headers used by the rmsd++ headers
-* nlohmann-json: for parsing of the periodic table json, etc. (build: header-only library)
+* nlohmann-json: for parsing of the periodic table json, etc.
 * rang: to print colored and styled text to the terminal (https://github.com/agauniyal/rang)
 * (optional) mmtf-cpp: for parsing chemical structures in the MMTF format (https://github.com/rcsb/mmtf-cpp)
 
