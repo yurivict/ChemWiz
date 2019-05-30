@@ -1,6 +1,7 @@
 #pragma once
 
 #include "obj.h"
+#include "mytypes.h"
 
 #include <string>
 #include <vector>
@@ -12,7 +13,8 @@ class TempFile : public Obj {
   std::string      fullPath; // full file name with path
   mutable bool     madePermanent;
 public:
-  TempFile(const std::string &ext = "", const std::string &content = "");
+  TempFile(const std::string &ext, const std::string &content);
+  TempFile(const std::string &ext, const Binary *content);
   ~TempFile();
 
   const std::string getFname() const {return fullPath;}

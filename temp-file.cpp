@@ -54,6 +54,14 @@ TempFile::TempFile(const std::string &ext, const std::string &content)
     std::ofstream(fullPath, std::ios::out) << content;
 }
 
+TempFile::TempFile(const std::string &ext, const Binary *content)
+: fullPath(genName(ext)),
+  madePermanent(false)
+{
+  std::ofstream fout(fullPath, std::ios::out);
+  fout.write((char*)&(*content)[0], content->size());
+}
+
 TempFile::~TempFile() {
   if (!madePermanent) {
     // the file may or may not exist

@@ -883,13 +883,16 @@ static void xnew(js_State *J) {
   AssertNargsRange(0,2)
   switch (GetNArgs()) {
   case 0: // ()
-    ReturnObj(TempFile, new TempFile);
+    ReturnObj(TempFile, new TempFile("", ""));
     break;
   case 1: // (fileName)
-    ReturnObj(TempFile, new TempFile(GetArgString(1)));
+    ReturnObj(TempFile, new TempFile(GetArgString(1), ""));
     break;
-  case 2: // (fileName, content)
-    ReturnObj(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
+  case 2: // (fileName, text content)
+    if (::strcmp(js_typeof(J, 2), "string") == 0)
+      ReturnObj(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
+    else
+      ReturnObj(TempFile, new TempFile(GetArgString(1), GetArg(Binary, 2)));
     break;
   }
 }
