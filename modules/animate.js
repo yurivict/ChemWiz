@@ -5,6 +5,9 @@
 // Please always create an image like this, and always see the image visually if QA cases fail.
 //
 
+//
+// 1-dimension
+//
 
 //
 // dim1LinearMotion
@@ -29,6 +32,21 @@ function dim1SineWave(fromVal, toVal, numSamples, numCycles, fn) { // ASSUMES fr
   for (var cycle = 0; cycle < numCycles; cycle++)
     for (var phase = 0; phase < 2*Math.PI; phase += dphase)
       fn(Math.sin(phase)*valAmpl + valMid)
+}
+
+//
+// 2-dimensions
+//
+
+//
+// dim2LinearMotion
+//
+function dim2LinearMotion(fromVal, toVal, numSamples, fn) {
+  var dVal = [(fromVal[0] + toVal[0])/2, (fromVal[1] + toVal[1])/2]
+  for (var sample = 0, val = fromVal; sample < numSamples; sample++, val[0] += dVal[0], val[1] += dVal[1]) {
+    fn(val)
+  }
+  // not including the last point
 }
 
 //
@@ -59,8 +77,25 @@ function dim2WaveSquare(minx, miny, maxx, maxy, numSamplesPerCycle, numCycles, f
   }
 }
 
+//
+// 3-dimensions
+//
+
+//
+// dim3LinearMotion
+//
+function dim3LinearMotion(fromVal, toVal, numSamples, fn) {
+  var dVal = Vec3.divn(Vec3.minus(toVal, fromVal), numSamples)
+  for (var sample = 0, val = fromVal; sample < numSamples; sample++, val = Vec3.plus(val, dVal)) {
+    fn(val)
+  }
+  // not including the last point
+}
+
 /// exports
 
 exports.dim1LinearMotion = dim1LinearMotion
 exports.dim1SineWave = dim1SineWave
+exports.dim2LinearMotion = dim2LinearMotion
 exports.dim2WaveSquare = dim2WaveSquare
+exports.dim3LinearMotion = dim3LinearMotion
