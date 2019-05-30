@@ -158,11 +158,16 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Image, toBinary, {
       AssertNargs(0)
       // get image data buffer
-      auto *img  = GetArg(Image, 0);
-      auto imgData = (uint8_t*)img->data();
-      size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
+      std::ostringstream ss; // FIXME this is inefficient to copy it to the string first TODO need to use std::basic_ostream with a custom std::basic_streambuf
+      ss << std::noskipws;
+      GetArg(Image, 0)->write_image(ss);
+      ss.flush();
       // create binary
-      std::unique_ptr<Binary> binary(new Binary(imgData, imgData + imgDataSize));
+      const std::string &strBuf = ss.str();
+      auto p = (uint8_t*)strBuf.c_str();
+      assert(ss.str()[0] == 'B');
+      std::unique_ptr<Binary> binary(new Binary(p, p + strBuf.size()));
+      //
       ReturnObj(Binary, binary.release());
     }, 0)
     // drawing functions
