@@ -11,6 +11,9 @@ function createInsFile(pngs) {
   return new TempFile("txt", insTxt)
 }
 
+//
+// pngsToMp4: takes an array of images as TmpFiles objects and converts them to the mpeg4 video
+//
 function pngsToMp4(pngs) {
   var mp4 = new TempFile("mp4")
   system("ffmpeg -loglevel quiet -r "+fps+" -f concat -safe 0 -i "+createInsFile(pngs).fname()+" -vcodec libx264 "+mp4.fname())
