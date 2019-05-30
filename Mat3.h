@@ -82,4 +82,7 @@ public:
                 i(2,1)*v(1) + i(2,2)*v(2) + i(2,3)*v(3),
                 i(3,1)*v(1) + i(3,2)*v(2) + i(3,3)*v(3));
   }
+  Mat3 operator/(Float m) const {
+    return Mat3((*this)[0]/m, (*this)[1]/m, (*this)[2]/m);
+  }
 }; // Mat3

@@ -1378,6 +1378,11 @@ static void muln(js_State *J) {
   Return(J, GetArgVec3(1)*GetArgFloat(2));
 }
 
+static void divn(js_State *J) {
+  AssertNargs(2)
+  Return(J, GetArgVec3(1)/GetArgFloat(2));
+}
+
 static void dot(js_State *J) {
   AssertNargs(2)
   Return(J, GetArgVec3(1)*GetArgVec3(2));
@@ -1474,6 +1479,11 @@ static void minus(js_State *J) {
 static void muln(js_State *J) {
   AssertNargs(2)
   Return(J, GetArgMat3x3(1)*GetArgFloat(2));
+}
+
+static void divn(js_State *J) {
+  AssertNargs(2)
+  Return(J, GetArgMat3x3(1)/GetArgFloat(2));
 }
 
 static void mulv(js_State *J) {
@@ -1693,6 +1703,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Vec3, plus,         JsVec3::plus, 2)
     ADD_NS_FUNCTION_CPP(Vec3, minus,        JsVec3::minus, 2)
     ADD_NS_FUNCTION_CPP(Vec3, muln,         JsVec3::muln, 2)
+    ADD_NS_FUNCTION_CPP(Vec3, divn,         JsVec3::divn, 2)
     ADD_NS_FUNCTION_CPP(Vec3, dot,          JsVec3::dot, 2)
     ADD_NS_FUNCTION_CPP(Vec3, cross,        JsVec3::cross, 2)
     ADD_NS_FUNCTION_CPP(Vec3, angleRad,     JsVec3::angleRad, 2)
@@ -1714,6 +1725,7 @@ void registerFunctions(js_State *J) {
     ADD_NS_FUNCTION_CPP(Mat3, plus,         JsMat3::plus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, minus,        JsMat3::minus, 2)
     ADD_NS_FUNCTION_CPP(Mat3, muln,         JsMat3::muln, 2)
+    ADD_NS_FUNCTION_CPP(Mat3, divn,         JsMat3::divn, 2)
     ADD_NS_FUNCTION_CPP(Mat3, mulv,         JsMat3::mulv, 2)
     ADD_NS_FUNCTION_CPP(Mat3, mul,          JsMat3::mul, 2)
     ADD_NS_FUNCTION_CPP(Mat3, rotate,       JsMat3::rotate, 1)
