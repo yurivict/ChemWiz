@@ -38,9 +38,6 @@
 #include "Vec3-ext.h"
 #include "util.h"
 
-// types defined locally
-typedef std::vector<uint8_t> Binary;
-
 // tag strings of all objects
 static const char *TAG_Obj         = "Obj";
 static const char *TAG_Binary      = "Binary";
@@ -48,14 +45,6 @@ static const char *TAG_Molecule    = "Molecule";
 static const char *TAG_Atom        = "Atom";
 static const char *TAG_TempFile    = "TempFile";
 static const char *TAG_StructureDb = "StructureDb";
-
-// externally defined types
-namespace JsImage {
-  extern void init(js_State *J);
-}
-namespace JsImageDrawer {
-  extern void init(js_State *J);
-}
 
 // helper macros
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
@@ -82,6 +71,15 @@ namespace JsImageDrawer {
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
 
 namespace JsBinding {
+
+// externally defined types
+namespace JsImage {
+  extern void init(js_State *J);
+}
+namespace JsImageDrawer {
+  extern void init(js_State *J);
+}
+
 
 //
 // helper classes and functions
@@ -284,7 +282,7 @@ static void init(js_State *J) {
 
 namespace JsBinary {
 
-static void xnewo(js_State *J, Binary *b) {
+/*static: used from the js-image module*/ void xnewo(js_State *J, Binary *b) {
   js_getglobal(J, TAG_Binary);
   js_getproperty(J, -1, "prototype");
   js_newuserdata(J, TAG_Binary, b, [](js_State *J, void *p) {

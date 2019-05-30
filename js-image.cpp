@@ -1,9 +1,11 @@
 
 #include "js-support.h"
 #include "xerror.h"
+#include "mytypes.h"
 
 #include <string>
 #include <sstream>
+#include <memory>
 
 #include <mujs.h>
 #include <bitmap_image.hpp>
@@ -11,6 +13,12 @@
 
 static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
+
+namespace JsBinding {
+namespace JsBinary {
+  extern void xnewo(js_State *J, Binary *b);
+}
+}
 
 //
 // wrapper classes // TODO get rid of them by extending the framework to accept arbitrary classes
@@ -43,6 +51,8 @@ static rgb_t unsignedToRgb(const unsigned &u) {
 }
 
 } // Rgb
+
+namespace JsBinding {
 
 namespace JsImage {
 
@@ -145,6 +155,16 @@ void init(js_State *J) {
       GetArg(Image, 0)->save_image(GetArgString(1));
       ReturnVoid(J);
     }, 1)
+    ADD_METHOD_CPP(Image, toBinary, {
+      AssertNargs(0)
+      // get image data buffer
+      auto *img  = GetArg(Image, 0);
+      auto imgData = (uint8_t*)img->data();
+      size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
+      // create binary
+      std::unique_ptr<Binary> binary(new Binary(imgData, imgData + imgDataSize));
+      ReturnObj(Binary, binary.release());
+    }, 0)
     // drawing functions
     ADD_METHOD_CPP(Image, setRegion, {
       AssertNargs(7)
@@ -262,3 +282,5 @@ void init(js_State *J) {
 }
 
 } // JsImageDrawer
+
+} // JsBinding
