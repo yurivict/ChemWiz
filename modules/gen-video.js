@@ -12,12 +12,12 @@ function createInsFile(pngs) {
 }
 
 //
-// pngsToMp4: takes an array of images as TmpFiles objects and converts them to the mpeg4 video
+// imgsToMp4: takes an array of images as TmpFiles objects and converts them to the mpeg4 video
 //
-function pngsToMp4(pngs) {
+function imgsToMp4(pngs) {
   var mp4 = new TempFile("mp4")
   system("ffmpeg -loglevel quiet -r "+fps+" -f concat -safe 0 -i "+createInsFile(pngs).fname()+" -vcodec libx264 "+mp4.fname())
   return mp4
 }
 
-exports.pngsToMp4 = pngsToMp4
+exports.imgsToMp4 = imgsToMp4
