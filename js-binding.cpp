@@ -55,7 +55,6 @@ static const char *TAG_StructureDb = "StructureDb";
                                  std::cout << "DBG JS Stack: @" << loc << "<<<" << std::endl; \
                                  abort(); // because DbgPrintStack damages stack by converting all values to strings
 #define GetArgSSMap(n)           objToMap(J, n)
-#define GetArgVec3(n)            objToVec3(J, n, __func__)
 #define GetArgUnsignedArray(n)      objToTypedArray<unsigned,false>(J, n, __func__)
 #define GetArgUnsignedArrayZ(n)     objToTypedArray<unsigned,true>(J, n, __func__)
 #define GetArgFloatArray(n)         objToTypedArray<double, false>(J, n, __func__)
@@ -65,7 +64,6 @@ static const char *TAG_StructureDb = "StructureDb";
 #define GetArgUnsignedArrayArray(n) objToTypedArray<std::vector<unsigned>>(J, n, __func__)
 #define GetArgFloatArrayArray(n)    objToTypedArray<std::vector<double>>(J, n, __func__)
 #define GetArgStringArrayArray(n)   objToTypedArray<std::vector<std::string>>(J, n, __func__)
-#define GetArgMat3x3(n)          objToMat3x3(J, n, __func__)
 #define GetArgMatNxX(n,N)        objToMatNxX<N>(J, n)
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
@@ -77,6 +75,9 @@ namespace JsImage {
   extern void init(js_State *J);
 }
 namespace JsImageDrawer {
+  extern void init(js_State *J);
+}
+namespace JsFloatArray {
   extern void init(js_State *J);
 }
 
@@ -133,7 +134,7 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   return mres;
 }
 
-static Vec3 objToVec3(js_State *J, int idx, const char *fname) {
+Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
     js_typeerror(J, "Vec3: not an array in arg#%d of the function '%s'", idx, fname);
   if (js_getlength(J, idx) != 3)
@@ -209,7 +210,7 @@ static void objToVecVa(js_State *J, int idx, std::valarray<double> *va, unsigned
   }
 }
 
-static Mat3 objToMat3x3(js_State *J, int idx, const char *fname) {
+Mat3 objToMat3x3(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
     js_typeerror(J, "objToMat3x3: not an array in arg#%d of the function '%s'", idx, fname);
   if (js_getlength(J, idx) != 3)
@@ -1624,6 +1625,7 @@ void registerFunctions(js_State *J) {
   // externally defined
   JsImage::init(J);
   JsImageDrawer::init(J);
+  JsFloatArray::init(J);
 
   //
   // Misc

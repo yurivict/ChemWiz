@@ -76,6 +76,10 @@ public:
     const Vec3 &i = *this;
     return i(X)*v(X) + i(Y)*v(Y) + i(Z)*v(Z);
   }
+  Vec3 scale(const Vec3 &v) const { // scalar multiplication
+    const Vec3 &i = *this;
+    return {i(X)*v(X), i(Y)*v(Y), i(Z)*v(Z)};
+  }
   Vec3 cross(const Vec3 &v) const { // cross (vector) multiplication
     const Vec3 &i = *this;
     return Vec3(-i(Z)*v(Y) + i(Y)*v(Z), i(Z)*v(X) - i(X)*v(Z), -i(Y)*v(X) + i(X)*v(Y)); // see https://en.wikipedia.org/wiki/Cross_product#Conversion_to_matrix_multiplication

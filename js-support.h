@@ -5,6 +5,7 @@
 #include "Mat3.h"
 
 #include <string>
+#include <utility> // for pair
 #include <vector>
 #include <array>
 #include <functional>
@@ -86,6 +87,10 @@ public:
   }
 }; // StrPtr
 
+// complex argument support
+Vec3 objToVec3(js_State *J, int idx, const char *fname);
+Mat3 objToMat3x3(js_State *J, int idx, const char *fname);
+
 }; // JsBinding
 
 //
@@ -155,6 +160,15 @@ inline void Push(js_State *J, const std::vector<T> &val) {
 }
 
 template<typename T>
+inline void Push(js_State *J, const std::pair<T,T> &val) {
+  js_newarray(J);
+  Push(J, val.first);
+  js_setindex(J, -2, 0/*idx*/);
+  Push(J, val.second);
+  js_setindex(J, -2, 1/*idx*/);
+}
+
+template<typename T>
 inline void Return(js_State *J, const T &val) {
   Push(J, val);
 }
@@ -187,4 +201,9 @@ inline void ReturnVoid(js_State *J) {
 #define GetArgStringCptr(n)      js_tostring(J, n)
 #define GetArgInt32(n)           js_toint32(J, n)
 #define GetArgUInt32(n)          js_touint32(J, n)
+
+// complex arguments need yet to be templetized
+
+#define GetArgVec3(n)            JsBinding::objToVec3(J, n, __func__)
+#define GetArgMat3x3(n)          JsBinding::objToMat3x3(J, n, __func__)
 
