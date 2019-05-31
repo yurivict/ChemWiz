@@ -78,14 +78,14 @@ public:
       bb.push_back(std::pair<Float,Float>(std::numeric_limits<Float>::max(), std::numeric_limits<Float>::min()));
 
     // compute bbox
-    auto ibbb = bb.begin(), ibbe = bb.end(), ibb = ibbb;
+    auto ib = bb.begin(), ie = bb.end(), i = ib;
     for (auto v : *this) {
-      if (v < ibbb->first)
-        ibbb->first = v;
-      if (v > ibbb->second)
-        ibbb->second = v;
-      if (++ibb == ibbe)
-        ibb = ibbb;
+      if (v < i->first)
+        i->first = v;
+      if (v > i->second)
+        i->second = v;
+      if (++i == ie)
+        i = ib;
     }
       
     return bb;
