@@ -13,12 +13,15 @@
 
 static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
+extern const char *TAG_FloatArray; // allow to access the arguments of this type
 
 namespace JsBinding {
 namespace JsBinary {
   extern void xnewo(js_State *J, Binary *b);
 }
 }
+
+typedef std::vector<Float> FloatArray;
 
 //
 // wrapper classes // TODO get rid of them by extending the framework to accept arbitrary classes
@@ -101,6 +104,22 @@ void init(js_State *J) {
       GetArg(Image, 0)->set_pixel(GetArgUInt32(1), GetArgUInt32(2), Rgb::unsignedToRgb(GetArgUInt32(3)));
       ReturnVoid(J);
     }, 3)
+    ADD_METHOD_CPP(Image, setPixelsFromArray, {
+      AssertNargs(5)
+      auto img = GetArg(Image, 0);
+      auto arr = GetArg(FloatArray, 1);
+      auto period = GetArgUInt32(2);
+      auto idxx = GetArgUInt32(3);
+      auto idxy = GetArgUInt32(4);
+      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
+      if (arr->size() % period != 0)
+        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period) {
+        //std::cout << "setPixel: x=" << *(it+idxx) << " y=" << *(it+idxy) << std::endl;
+        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      }
+      ReturnVoid(J);
+    }, 5)
     ADD_METHOD_CPP(Image, plasma, {
       AssertNargs(10)
       auto strToColormap = [](const std::string &name) {
