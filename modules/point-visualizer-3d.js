@@ -12,7 +12,15 @@ function addToLims(lims, v) {
     lims[1] = v
 }
 
-exports.create = function() {
+function bboxToCtr(bbox) {
+  var ctr = []
+  bbox.forEach(function(lims) {
+    ctr.push((lims[0]+lims[1])/2)
+  })
+  return ctr
+}
+
+function createNAcc() { // plain JavaScript, unaccelerated function
   return {
     pts: [],
     // iface
@@ -28,7 +36,7 @@ exports.create = function() {
         addToLims(bbox[2], pt[2])
       })
       // find the center point
-      var ctr = [(bbox[0][0]+bbox[0][1])/2, (bbox[1][0]+bbox[1][1])/2, (bbox[2][0]+bbox[2][1])/2]
+      var ctr = bboxToCtr(bbox)
       // rotate, compute x/y bbox and save
       var M = Mat3.rotate(viewRotVec)
       var bboxr = [[Number.MAX_VALUE,Number.MIN_VALUE], [Number.MAX_VALUE,Number.MIN_VALUE]]
@@ -40,11 +48,10 @@ exports.create = function() {
         ptr.push([r[0], r[1]]) // only keep x,y
       })
       // find the center point of rorared points
-      var ctrr = [(bboxr[0][0]+bboxr[0][1])/2, (bboxr[1][0]+bboxr[1][1])/2]
-      // compute scaling coefficient
-      var scalex = paramImgSz*(1-2*paramMargin)/(bboxr[0][1]-bboxr[0][0])
-      var scaley = paramImgSz*(1-2*paramMargin)/(bboxr[1][1]-bboxr[1][0])
-      var scale = Math.min(scalex, scaley)
+      var ctrr = bboxToCtr(bboxr)
+      // compute the scaling coefficient
+      var scale = Math.min(paramImgSz*(1-2*paramMargin)/(bboxr[0][1]-bboxr[0][0]),
+                           paramImgSz*(1-2*paramMargin)/(bboxr[1][1]-bboxr[1][0]))
       // create image
       var img = new Image(paramImgSz, paramImgSz)
       img.setRegion(0,0, img.width(), img.height(), 255,255,255)
@@ -56,3 +63,39 @@ exports.create = function() {
     }
   }
 }
+
+function createAcc() { // accelerated through FloatArray functions
+  return {
+    pts: new FloatArray,
+    // iface
+    add: function(x,y,z) {
+      this.pts.append3(x,y,z)
+    },
+    toImage: function(viewRotVec) {
+      // find the bounding box
+      var bbox = this.pts.bbox(3)
+      // find the center point
+      var ctr = bboxToCtr(bbox)
+      // rotate, compute x/y bbox and save
+      var M = Mat3.rotate(viewRotVec)
+      var ptr = this.pts.createMulMat3PlusVec3(M, Vec3.minus(ctr, Mat3.mulv(M, ctr)))
+      var bboxr = ptr.bbox(3)
+      // find the center point of rorared points
+      var ctrr = bboxToCtr(bboxr)
+      // compute the scaling coefficient
+      var scale = Math.min(paramImgSz*(1-2*paramMargin)/(bboxr[0][1]-bboxr[0][0]),
+                           paramImgSz*(1-2*paramMargin)/(bboxr[1][1]-bboxr[1][0]))
+      // create image
+      var img = new Image(paramImgSz, paramImgSz)
+      img.setRegion(0,0, img.width(), img.height(), 255,255,255)
+      ptr.mulScalarPlusVec3([scale, scale, 1.], [paramImgSz/2-ctrr[0]*scale, paramImgSz/2-ctrr[1]*scale, 0.])
+      img.setPixelsFromArray(ptr, 3, 0, 1, 0) // 3=period, 0=x, 1=y, 0=black
+      //
+      return img
+    }
+  }
+}
+
+exports.create = createAcc       // default
+exports.createNAcc = createNAcc
+exports.createAcc = createAcc
