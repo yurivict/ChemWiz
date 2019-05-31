@@ -52,7 +52,6 @@ public:
       output->push_back(val(Y));
       output->push_back(val(Z));
     }
-    std::cout << "FloatArray.mulMat3PlusVec3: output.size=" << output->size() << std::endl;
     return output.release();
   }
   void mulScalarPlusVec3(const Vec3 &scalar, const Vec3 &v) {

@@ -114,10 +114,8 @@ void init(js_State *J) {
       auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
       if (arr->size() % period != 0)
         ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
-      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period) {
-        //std::cout << "setPixel: x=" << *(it+idxx) << " y=" << *(it+idxy) << std::endl;
+      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
         img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
-      }
       ReturnVoid(J);
     }, 5)
     ADD_METHOD_CPP(Image, plasma, {
