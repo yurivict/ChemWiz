@@ -47,7 +47,7 @@ function createNAcc() { // plain JavaScript, unaccelerated function
         addToLims(bboxr[1], r[1])
         ptr.push([r[0], r[1]]) // only keep x,y
       })
-      // find the center point of rorared points
+      // find the center point of rotated points
       var ctrr = bboxToCtr(bboxr)
       // compute the scaling coefficient
       var scale = Math.min(paramImgSz*(1-2*paramMargin)/(bboxr[0][1]-bboxr[0][0]),
@@ -80,7 +80,7 @@ function createAcc() { // accelerated through FloatArray functions
       var M = Mat3.rotate(viewRotVec)
       var ptr = this.pts.createMulMat3PlusVec3(M, Vec3.minus(ctr, Mat3.mulv(M, ctr)))
       var bboxr = ptr.bbox(3)
-      // find the center point of rorared points
+      // find the center point of rotated points
       var ctrr = bboxToCtr(bboxr)
       // compute the scaling coefficient
       var scale = Math.min(paramImgSz*(1-2*paramMargin)/(bboxr[0][1]-bboxr[0][0]),
