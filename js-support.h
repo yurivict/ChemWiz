@@ -45,9 +45,6 @@ private:
 #define END_NAMESPACE(ns) \
   JsSupport::endNamespace(J, #ns);
 
-#define ADD_JS_CONSTRUCTOR(cls) /*@lev=1, a generic constructor, nargs=0 below doesn't seem to enforce number of args, or differentiate constructors by number of args*/ \
-  JsSupport::addJsConstructor(J, TAG_##cls, Js##cls::xnew);
-
 // add method defined by the C++ code
 #define ADD_METHOD_CPP(cls, methodName, methodBody, nargs) \
   JsSupport::addMethodCpp(J, #cls, #methodName, [](js_State *J) methodBody,  nargs);
