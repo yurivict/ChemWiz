@@ -34,12 +34,12 @@ static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) {
 // JsSupport methods
 
 void JsSupport::beginDefineClass(js_State *J, const char *clsTag, js_CFunction newFun) {
-  InitObjectRegistry(J, clsTag);
+  initObjectRegistry(J, clsTag);
   js_pushglobal(J);
   addJsConstructor(J, clsTag, newFun);
   js_getglobal(J, clsTag);
   js_getproperty(J, -1, "prototype");
-  StackPopPrevious(J);
+  popPreviousStackElement(J);
   // returns at 2 slots down in stack
 }
 
@@ -94,12 +94,12 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
 
 /// internals
 
-void JsSupport::InitObjectRegistry(js_State *J, const char *objTag) {
+void JsSupport::initObjectRegistry(js_State *J, const char *objTag) {
   js_newobject(J);
   js_setregistry(J, objTag);
 }
 
-void JsSupport::StackPopPrevious(js_State *J) {
+void JsSupport::popPreviousStackElement(js_State *J) {
   js_rot2(J);
   js_pop(J, 1);
 }

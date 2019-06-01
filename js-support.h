@@ -33,8 +33,8 @@ public:
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
 private:
-  static void InitObjectRegistry(js_State *J, const char *objTag);
-  static void StackPopPrevious(js_State *J);
+  static void initObjectRegistry(js_State *J, const char *objTag);
+  static void popPreviousStackElement(js_State *J);
 }; // JsSupport
 
 // convenience macros that come with JsSupport
