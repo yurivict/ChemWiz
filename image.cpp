@@ -67,25 +67,18 @@ static void xnewo(js_State *J, Image *i) {
   });
 }
 
-static void xnew(js_State *J) {
-  AssertNargsRange(1,2)
-  switch (GetNArgs()) {
-  case 1: // load bmp from file
-    ReturnObj(Image, new Image(GetArgString(1)));
-    break;
-  case 2: // create a blank image with sizes
-    ReturnObj(Image, new Image(GetArgUInt32(1), GetArgUInt32(2)));
-    break;
-  }
-}
-
 void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_Image);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(Image)
-  js_getglobal(J, TAG_Image);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_Image, [](js_State *J) {
+    AssertNargsRange(1,2)
+    switch (GetNArgs()) {
+    case 1: // load bmp from file
+      ReturnObj(Image, new Image(GetArgString(1)));
+      break;
+    case 2: // create a blank image with sizes
+      ReturnObj(Image, new Image(GetArgUInt32(1), GetArgUInt32(2)));
+      break;
+    }
+  });
   { // methods
     ADD_METHOD_CPP(Image, width, {
       AssertNargs(0)
@@ -217,7 +210,7 @@ void init(js_State *J) {
       ReturnVoid(J);
     }, 0)
   }
-  js_pop(J, 2);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsImage
@@ -232,18 +225,11 @@ static void xnewo(js_State *J, ImageDrawer *d) {
   });
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(1)
-  ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 1)));
-}
-
 void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_ImageDrawer);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(ImageDrawer)
-  js_getglobal(J, TAG_ImageDrawer);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_ImageDrawer, [](js_State *J) {
+    AssertNargs(1)
+    ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 1)));
+  });
   { // methods
     ADD_METHOD_CPP(ImageDrawer, penWidth, {
       AssertNargs(1)
@@ -300,7 +286,7 @@ void init(js_State *J) {
       ReturnVoid(J);
     }, 3)
   }
-  js_pop(J, 2);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsImageDrawer

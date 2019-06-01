@@ -257,26 +257,18 @@ static void xnewo(js_State *J, Obj *o) {
   js_newuserdata(J, TAG_Obj, o, 0/*finalize*/);
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(Obj, new Obj);
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_Obj);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(Obj)
-  js_getglobal(J, TAG_Obj);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_Obj, [](js_State *J) {
+    AssertNargs(0)
+    ReturnObj(Obj, new Obj);
+  });
   { // methods
     ADD_METHOD_CPP(Obj, id, {
       AssertNargs(0)
       Return(J, GetArg(Obj, 0)->id());
     }, 0)
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsObj
@@ -291,23 +283,16 @@ namespace JsBinary {
   });
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(1)
-  auto b = new Binary;
-  auto str = GetArgStringCptr(1);
-  auto strLen = ::strlen(str);
-  b->resize(strLen);
-  ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
-  ReturnObj(Binary, b);
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_Binary);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(Binary)
-  js_getglobal(J, TAG_Binary);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_Binary, [](js_State *J) {
+    AssertNargs(1)
+    auto b = new Binary;
+    auto str = GetArgStringCptr(1);
+    auto strLen = ::strlen(str);
+    b->resize(strLen);
+    ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
+    ReturnObj(Binary, b);
+  });
   { // methods
     ADD_METHOD_CPP(Binary, dupl, {
       AssertNargs(0)
@@ -349,8 +334,7 @@ static void init(js_State *J) {
       ReturnVoid(J);
     }, 1)
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsBinary
@@ -372,18 +356,11 @@ static void xnewoZ(js_State *J, Atom *a) { // object or undefined when a==nulllp
     js_pushundefined(J);
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(2)
-  ReturnObj(Atom, new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_Atom);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(Atom)
-  js_getglobal(J, TAG_Atom);              // PUSH Object => {-1: Atom}
-  js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Atom, -2: Atom.prototype}
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_Atom, [](js_State *J) {
+    AssertNargs(2)
+    ReturnObj(Atom, new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
+  });
   { // methods
     ADD_METHOD_CPP(Atom, id, {
       AssertNargs(0)
@@ -487,8 +464,7 @@ static void init(js_State *J) {
     ADD_METHOD_JS (Atom, angleBetweenDeg, function(a1, a2) {var p = this.getPos(); return Vec3.angleDeg(Vec3.minus(a1.getPos(),p), Vec3.minus(a2.getPos(),p))})
     ADD_METHOD_JS (Atom, distance, function(othr) {return Vec3.length(Vec3.minus(this.getPos(), othr.getPos()))})
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsAtom
@@ -582,17 +558,11 @@ static void xnewo(js_State *J, Molecule *m) {
   js_newuserdata(J, TAG_Molecule, m, moleculeFinalize);
 }
 
-static void xnew(js_State *J) {
-  ReturnObj(Molecule, new Molecule("created-in-script"));
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_Molecule);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(Molecule)
-  js_getglobal(J, TAG_Molecule);          // PUSH Object => {-1: Molecule}
-  js_getproperty(J, -1, "prototype");     // PUSH prototype => {-1: Molecule, -2: Molecule.prototype}
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_Molecule, [](js_State *J) {
+    AssertNargs(0)
+    ReturnObj(Molecule, new Molecule("created-in-script"));
+  });
   { // methods
     ADD_METHOD_CPP(Molecule, id, {
       AssertNargs(0)
@@ -822,8 +792,7 @@ static void init(js_State *J) {
       return Object.keys(mm);
     })
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 // static functions in the Molecule namespace
@@ -880,31 +849,24 @@ static void xnewo(js_State *J, TempFile *f) {
   });
 }
 
-static void xnew(js_State *J) {
-  AssertNargsRange(0,2)
-  switch (GetNArgs()) {
-  case 0: // ()
-    ReturnObj(TempFile, new TempFile("", ""));
-    break;
-  case 1: // (fileName)
-    ReturnObj(TempFile, new TempFile(GetArgString(1), ""));
-    break;
-  case 2: // (fileName, text content)
-    if (::strcmp(js_typeof(J, 2), "string") == 0)
-      ReturnObj(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
-    else
-      ReturnObj(TempFile, new TempFile(GetArgString(1), GetArg(Binary, 2)));
-    break;
-  }
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_TempFile);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(TempFile)
-  js_getglobal(J, TAG_TempFile);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_TempFile, [](js_State *J) {
+    AssertNargsRange(0,2)
+    switch (GetNArgs()) {
+    case 0: // ()
+      ReturnObj(TempFile, new TempFile("", ""));
+      break;
+    case 1: // (fileName)
+      ReturnObj(TempFile, new TempFile(GetArgString(1), ""));
+      break;
+    case 2: // (fileName, text content)
+      if (::strcmp(js_typeof(J, 2), "string") == 0)
+        ReturnObj(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
+      else
+        ReturnObj(TempFile, new TempFile(GetArgString(1), GetArg(Binary, 2)));
+      break;
+    }
+  });
   { // methods
     ADD_METHOD_CPP(TempFile, str, {
       AssertNargs(0)
@@ -926,8 +888,7 @@ static void init(js_State *J) {
     }, 1)
     //ADD_METHOD_CPP(TempFile, writeBinary, 1) // to write binary data into the temp file
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsTempFile
@@ -942,18 +903,11 @@ static void xnewo(js_State *J, StructureDb *f) {
   });
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(StructureDb, new StructureDb);
-}
-
 static void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_StructureDb);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(StructureDb)
-  js_getglobal(J, TAG_StructureDb);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_StructureDb, [](js_State *J) {
+    AssertNargs(0)
+    ReturnObj(StructureDb, new StructureDb);
+  });
   { // methods
     ADD_METHOD_CPP(StructureDb, str, {
       AssertNargs(0)
@@ -983,8 +937,7 @@ static void init(js_State *J) {
       Return(J, ss.str());
     }, 1)
   }
-  js_pop(J, 2);
-  AssertStack(0);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsStructureDb

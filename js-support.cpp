@@ -33,9 +33,19 @@ static void jsB_propf(js_State *J, const char *name, js_CFunction cfun, int n) {
 
 // JsSupport methods
 
-void JsSupport::InitObjectRegistry(js_State *J, const char *objTag) {
-  js_newobject(J);
-  js_setregistry(J, objTag);
+void JsSupport::beginDefineClass(js_State *J, const char *clsTag, js_CFunction newFun) {
+  InitObjectRegistry(J, clsTag);
+  js_pushglobal(J);
+  addJsConstructor(J, clsTag, newFun);
+  js_getglobal(J, clsTag);
+  js_getproperty(J, -1, "prototype");
+  StackPopPrevious(J);
+  // returns at 2 slots down in stack
+}
+
+void JsSupport::endDefineClass(js_State *J) {
+  js_pop(J, 2);
+  AssertStack(0);
 }
 
 void JsSupport::beginNamespace(js_State *J, const char *nsNameStr) {
@@ -80,6 +90,13 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
   ckErr(J, js_ploadstring(J, sName.c_str(), sCode.c_str()));
   js_call(J, -1);
   js_defproperty(J, -2, fnNameStr, JS_DONTENUM);
+}
+
+/// internals
+
+void JsSupport::InitObjectRegistry(js_State *J, const char *objTag) {
+  js_newobject(J);
+  js_setregistry(J, objTag);
 }
 
 void JsSupport::StackPopPrevious(js_State *J) {

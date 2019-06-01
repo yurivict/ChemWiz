@@ -22,7 +22,8 @@
 
 class JsSupport {
 public:
-  static void InitObjectRegistry(js_State *J, const char *objTag);
+  static void beginDefineClass(js_State *J, const char *clsTag, js_CFunction newFun);
+  static void endDefineClass(js_State *J);
   static void beginNamespace(js_State *J, const char *nsNameStr);
   static void endNamespace(js_State *J, const char *nsNameStr);
   static void addJsConstructor(js_State *J, const char *clsTag, js_CFunction newFun);
@@ -31,6 +32,8 @@ public:
   static void addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
+private:
+  static void InitObjectRegistry(js_State *J, const char *objTag);
   static void StackPopPrevious(js_State *J);
 }; // JsSupport
 

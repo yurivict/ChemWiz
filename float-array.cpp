@@ -21,8 +21,6 @@ public:
   FloatArray() { } // created with size 0
   FloatArray(const FloatArray &other) : std::vector<Float>(other) { } // copy constructor
   void muln(Float m) {
-    //using namespace simdpp;
-    //float64<2>
     for (auto &f : *this)
       f *= m;
   }
@@ -104,18 +102,11 @@ static void xnewo(js_State *J, FloatArray *d) {
  });
 }
 
-static void xnew(js_State *J) {
-  AssertNargs(0)
-  ReturnObj(FloatArray, new FloatArray);
-}
-
 void init(js_State *J) {
-  JsSupport::InitObjectRegistry(J, TAG_FloatArray);
-  js_pushglobal(J);
-  ADD_JS_CONSTRUCTOR(FloatArray)
-  js_getglobal(J, TAG_FloatArray);
-  js_getproperty(J, -1, "prototype");
-  JsSupport::StackPopPrevious(J);
+  JsSupport::beginDefineClass(J, TAG_FloatArray, [](js_State *J) {
+    AssertNargs(0)
+    ReturnObj(FloatArray, new FloatArray);
+  });
   { // methods
     ADD_METHOD_CPP(FloatArray, toString, {
       AssertNargs(0)
@@ -211,7 +202,7 @@ void init(js_State *J) {
       Return(J, GetArg(FloatArray, 0)->bbox(GetArgUInt32(1)));
     }, 1)
   }
-  js_pop(J, 2);
+  JsSupport::endDefineClass(J);
 }
 
 } // JsFloatArray
