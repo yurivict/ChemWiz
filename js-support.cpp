@@ -93,7 +93,8 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
 }
 
 //
-// require() inspired from mujs: it loads the module, and exposes its exports.* symbols as the returned object's keys
+// require() - inspired by mujs: it loads the module, and exposes its exports.* symbols as the returned object's keys
+//             borrowed from MuJS's main.c with modifications
 //
 void JsSupport::registerFuncRequire(js_State *J) {
   js_dostring(J,
@@ -106,6 +107,20 @@ void JsSupport::registerFuncRequire(js_State *J) {
     "  return exports\n"
     "}\n"
     "require.cache = Object.create(null)\n"
+  );
+}
+
+//
+// Error.prototype.toString - prints error trace on error
+//                            borrowed from MuJS's main.c
+//
+void JsSupport::registerErrorToString(js_State *J) {
+  js_dostring(J,
+    "Error.prototype.toString = function() {\n"
+    "  if (this.stackTrace)\n"
+    "    return this.name + ': ' + this.message + this.stackTrace;\n"
+    "  return this.name + ': ' + this.message;\n"
+    "};\n"
   );
 }
 

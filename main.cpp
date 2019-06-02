@@ -40,6 +40,7 @@ static int main_guarded(int argc, char* argv[]) {
     // register our functions
     JsBinding::registerFunctions(J);
     JsSupport::registerFuncRequire(J);
+    JsSupport::registerErrorToString(J);
     // execute supplied JavaScript file or string argument
     for (unsigned i = 1; i < argc && !errs; i++) {
       if (argv[i][0] != '-')
