@@ -1061,7 +1061,7 @@ static void read(js_State *J) { // reads file into a string
     file.open(fname, std::ios::in);
     Return(J, std::string(it(file), it()));
     file.close();
-  } catch (std::ifstream::failure e) {
+  } catch (std::ifstream::failure e) { // gcc warning: catching polymorphic type 'class std::ios_base::failure' by value
     ERROR(str(boost::format("can't read the file '%1%': %2%") % fname % e.what()));
   }
 }
@@ -1076,7 +1076,7 @@ static void write(js_State *J) { // writes string into a file
     file.open(fname, std::ios::out);
     file << GetArgString(1);
     file.close();
-  } catch (std::ifstream::failure e) {
+  } catch (std::ifstream::failure e) { // gcc warning: catching polymorphic type 'class std::ios_base::failure' by value
     ERROR(str(boost::format("can't write the file '%1%': %2%") % fname % e.what()));
   }
 
@@ -1127,7 +1127,7 @@ static void formatFp(js_State *J) {
   AssertNargs(2)
   char buf[32];
   ::sprintf(buf, "%.*lf", GetArgUInt32(2), GetArgFloat(1));
-  Return(J, buf);
+  Return(J, std::string(buf));
 }
 
 static void download(js_State *J) {
@@ -1575,8 +1575,8 @@ void registerFunctions(js_State *J) {
       gettimeofday(&curTime, NULL);
 
       struct tm  tstruct;
-      char       bufs[32];
-      char       bufms[32];
+      char       bufs[64];
+      char       bufms[64];
 
       tstruct = *localtime(&curTime.tv_sec);
       strftime(bufs, sizeof(bufs), "%Y-%m-%d.%X", &tstruct);
