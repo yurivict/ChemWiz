@@ -16,16 +16,6 @@
 const char *TAG_FloatArray4      = "FloatArray4"; // non-static: used externally
 const char *TAG_FloatArray8      = "FloatArray8"; // non-static: used externally
 
-/*
-// CastVec3To/CastMat3To
-template<typename ToFloat>
-const Vec3<ToFloat>& CastVec3To(const Vec3 &v);
-template<>
-const Vec3<double>& CastVec3To(const Vec3 &v) {return v;}
-template<>
-const Vec3<float>& CastVec3To(const Vec3 &v) {return v;}
-*/
-
 #define CastGetArgVec3(n) Vec3ToType<double,Float>::convert(GetArgVec3(n))
 #define CastGetArgMat3x3(n) Mat3ToType<double,Float>::convert(GetArgMat3x3(n))
 
