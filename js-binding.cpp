@@ -54,7 +54,7 @@ static const char *TAG_StructureDb = "StructureDb";
                                    std::cout << "  -- @idx=" << -i << ": " << js_tostring(J, -i)  << std::endl; \
                                  std::cout << "DBG JS Stack: @" << loc << "<<<" << std::endl; \
                                  abort(); // because DbgPrintStack damages stack by converting all values to strings
-#define GetArgSSMap(n)           objToMap(J, n)
+//#define GetArgSSMap(n)           objToMap(J, n)
 #define GetArgUnsignedArray(n)      objToTypedArray<unsigned,false>(J, n, __func__)
 #define GetArgUnsignedArrayZ(n)     objToTypedArray<unsigned,true>(J, n, __func__)
 #define GetArgFloatArray(n)         objToTypedArray<double, false>(J, n, __func__)
@@ -117,12 +117,12 @@ static void returnArrayOfArrayOfUserData(js_State *J, const A &arr, const char *
     js_setindex(J, -2, idx++);
   }
 }
-
+/*
 static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   std::map<std::string,std::string> mres;
   if (!js_isobject(J, idx))
     js_typeerror(J, "objToMap: not an object");
-  js_pushiterator(J, idx/*idx*/, 1/*own*/);
+  js_pushiterator(J, idx, 1/ *own* /);
   const char *key;
   while ((key = js_nextiterator(J, -1))) {
     js_getproperty(J, idx, key);
@@ -134,6 +134,7 @@ static std::map<std::string,std::string> objToMap(js_State *J, int idx) {
   }
   return mres;
 }
+*/
 
 Vec3 objToVec3(js_State *J, int idx, const char *fname) {
   if (!js_isarray(J, idx))
