@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <limits>
 
 #include <mujs.h>
 
@@ -119,6 +120,32 @@ inline void Sort(Binary &b, unsigned areaSize, unsigned fldOffset, bool orderInc
   ERROR("Binary::sort: unsupported sizes fldOffset=" << fldOffset << " and areaSize=" << areaSize)
 }
 
+template<typename T>
+std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCoords, unsigned padding) {
+  auto sz = b.size();
+  if (sz % (offCoords+sizeof(T)*ndims+padding) != 0)
+    ERROR("Binary.bbox{Type}: array size isn't a multiple of the area size")
+
+  // initialize bb
+  std::vector<std::pair<T,T>> bb;
+  bb.reserve(ndims);
+  while (bb.size() < ndims)
+    bb.push_back(std::pair<T,T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::min()));
+
+  for (auto it = b.begin()+offCoords, ite = b.end(); it < ite;) {
+    for (int d = 0; d < ndims; d++) {
+      T c = *(T*)&(*it);
+      if (c < bb[d].first)
+        bb[d].first = c;
+      if (c > bb[d].second)
+        bb[d].second = c;
+      it += sizeof(T);
+    }
+    it += padding;
+  }
+
+  return bb;
+}
 
 namespace JsBinding {
 
@@ -279,6 +306,24 @@ void init(js_State *J) {
       file.write((char*)&(*b)[0], b->size());
       ReturnVoid(J);
     }, 1)
+    ADD_METHOD_CPP(Binary, bboxFloat4, {
+      AssertNargs(3)
+      Return(J, BBox<float>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1), // ndims
+        GetArgUInt32(2), // offCoords
+        GetArgUInt32(3)  // padding
+      ));
+    }, 3)
+    ADD_METHOD_CPP(Binary, bboxFloat8, {
+      AssertNargs(3)
+      Return(J, BBox<double>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1), // ndims
+        GetArgUInt32(2), // offCoords
+        GetArgUInt32(3)  // padding
+      ));
+    }, 3)
   }
   JsSupport::endDefineClass(J);
 }
