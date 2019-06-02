@@ -14,7 +14,7 @@
 static std::vector<Molecule*> readMolecule(const mmtf::StructureData &sd) {
   std::vector<Molecule*> res;
 
-  assert(sd.secStructList.empty() || sd.secStructList.size() == sd.numGroups);
+  assert(sd.secStructList.empty() || (int)sd.secStructList.size() == sd.numGroups);
 
   auto &ptd = PeriodicTableData::get();
 
