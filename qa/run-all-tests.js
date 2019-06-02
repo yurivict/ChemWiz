@@ -6,11 +6,11 @@ var all_tests = ["xyz",
                  "vec3-ops", "vec3-rmsd",
                  "mat3-ops", "mat3-rotate",
                  "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
-                 "web-ui-http", "web-ui-https", "web-ui-url",
                  "gzip", "mmtf",
                  "sqlite3",
                  "image",
                  "animate",
+                 "web-ui-http", "web-ui-https", "web-ui-url",
                  "calc-erkale", "calc-nwchem"
                 ]
 
