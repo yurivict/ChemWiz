@@ -10,7 +10,7 @@ function evolveDim1SineWave() {
   var numSamplesPerCycle = 400
   var viewRot = Vec3.muln(Vec3.normalize([+1,-1,0]), Math.PI/3)
 
-  var pv = PV.create()
+  var pv = PV.createBW()
 
   var z = -1.
   var dz = 2./((numCyclesMax - numCyclesMin) / numCyclesDlt)
@@ -33,7 +33,7 @@ function evolveDim2WaveSquare() {
   var numSamplesPerCycle = 400
   var viewRot = Vec3.muln(Vec3.normalize([+1,-1,0]), Math.PI/5)
 
-  var pv = PV.create()
+  var pv = PV.createBW()
 
   var z = -1
   var dz = 1./(numSamplesPerCycle*numCycles)
