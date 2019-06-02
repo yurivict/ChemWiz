@@ -15,6 +15,7 @@ static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
 extern const char *TAG_FloatArray4; // allow to access the arguments of this type
 extern const char *TAG_FloatArray8; // allow to access the arguments of this type
+extern const char *TAG_Binary;
 
 namespace JsBinding {
 namespace JsBinary {
@@ -67,6 +68,15 @@ void SetPixelsFromArray(Image &img, const FA *arr, unsigned period, unsigned idx
     ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
   for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
     img.set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+}
+
+template<typename Float>
+void SetPixelsFromBinary(Image &img, const Binary &b, unsigned offCoordX, unsigned offCoordY, unsigned offColor, unsigned period) {
+  auto itToU = [](Binary::const_iterator it) {
+    return (unsigned)*(Float*)&*it;
+  };
+  for (auto itx = b.begin()+offCoordX, ity = b.begin()+offCoordY, itc = b.begin()+offColor, ite = b.end(); itx < ite; itx += period, ity += period, itc += period)
+    img.set_pixel(itToU(itx), itToU(ity), rgb_t{itc[0], itc[1], itc[2]});
 }
 
 namespace JsBinding {
@@ -250,6 +260,30 @@ void init(js_State *J) {
         GetArgUInt32(3),                    // idxx
         GetArgUInt32(4),                    // idxy
         Rgb::unsignedToRgb(GetArgUInt32(5)) // clr (from color as UINT)
+      );
+      ReturnVoid(J);
+    }, 5)
+    ADD_METHOD_CPP(Image, setPixelsFromBinaryFloat4, {
+      AssertNargs(5)
+      SetPixelsFromBinary<float>(
+        *GetArg(Image, 0),                  // img
+        *GetArg(Binary, 1),                 // bin
+        GetArgUInt32(2),                    // offCoordX
+        GetArgUInt32(3),                    // offCoordY
+        GetArgUInt32(4),                    // offColor
+        GetArgUInt32(5)                     // period
+      );
+      ReturnVoid(J);
+    }, 5)
+    ADD_METHOD_CPP(Image, setPixelsFromBinaryFloat8, {
+      AssertNargs(5)
+      SetPixelsFromBinary<double>(
+        *GetArg(Image, 0),                  // img
+        *GetArg(Binary, 1),                 // bin
+        GetArgUInt32(2),                    // offCoordX
+        GetArgUInt32(3),                    // offCoordY
+        GetArgUInt32(4),                    // offColor
+        GetArgUInt32(5)                     // period
       );
       ReturnVoid(J);
     }, 5)

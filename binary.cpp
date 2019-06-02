@@ -1,5 +1,6 @@
 #include <string.h>
 #include <assert.h>
+#include <sys/types.h>
 
 #include <string>
 #include <fstream>
@@ -11,6 +12,8 @@
 #include "mytypes.h"
 #include "js-support.h"
 #include "xerror.h"
+#include "Vec3.h"
+#include "Mat3.h"
 
 const char *TAG_Binary      = "Binary";
 
@@ -121,9 +124,9 @@ inline void Sort(Binary &b, unsigned areaSize, unsigned fldOffset, bool orderInc
 }
 
 template<typename T>
-std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCoords, unsigned padding) {
+std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCoords, unsigned trailing) {
   auto sz = b.size();
-  if (sz % (offCoords+sizeof(T)*ndims+padding) != 0)
+  if (sz % (offCoords+sizeof(T)*ndims+trailing) != 0)
     ERROR("Binary.bbox{Type}: array size isn't a multiple of the area size")
 
   // initialize bb
@@ -141,10 +144,44 @@ std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCo
         bb[d].second = c;
       it += sizeof(T);
     }
-    it += padding;
+    it += trailing;
   }
 
   return bb;
+}
+
+template<typename Float>
+Binary* CreateMulMat3PlusVec3(const Binary &b, unsigned leading, unsigned trailing, const TMat3<Float> &m, const TVec3<Float> &v) {
+  typedef TVec3<Float> V;
+  std::unique_ptr<Binary> output(new Binary);
+  output->reserve(b.size());
+  for (auto it = b.begin(), ite = b.end(); it < ite;) {
+    // leading area before coords (FIXME often zero-length, so this is a waste, have a template param for that?)
+    for (unsigned i = 0; i < leading; i++)
+      output->push_back(*it++);
+    // matrix operation
+    union {const V *vec; const Float *f;} src;
+    uint8_t res[sizeof(V)];
+    src.f = (Float*)&*it;
+    *(V*)&res[0] = m*(*src.vec) + v;
+    for (unsigned i = 0; i < sizeof(V); i++)
+      output->push_back(res[i]);
+    it += 3*sizeof(Float);
+    // trailing bytes
+    for (unsigned i = 0; i < trailing; i++)
+      output->push_back(*it++);
+  }
+  return output.release();
+}
+
+template<typename Float>
+void MulScalarPlusVec3(Binary &b, unsigned leading, unsigned trailing, const TVec3<Float> &scalar, const TVec3<Float> &v) {
+  typedef TVec3<Float> V;
+  for (auto it = b.begin() + leading, ite = b.end(); it < ite;) {
+    V *vec = (V*)&*it;
+    *vec = (*vec).scale(scalar) + v;
+    it += sizeof(V) + trailing;
+  }
 }
 
 namespace JsBinding {
@@ -196,6 +233,11 @@ void init(js_State *J) {
       auto b = GetArg(Binary, 0);
       auto b1 = GetArg(Binary, 1);
       b->insert(b->end(), b1->begin(), b1->end());
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, appendByte, { // appends the 'int' value as bytes
+      AssertNargs(1)
+      GetArg(Binary, 0)->push_back((uint8_t)GetArgUInt32(1));
       ReturnVoid(J);
     }, 1)
     ADD_METHOD_CPP(Binary, appendInt, { // appends the 'int' value as bytes
@@ -312,7 +354,7 @@ void init(js_State *J) {
         *GetArg(Binary, 0),
         GetArgUInt32(1), // ndims
         GetArgUInt32(2), // offCoords
-        GetArgUInt32(3)  // padding
+        GetArgUInt32(3)  // trailing
       ));
     }, 3)
     ADD_METHOD_CPP(Binary, bboxFloat8, {
@@ -321,9 +363,51 @@ void init(js_State *J) {
         *GetArg(Binary, 0),
         GetArgUInt32(1), // ndims
         GetArgUInt32(2), // offCoords
-        GetArgUInt32(3)  // padding
+        GetArgUInt32(3)  // trailing
       ));
     }, 3)
+    ADD_METHOD_CPP(Binary, createMulMat3PlusVec3Float4, {
+      AssertNargs(4)
+      ReturnObj(CreateMulMat3PlusVec3<float>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1),      // leading
+        GetArgUInt32(2),      // trailing
+        Mat3ToType<double, float>::convert(GetArgMat3x3(3)), // M
+        Vec3ToType<double, float>::convert(GetArgVec3(4))    // V
+      ));
+    }, 4)
+    ADD_METHOD_CPP(Binary, createMulMat3PlusVec3Float8, {
+      AssertNargs(4)
+      ReturnObj(CreateMulMat3PlusVec3<double>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1), // leading
+        GetArgUInt32(2), // trailing
+        GetArgMat3x3(3), // M
+        GetArgVec3(4)    // V
+      ));
+    }, 4)
+    ADD_METHOD_CPP(Binary, mulScalarPlusVec3Float4, {
+      AssertNargs(4)
+      MulScalarPlusVec3<float>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1),                                  // leading
+        GetArgUInt32(2),                                  // trailing
+        Vec3ToType<double,float>::convert(GetArgVec3(3)), // Scalar
+        Vec3ToType<double,float>::convert(GetArgVec3(4))  // Vec
+      );
+      ReturnVoid(J);
+    }, 4)
+    ADD_METHOD_CPP(Binary, mulScalarPlusVec3Float8, {
+      AssertNargs(4)
+      MulScalarPlusVec3<double>(
+        *GetArg(Binary, 0),
+        GetArgUInt32(1), // leading
+        GetArgUInt32(2), // trailing
+        GetArgVec3(3),   // Scalar
+        GetArgVec3(4)    // Vec
+      );
+      ReturnVoid(J);
+    }, 4)
   }
   JsSupport::endDefineClass(J);
 }
