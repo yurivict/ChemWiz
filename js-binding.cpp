@@ -1117,66 +1117,6 @@ static void waitForUserInput(js_State *J) {
   ReturnVoid(J);
 }
 
-namespace JsTime {
-
-static void start(js_State *J) {
-  AssertNargs(0)
-  js_pushnumber(J, Tm::start());
-}
-
-static void now(js_State *J) {
-  AssertNargs(0)
-  js_pushnumber(J, Tm::now());
-}
-
-static void wallclock(js_State *J) {
-  AssertNargs(0)
-  js_pushnumber(J, Tm::wallclock());
-}
-
-static void currentDateTimeToSec(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
-  AssertNargs(0)
-  time_t     now = time(0);
-  struct tm  tstruct;
-  char       buf[80];
-  tstruct = *localtime(&now);
-  strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-  Return(J, std::string(buf));
-}
-
-static void currentDateTimeToMs(js_State *J) { // format is YYYY-MM-DD.HH:mm:ss
-  AssertNargs(0)
-
-  timeval curTime;
-  gettimeofday(&curTime, NULL);
-
-  struct tm  tstruct;
-  char       bufs[80], bufms[80];
-
-  tstruct = *localtime(&curTime.tv_sec);
-  strftime(bufs, sizeof(bufs), "%Y-%m-%d.%X", &tstruct);
-  sprintf(bufms, "%s.%03ld", bufs, curTime.tv_usec/1000);
-
-  Return(J, std::string(bufms));
-}
-
-} // JsTime
-
-namespace JsLegacyRng {
-
-static void srand(js_State *J) {
-  AssertNargs(1)
-  ::srand(GetArgUInt32(1));
-  ReturnVoid(J);
-}
-
-static void rand(js_State *J) {
-  AssertNargs(0)
-  Return(J, ::rand());
-}
-
-} // JsLegacyRng
-
 static void system(js_State *J) {
   AssertNargs(1)
   Return(J, Process::exec(GetArgString(1)));
@@ -1606,11 +1546,42 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(sleep, 1)
   ADD_JS_FUNCTION(waitForUserInput, 0)
   BEGIN_NAMESPACE(Time)
-    ADD_NS_FUNCTION_CPP(Time, start,                JsTime::start, 0)
-    ADD_NS_FUNCTION_CPP(Time, now,                  JsTime::now, 0)
-    ADD_NS_FUNCTION_CPP(Time, wallclock,            JsTime::wallclock, 0)
-    ADD_NS_FUNCTION_CPP(Time, currentDateTimeToSec, JsTime::currentDateTimeToSec, 0)
-    ADD_NS_FUNCTION_CPP(Time, currentDateTimeToMs,  JsTime::currentDateTimeToMs, 0)
+    ADD_NS_FUNCTION_CPPnew(Time, start, {
+      AssertNargs(0)
+      js_pushnumber(J, Tm::start());
+    }, 0)
+    ADD_NS_FUNCTION_CPPnew(Time, now, {
+      AssertNargs(0)
+      js_pushnumber(J, Tm::now());
+    }, 0)
+    ADD_NS_FUNCTION_CPPnew(Time, wallclock, {
+      AssertNargs(0)
+      js_pushnumber(J, Tm::wallclock());
+    }, 0)
+    ADD_NS_FUNCTION_CPPnew(Time, currentDateTimeToSec, { // format is YYYY-MM-DD.HH:mm:ss
+      AssertNargs(0)
+      time_t     now = time(0);
+      struct tm  tstruct;
+      char       buf[80];
+      tstruct = *localtime(&now);
+      strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+      Return(J, std::string(buf));
+    }, 0)
+    ADD_NS_FUNCTION_CPPnew(Time, currentDateTimeToMs, { // format is YYYY-MM-DD.HH:mm:ss
+      AssertNargs(0)
+
+      timeval curTime;
+      gettimeofday(&curTime, NULL);
+
+      struct tm  tstruct;
+      char       bufs[32];
+      char       bufms[32];
+
+      tstruct = *localtime(&curTime.tv_sec);
+      strftime(bufs, sizeof(bufs), "%Y-%m-%d.%X", &tstruct);
+      sprintf(bufms, "%s.%03ld", bufs, curTime.tv_usec/1000);
+      Return(J, std::string(bufms));
+    }, 0)
     ADD_NS_FUNCTION_JS (Time, timeTheCode, function(name, func) {
       var t1 = Time.now();
       func();
@@ -1619,8 +1590,15 @@ void registerFunctions(js_State *J) {
     })
   END_NAMESPACE(Time)
   BEGIN_NAMESPACE(LegacyRng)
-    ADD_NS_FUNCTION_CPP(LegacyRng, srand, JsLegacyRng::srand, 1)
-    ADD_NS_FUNCTION_CPP(LegacyRng, rand,  JsLegacyRng::rand, 0)
+    ADD_NS_FUNCTION_CPPnew(LegacyRng, srand, {
+      AssertNargs(1)
+      ::srand(GetArgUInt32(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(LegacyRng, rand, {
+      AssertNargs(0)
+      Return(J, ::rand());
+    }, 0)
   END_NAMESPACE(LegacyRng)
   ADD_JS_FUNCTION(system, 1)
   ADD_JS_FUNCTION(formatFp, 2)

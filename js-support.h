@@ -63,6 +63,9 @@ private:
 #define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) \
   JsSupport::addNsFunctionCpp(J, #ns, #jsfn, cfn, nargs);
 
+#define ADD_NS_FUNCTION_CPPnew(ns, jsfn, fnBody, nargs) \
+  JsSupport::addNsFunctionCpp(J, #ns, #jsfn, [](js_State *J) fnBody, nargs);
+
 #define ADD_NS_FUNCTION_JS(ns, func, code...) \
   JsSupport::addNsFunctionJs(J, #ns, #func, #code);
 
