@@ -5,6 +5,10 @@ var paramMargin = 0.1 // 10% on each side
 var paramImgSz = 800 // 800x800
 
 // helpers
+function createFloatArray() {
+  return new FloatArray8; // FloatArray4 also works
+}
+
 function addToLims(lims, v) {
   if (v < lims[0])
     lims[0] = v
@@ -66,7 +70,7 @@ function createNAcc() { // plain JavaScript, unaccelerated function
 
 function createAcc() { // accelerated through FloatArray functions
   return {
-    pts: new FloatArray,
+    pts: createFloatArray(),
     // iface
     add: function(x,y,z) {
       this.pts.append3(x,y,z)
@@ -89,7 +93,7 @@ function createAcc() { // accelerated through FloatArray functions
       var img = new Image(paramImgSz, paramImgSz)
       img.setRegion(0,0, img.width(), img.height(), 255,255,255)
       ptr.mulScalarPlusVec3([scale, scale, 1.], [paramImgSz/2-ctrr[0]*scale, paramImgSz/2-ctrr[1]*scale, 0.])
-      img.setPixelsFromArray(ptr, 3, 0, 1, 0) // 3=period, 0=x, 1=y, 0=black
+      img.setPixelsFromArray8(ptr, 3, 0, 1, 0) // 3=period, 0=x, 1=y, 0=black
       //
       return img
     }
