@@ -81,7 +81,7 @@ void TempFile::toPermanent(const std::string &permFileName) const {
   if (madePermanent)
     ERROR("temp-file can only be made permanent once!")
   // fails with cross-device error when tmp files are on /tmp
-  if (int err = std::rename(fullPath.c_str(), permFileName.c_str()))
+  if (std::rename(fullPath.c_str(), permFileName.c_str()) != 0)
     throw std::runtime_error("rename() failed!");
   madePermanent = true;
 
