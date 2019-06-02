@@ -57,9 +57,11 @@ inline void SortOne(Binary &b, size_t sz, bool orderInc) {
 
 template<unsigned SzM1, typename T, unsigned SzM2>
 struct Area {
+#pragma pack(push, 1)
   uint8_t m1[SzM1];
-  T value;
+  T       value;
   uint8_t m2[SzM2];
+#pragma pack(pop)
 }; // Area
 
 template<typename T>
