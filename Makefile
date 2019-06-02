@@ -16,6 +16,7 @@ APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
+DEP_FILES=	$(SRCS_CPP:.cpp=.d)
 
 # for MuJS
 LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs libcryptopp)
@@ -57,13 +58,29 @@ LDFLAGS+=	-Wl,-rpath=/usr/local/lib/gcc8 /usr/local/lib/gcc8/libgcc_s.so # FreeB
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 
-$(APP): $(OBJS) $(HEADERS) Makefile
+#
+# build rules
+#
+$(APP): $(OBJS)
 	$(CXX) -o $(APP) $(OBJS) $(LDFLAGS) $(LDLIBS)
 
-$(OBJS): $(HEADERS) Makefile
+#
+# auto-dependencies
+#
+%.d: %.cpp
+	@$(CXX) -M $< $(CXXFLAGS) > $@
 
+-include $(DEP_FILES)
+
+#
+# other targets
+#
 test:
 	./$(APP) qa/run-all-tests.js
 
 clean:
-	rm -f $(OBJS) $(APP)
+	rm -f $(OBJS) $(APP) $(DEP_FILES)
+
+clean-deps:
+	rm -f $(DEP_FILES)
+
