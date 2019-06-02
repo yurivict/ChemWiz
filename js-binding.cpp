@@ -247,6 +247,14 @@ static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   return m;
 }
 
+template<typename T>
+inline void BinaryAppend(Binary &b, T arg) {
+  auto sz = b.size();
+  b.reserve(sz + sizeof(arg));
+  *(decltype(arg)*)&b[sz] = arg;
+  b.resize(sz + sizeof(arg));
+}
+
 //
 // Define object types
 //
@@ -309,6 +317,7 @@ static void init(js_State *J) {
       GetArg(Binary, 0)->resize(GetArgUInt32(1));
       ReturnVoid(J);
     }, 1)
+    // appendXx methods
     ADD_METHOD_CPP(Binary, append, {
       AssertNargs(1)
       auto b = GetArg(Binary, 0);
@@ -316,6 +325,27 @@ static void init(js_State *J) {
       b->insert(b->end(), b1->begin(), b1->end());
       ReturnVoid(J);
     }, 1)
+    ADD_METHOD_CPP(Binary, appendInt, { // appends the 'int' value as bytes
+      AssertNargs(1)
+      BinaryAppend(*GetArg(Binary, 0), GetArgInt32(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, appendUInt, { // appends the 'unsigned' value as bytes
+      AssertNargs(1)
+      BinaryAppend(*GetArg(Binary, 0), GetArgUInt32(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, appendFloat4, { // appends the 'float' value as bytes
+      AssertNargs(1)
+      BinaryAppend(*GetArg(Binary, 0), (float)GetArgFloat(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, appendFloat8, { // appends the 'double' value as bytes
+      AssertNargs(1)
+      BinaryAppend(*GetArg(Binary, 0), (double)GetArgFloat(1));
+      ReturnVoid(J);
+    }, 1)
+    //
     ADD_METHOD_CPP(Binary, concatenate, {
       AssertNargs(1)
       auto b = new Binary(*GetArg(Binary, 0));
