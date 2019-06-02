@@ -92,6 +92,23 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
   js_defproperty(J, -2, fnNameStr, JS_DONTENUM);
 }
 
+//
+// require() inspired from mujs: it loads the module, and exposes its exports.* symbols as the returned object's keys
+//
+void JsSupport::registerFuncRequire(js_State *J) {
+  js_dostring(J,
+    "function require(name) {\n"
+    "  var cache = require.cache\n"
+    "  if (name in cache) return cache[name]\n"
+    "  var exports = {}\n"
+    "  cache[name] = exports\n"
+    "  Function('exports', File.read(name.indexOf('/')==-1 ? 'modules/'+name+'.js' : name+'.js'))(exports)\n"
+    "  return exports\n"
+    "}\n"
+    "require.cache = Object.create(null)\n"
+  );
+}
+
 /// internals
 
 void JsSupport::initObjectRegistry(js_State *J, const char *objTag) {

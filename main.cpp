@@ -2,6 +2,7 @@
 #include "xerror.h"
 #include "common.h"
 #include "js-binding.h"
+#include "js-support.h"
 #include "util.h"
 #include "tm.h"
 
@@ -38,6 +39,7 @@ static int main_guarded(int argc, char* argv[]) {
   if (js_State *J = js_newstate(NULL, NULL, JS_STRICT)) {
     // register our functions
     JsBinding::registerFunctions(J);
+    JsSupport::registerFuncRequire(J);
     // execute supplied JavaScript file or string argument
     for (unsigned i = 1; i < argc && !errs; i++) {
       if (argv[i][0] != '-')

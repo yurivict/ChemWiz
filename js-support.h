@@ -32,6 +32,7 @@ public:
   static void addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
+  static void registerFuncRequire(js_State *J);
 private:
   static void initObjectRegistry(js_State *J, const char *objTag);
   static void popPreviousStackElement(js_State *J);
