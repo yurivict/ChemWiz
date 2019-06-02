@@ -136,3 +136,19 @@ private:
 
 typedef TVec3<double> Vec3;
 typedef TVec3<float> Vec3f;
+
+template<typename FromFloat, typename ToFloat>
+class Vec3ToType {
+public:
+  static const TVec3<ToFloat> convert(const TVec3<FromFloat> &v) {
+    return TVec3<ToFloat>((ToFloat)v(X), (ToFloat)v(Y), (ToFloat)v(Z));
+  }
+}; // Vec3ToType
+
+template<typename XFloat>
+class Vec3ToType<XFloat,XFloat> {
+public:
+  static const TVec3<XFloat>& convert(const TVec3<XFloat> &v) {
+    return v;
+  }
+};

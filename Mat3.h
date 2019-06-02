@@ -9,15 +9,16 @@ typedef double Float;
 
 template<typename Float>
 class TMat3 : public boost::array<TVec3<Float>, 3> {
+  typedef TVec3<Float> V3;
 public:
   TMat3() { }
-  TMat3(const TVec3<Float> &v) : boost::array<Vec3, 3>({{Vec3(v(X),0,0), Vec3(0,v(Y),0), Vec3(0,0,v(Z))}}) { } // Vec3 -> diagonal matrix TMat3 constructor
-  TMat3(const TVec3<Float> &v1, const Vec3 &v2, const Vec3 &v3) : boost::array<Vec3, 3>({{v1, v2, v3}}) { }
+  TMat3(const TVec3<Float> &v) : boost::array<V3, 3>({{V3(v(X),0,0), V3(0,v(Y),0), V3(0,0,v(Z))}}) { } // Vec3 -> diagonal matrix TMat3 constructor
+  TMat3(const TVec3<Float> &v1, const V3 &v2, const V3 &v3) : boost::array<V3, 3>({{v1, v2, v3}}) { }
   Float& operator()(unsigned idx1, unsigned idx2) { // 1-based index access
     return (*this)[idx1-1](idx2);
   }
   TMat3 t() const {
-    auto swap = [](typename TVec3<Float>::val_t &f1, typename Vec3::val_t &f2) {
+    auto swap = [](typename TVec3<Float>::val_t &f1, typename V3::val_t &f2) {
       auto tmp = f1;
       f1 = f2;
       f2 = tmp;
@@ -29,12 +30,12 @@ public:
     return tmp;
   }
   static bool almostEquals(const TMat3 &m1, const TMat3 &m2, Float eps)
-    {return TVec3<Float>::almostEquals(m1[0], m2[0], eps) && Vec3::almostEquals(m1[1], m2[1], eps) && Vec3::almostEquals(m1[2], m2[2], eps);}
-  static TMat3 zero() {return TMat3(TVec3<Float>(0,0,0), Vec3(0,0,0), Vec3(0,0,0));}
-  static TMat3 identity() {return TMat3(TVec3<Float>(1,0,0), Vec3(0,1,0), Vec3(0,0,1));}
+    {return TVec3<Float>::almostEquals(m1[0], m2[0], eps) && V3::almostEquals(m1[1], m2[1], eps) && V3::almostEquals(m1[2], m2[2], eps);}
+  static TMat3 zero() {return TMat3(TVec3<Float>(0,0,0), V3(0,0,0), V3(0,0,0));}
+  static TMat3 identity() {return TMat3(TVec3<Float>(1,0,0), V3(0,1,0), V3(0,0,1));}
   TMat3 transpose() const {
     const auto &i = *this;
-    return TMat3(TVec3<Float>(i(1,1),i(2,1),i(3,1)), Vec3(i(1,2),i(2,2),i(3,2)), Vec3(i(1,3),i(2,3),i(3,3)));
+    return TMat3(TVec3<Float>(i(1,1),i(2,1),i(3,1)), V3(i(1,2),i(2,2),i(3,2)), V3(i(1,3),i(2,3),i(3,3)));
   }
   static TMat3 rotate(const TVec3<Float> &r) {
     Float rLen = r.len();
@@ -77,7 +78,7 @@ public:
                  TVec3<Float>(i(2,1)*m(1,1)+i(2,2)*m(2,1)+i(2,3)*m(3,1), i(2,1)*m(1,2)+i(2,2)*m(2,2)+i(2,3)*m(3,2), i(2,1)*m(1,3)+i(2,2)*m(2,3)+i(2,3)*m(3,3)),
                  TVec3<Float>(i(3,1)*m(1,1)+i(3,2)*m(2,1)+i(3,3)*m(3,1), i(3,1)*m(1,2)+i(3,2)*m(2,2)+i(3,3)*m(3,2), i(3,1)*m(1,3)+i(3,2)*m(2,3)+i(3,3)*m(3,3)));
   }
-  TVec3<Float> operator*(const Vec3 &v) const {
+  TVec3<Float> operator*(const V3 &v) const {
     const auto &i = *this;
     return TVec3<Float>(i(1,1)*v(1) + i(1,2)*v(2) + i(1,3)*v(3),
                         i(2,1)*v(1) + i(2,2)*v(2) + i(2,3)*v(3),
@@ -90,3 +91,21 @@ public:
 
 typedef TMat3<double> Mat3;
 typedef TMat3<float> Mat3f;
+
+template<typename FromFloat, typename ToFloat>
+class Mat3ToType {
+public:
+  static const TMat3<ToFloat> convert(const TMat3<FromFloat> &m) {
+    return TMat3<ToFloat>(Vec3ToType<FromFloat,ToFloat>::convert(m[0]),
+                          Vec3ToType<FromFloat,ToFloat>::convert(m[1]),
+                          Vec3ToType<FromFloat,ToFloat>::convert(m[2]));
+  }
+}; // Mat3ToType
+
+template<typename XFloat>
+class Mat3ToType<XFloat,XFloat> {
+public:
+  static const TMat3<XFloat>& convert(const TMat3<XFloat> &m) {
+    return m;
+  }
+};
