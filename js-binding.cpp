@@ -78,7 +78,8 @@ namespace JsImageDrawer {
   extern void init(js_State *J);
 }
 namespace JsFloatArray {
-  extern void init(js_State *J);
+  extern void initFloat4(js_State *J);
+  extern void initFloat8(js_State *J);
 }
 
 
@@ -260,7 +261,7 @@ static void xnewo(js_State *J, Obj *o) {
 static void init(js_State *J) {
   JsSupport::beginDefineClass(J, TAG_Obj, [](js_State *J) {
     AssertNargs(0)
-    ReturnObj(Obj, new Obj);
+    ReturnObj(new Obj);
   });
   { // methods
     ADD_METHOD_CPP(Obj, id, {
@@ -291,12 +292,12 @@ static void init(js_State *J) {
     auto strLen = ::strlen(str);
     b->resize(strLen);
     ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
-    ReturnObj(Binary, b);
+    ReturnObj(b);
   });
   { // methods
     ADD_METHOD_CPP(Binary, dupl, {
       AssertNargs(0)
-      ReturnObj(Binary, new Binary(*GetArg(Binary, 0)));
+      ReturnObj(new Binary(*GetArg(Binary, 0)));
     }, 0)
     ADD_METHOD_CPP(Binary, size, {
       AssertNargs(0)
@@ -319,7 +320,7 @@ static void init(js_State *J) {
       auto b = new Binary(*GetArg(Binary, 0));
       auto b1 = GetArg(Binary, 1);
       b->insert(b->end(), b1->begin(), b1->end());
-      ReturnObj(Binary, b);
+      ReturnObj(b);
     }, 1)
     ADD_METHOD_CPP(Binary, toString, {
       AssertNargs(0)
@@ -359,7 +360,7 @@ static void xnewoZ(js_State *J, Atom *a) { // object or undefined when a==nulllp
 static void init(js_State *J) {
   JsSupport::beginDefineClass(J, TAG_Atom, [](js_State *J) {
     AssertNargs(2)
-    ReturnObj(Atom, new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
+    ReturnObj(new Atom(Element(PeriodicTableData::get().elementFromSymbol(GetArgString(1))), GetArgVec3(2)));
   });
   { // methods
     ADD_METHOD_CPP(Atom, id, {
@@ -368,7 +369,7 @@ static void init(js_State *J) {
     }, 0)
     ADD_METHOD_CPP(Atom, dupl, {
       AssertNargs(0)
-      ReturnObj(Atom, new Atom(*GetArg(Atom, 0)));
+      ReturnObj(new Atom(*GetArg(Atom, 0)));
     }, 0)
     ADD_METHOD_CPP(Atom, str, {
       AssertNargs(0)
@@ -426,15 +427,15 @@ static void init(js_State *J) {
     }, 1)
     ADD_METHOD_CPP(Atom, getOtherBondOf3, {
       AssertNargs(2)
-      ReturnObj(Atom, GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
+      ReturnObj(GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
     }, 2)
     ADD_METHOD_CPP(Atom, findSingleNeighbor, {
       AssertNargs(1)
-      ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));
+      ReturnObjZ(GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));
     }, 1)
     ADD_METHOD_CPP(Atom, findSingleNeighbor2, {
       AssertNargs(2)
-      ReturnObjZ(Atom, GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
+      ReturnObjZ(GetArg(Atom, 0)->findSingleNeighbor2(GetArgElement(1), GetArgElement(2)));
     }, 2)
     ADD_METHOD_CPP(Atom, snapToGrid, {
       AssertNargs(1)
@@ -561,7 +562,7 @@ static void xnewo(js_State *J, Molecule *m) {
 static void init(js_State *J) {
   JsSupport::beginDefineClass(J, TAG_Molecule, [](js_State *J) {
     AssertNargs(0)
-    ReturnObj(Molecule, new Molecule("created-in-script"));
+    ReturnObj(new Molecule("created-in-script"));
   });
   { // methods
     ADD_METHOD_CPP(Molecule, id, {
@@ -570,7 +571,7 @@ static void init(js_State *J) {
     }, 0)
     ADD_METHOD_CPP(Molecule, dupl, {
       AssertNargs(0)
-      ReturnObj(Molecule, new Molecule(*GetArg(Molecule, 0)));
+      ReturnObj(new Molecule(*GetArg(Molecule, 0)));
     }, 0)
     ADD_METHOD_CPP(Molecule, str, {
       AssertNargs(0)
@@ -583,7 +584,7 @@ static void init(js_State *J) {
     }, 0)
     ADD_METHOD_CPP(Molecule, getAtom, {
       AssertNargs(1)
-      ReturnObj(Atom, GetArg(Molecule, 0)->getAtom(GetArgUInt32(1)));
+      ReturnObjExt(Atom, GetArg(Molecule, 0)->getAtom(GetArgUInt32(1)));
     }, 1)
     ADD_METHOD_CPP(Molecule, getAtoms, {
       AssertNargs(0)
@@ -776,15 +777,15 @@ static void init(js_State *J) {
     //  auto aaBackbonesBinary = Util::createContainerFromBufferOfDifferentType<std::vector<Molecule::AaBackbone>, Binary>(GetArg(Molecule, 0)->findAaBackbones());
     //  Return(Binary, aaBackbonesBinary);
     //}, 0)
-    ADD_METHOD_JS (Molecule, extractCoords, function(m) {
+    ADD_METHOD_JS(Molecule, extractCoords, function(m) {
       var res = [];
       var atoms = this.getAtoms();
       for (var i = 0; i < atoms.length; i++)
         res.push(atoms[i].getPos());
       return res;
     });
-    ADD_METHOD_JS (Molecule, rmsd, function(othr) {return Vec3.rmsd(this.extractCoords(), othr.extractCoords())})
-    ADD_METHOD_JS (Molecule, allElements, function() {
+    ADD_METHOD_JS(Molecule, rmsd, function(othr) {return Vec3.rmsd(this.extractCoords(), othr.extractCoords())})
+    ADD_METHOD_JS(Molecule, allElements, function() {
       var mm = {};
       var atoms = this.getAtoms();
       for (var i = 0; i < atoms.length; i++)
@@ -799,7 +800,7 @@ static void init(js_State *J) {
 
 static void fromXyzOne(js_State *J) {
   AssertNargs(1)
-  ReturnObj(Molecule, Molecule::readXyzFileOne(GetArgString(1)));
+  ReturnObj(Molecule::readXyzFileOne(GetArgString(1)));
 }
 
 static void fromXyzMany(js_State *J) {
@@ -816,7 +817,7 @@ static void listNeighborsHierarchically(js_State *J) {
 #if defined(USE_OPENBABEL)
 static void fromSMILES(js_State *J) {
   AssertNargs(2)
-  ReturnObj(Molecule, Molecule::createFromSMILES(GetArgString(1), GetArgString(2)/*opt*/));
+  ReturnObj(Molecule::createFromSMILES(GetArgString(1), GetArgString(2)/*opt*/));
 }
 #endif
 
@@ -854,16 +855,16 @@ static void init(js_State *J) {
     AssertNargsRange(0,2)
     switch (GetNArgs()) {
     case 0: // ()
-      ReturnObj(TempFile, new TempFile("", ""));
+      ReturnObj(new TempFile("", ""));
       break;
     case 1: // (fileName)
-      ReturnObj(TempFile, new TempFile(GetArgString(1), ""));
+      ReturnObj(new TempFile(GetArgString(1), ""));
       break;
     case 2: // (fileName, text content)
       if (::strcmp(js_typeof(J, 2), "string") == 0)
-        ReturnObj(TempFile, new TempFile(GetArgString(1), GetArgString(2)));
+        ReturnObj(new TempFile(GetArgString(1), GetArgString(2)));
       else
-        ReturnObj(TempFile, new TempFile(GetArgString(1), GetArg(Binary, 2)));
+        ReturnObj(new TempFile(GetArgString(1), GetArg(Binary, 2)));
       break;
     }
   });
@@ -879,7 +880,7 @@ static void init(js_State *J) {
     }, 0)
     ADD_METHOD_CPP(TempFile, toBinary, {
       AssertNargs(0)
-      ReturnObj(Binary, GetArg(TempFile, 0)->toBinary());
+      ReturnObjExt(Binary, GetArg(TempFile, 0)->toBinary());
     }, 0)
     ADD_METHOD_CPP(TempFile, toPermanent, {
       AssertNargs(1)
@@ -906,7 +907,7 @@ static void xnewo(js_State *J, StructureDb *f) {
 static void init(js_State *J) {
   JsSupport::beginDefineClass(J, TAG_StructureDb, [](js_State *J) {
     AssertNargs(0)
-    ReturnObj(StructureDb, new StructureDb);
+    ReturnObj(new StructureDb);
   });
   { // methods
     ADD_METHOD_CPP(StructureDb, str, {
@@ -1190,12 +1191,12 @@ static void formatFp(js_State *J) {
 
 static void download(js_State *J) {
   AssertNargs(3)
-  ReturnObj(Binary, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
+  ReturnObjExt(Binary, WebIo::download(GetArgString(1), GetArgString(2), GetArgString(3)));
 }
 
 static void downloadUrl(js_State *J) {
   AssertNargs(1)
-  ReturnObj(Binary, WebIo::downloadUrl(GetArgString(1)));
+  ReturnObjExt(Binary, WebIo::downloadUrl(GetArgString(1)));
 }
 
 template<typename C>
@@ -1226,7 +1227,7 @@ static void gxzip(js_State *J, C xcompressor) {
   Binary *b = new Binary;
   copyContainer(os.str(), *b); // XXX TODO optimize: need to copy between containers
 
-  ReturnObj(Binary, b);
+  ReturnObjExt(Binary, b);
 }
 
 static void gzip(js_State *J) {
@@ -1578,7 +1579,8 @@ void registerFunctions(js_State *J) {
   // externally defined
   JsImage::init(J);
   JsImageDrawer::init(J);
-  JsFloatArray::init(J);
+  JsFloatArray::initFloat4(J);
+  JsFloatArray::initFloat8(J);
 
   //
   // Misc

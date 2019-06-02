@@ -48,6 +48,8 @@ private:
 // add method defined by the C++ code
 #define ADD_METHOD_CPP(cls, methodName, methodBody, nargs) \
   JsSupport::addMethodCpp(J, #cls, #methodName, [](js_State *J) methodBody,  nargs);
+#define ADD_METHOD_CPPc(cls, methodName, methodBody, nargs) \
+  JsSupport::addMethodCpp(J, cls, #methodName, [](js_State *J) methodBody,  nargs);
 
 // add method defined in JavaScript
 #define ADD_METHOD_JS(cls, method, code...) \
@@ -184,8 +186,10 @@ inline void ReturnVoid(js_State *J) {
 //
 // convenience macros to return object
 //
-#define ReturnObj(type, v) Js##type::xnewo(J, v)
-#define ReturnObjZ(type, v) Js##type::xnewoZ(J, v)
+#define ReturnObj(v) xnewo(J, v)
+#define ReturnObjExt(type, v) Js##type::xnewo(J, v)
+#define ReturnObjZ(v) xnewoZ(J, v)
+#define ReturnObjZExt(type, v) Js##type::xnewoZ(J, v)
 
 
 //
@@ -194,6 +198,7 @@ inline void ReturnVoid(js_State *J) {
 
 #define GetNArgs()               (js_gettop(J)-1)
 #define GetArg(type, n)          ((type*)js_touserdata(J, n, TAG_##type))
+#define GetArgExt(type, tag, n)  ((type*)js_touserdata(J, n, tag))
 #define GetArgZ(type, n)         (!js_isundefined(J, n) ? (type*)js_touserdata(J, n, TAG_##type) : nullptr)
 #define GetArgBoolean(n)         js_toboolean(J, n)
 #define GetArgFloat(n)           js_tonumber(J, n)

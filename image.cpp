@@ -13,7 +13,8 @@
 
 static const char *TAG_Image         = "Image";
 static const char *TAG_ImageDrawer   = "ImageDrawer";
-extern const char *TAG_FloatArray; // allow to access the arguments of this type
+extern const char *TAG_FloatArray4; // allow to access the arguments of this type
+extern const char *TAG_FloatArray8; // allow to access the arguments of this type
 
 namespace JsBinding {
 namespace JsBinary {
@@ -21,7 +22,8 @@ namespace JsBinary {
 }
 }
 
-typedef std::vector<Float> FloatArray;
+typedef std::vector<float> FloatArray4;
+typedef std::vector<double> FloatArray8;
 
 //
 // wrapper classes // TODO get rid of them by extending the framework to accept arbitrary classes
@@ -72,10 +74,10 @@ void init(js_State *J) {
     AssertNargsRange(1,2)
     switch (GetNArgs()) {
     case 1: // load bmp from file
-      ReturnObj(Image, new Image(GetArgString(1)));
+      ReturnObj(new Image(GetArgString(1)));
       break;
     case 2: // create a blank image with sizes
-      ReturnObj(Image, new Image(GetArgUInt32(1), GetArgUInt32(2)));
+      ReturnObj(new Image(GetArgUInt32(1), GetArgUInt32(2)));
       break;
     }
   });
@@ -97,10 +99,24 @@ void init(js_State *J) {
       GetArg(Image, 0)->set_pixel(GetArgUInt32(1), GetArgUInt32(2), Rgb::unsignedToRgb(GetArgUInt32(3)));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP(Image, setPixelsFromArray, {
+    ADD_METHOD_CPP(Image, setPixelsFromArray4, {
       AssertNargs(5)
       auto img = GetArg(Image, 0);
-      auto arr = GetArg(FloatArray, 1);
+      auto arr = GetArg(FloatArray4, 1);
+      auto period = GetArgUInt32(2);
+      auto idxx = GetArgUInt32(3);
+      auto idxy = GetArgUInt32(4);
+      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
+      if (arr->size() % period != 0)
+        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
+        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      ReturnVoid(J);
+    }, 5)
+    ADD_METHOD_CPP(Image, setPixelsFromArray8, {
+      AssertNargs(5)
+      auto img = GetArg(Image, 0);
+      auto arr = GetArg(FloatArray8, 1);
       auto period = GetArgUInt32(2);
       auto idxx = GetArgUInt32(3);
       auto idxy = GetArgUInt32(4);
@@ -178,7 +194,7 @@ void init(js_State *J) {
       assert(ss.str()[0] == 'B');
       std::unique_ptr<Binary> binary(new Binary(p, p + strBuf.size()));
       //
-      ReturnObj(Binary, binary.release());
+      ReturnObjExt(Binary, binary.release());
     }, 0)
     // drawing functions
     ADD_METHOD_CPP(Image, setRegion, {
@@ -228,7 +244,7 @@ static void xnewo(js_State *J, ImageDrawer *d) {
 void init(js_State *J) {
   JsSupport::beginDefineClass(J, TAG_ImageDrawer, [](js_State *J) {
     AssertNargs(1)
-    ReturnObj(ImageDrawer, new ImageDrawer(*GetArg(Image, 1)));
+    ReturnObj(new ImageDrawer(*GetArg(Image, 1)));
   });
   { // methods
     ADD_METHOD_CPP(ImageDrawer, penWidth, {
