@@ -42,7 +42,7 @@ static int main_guarded(int argc, char* argv[]) {
     JsSupport::registerFuncRequire(J);
     JsSupport::registerErrorToString(J);
     // execute supplied JavaScript file or string argument
-    for (unsigned i = 1; i < argc && !errs; i++) {
+    for (int i = 1; i < argc && !errs; i++) {
       if (argv[i][0] != '-')
         errs += js_dofile(J, argv[i]);
       else if (argv[i][1] == 's' && argv[i][2] == 0 && i+1 < argc) {
