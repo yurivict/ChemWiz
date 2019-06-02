@@ -5,6 +5,7 @@
 var all_tests = ["xyz",
                  "vec3-ops", "vec3-rmsd",
                  "mat3-ops", "mat3-rotate",
+                 "binary",
                  "computeConvexHullFacets", "computeConvexHullFacets+furthestdist",
                  "gzip", "mmtf",
                  "sqlite3",
