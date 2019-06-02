@@ -6,6 +6,8 @@
 
 #include <mujs.h>
 
+#include <string.h>
+
 // simple macros are inline-like
 #define AssertStack(n)           assert(js_gettop(J) == n);
 
