@@ -40,6 +40,10 @@ public:
   ImageDrawer(Image &image) : image_drawer(image) { }
 }; // ImageDrawer
 
+//
+// helpers
+//
+
 namespace Rgb {
 
 union U {
@@ -56,6 +60,14 @@ static rgb_t unsignedToRgb(const unsigned &u) {
 }
 
 } // Rgb
+
+template<typename FA>
+void SetPixelsFromArray(Image &img, const FA *arr, unsigned period, unsigned idxx, unsigned idxy, rgb_t clr) {
+  if (arr->size() % period != 0)
+    ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+  for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
+    img.set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+}
 
 namespace JsBinding {
 
@@ -219,30 +231,26 @@ void init(js_State *J) {
     //
     ADD_METHOD_CPP(Image, setPixelsFromArray4, {
       AssertNargs(5)
-      auto img = GetArg(Image, 0);
-      auto arr = GetArg(FloatArray4, 1);
-      auto period = GetArgUInt32(2);
-      auto idxx = GetArgUInt32(3);
-      auto idxy = GetArgUInt32(4);
-      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
-      if (arr->size() % period != 0)
-        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
-      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
-        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      SetPixelsFromArray<FloatArray4>(
+        *GetArg(Image, 0),                  // img
+        GetArg(FloatArray4, 1),             // arr
+        GetArgUInt32(2),                    // period
+        GetArgUInt32(3),                    // idxx
+        GetArgUInt32(4),                    // idxy
+        Rgb::unsignedToRgb(GetArgUInt32(5)) // clr (from color as UINT)
+      );
       ReturnVoid(J);
     }, 5)
     ADD_METHOD_CPP(Image, setPixelsFromArray8, {
       AssertNargs(5)
-      auto img = GetArg(Image, 0);
-      auto arr = GetArg(FloatArray8, 1);
-      auto period = GetArgUInt32(2);
-      auto idxx = GetArgUInt32(3);
-      auto idxy = GetArgUInt32(4);
-      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
-      if (arr->size() % period != 0)
-        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
-      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
-        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      SetPixelsFromArray<FloatArray8>(
+        *GetArg(Image, 0),                  // img
+        GetArg(FloatArray8, 1),             // arr
+        GetArgUInt32(2),                    // period
+        GetArgUInt32(3),                    // idxx
+        GetArgUInt32(4),                    // idxy
+        Rgb::unsignedToRgb(GetArgUInt32(5)) // clr (from color as UINT)
+      );
       ReturnVoid(J);
     }, 5)
   }
