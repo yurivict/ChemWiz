@@ -597,7 +597,7 @@ bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
   assert(aPayload);
 
   // what is connected to N?
-  Atom* aHCn1;
+  Atom* aHCn1; // XXX technically aHCn1 is used uninitilized, gcc8 finds it, but clang doesn't (clang-bug#42103), actually this is not a problem
   Atom* aHn2 = nullptr;
   Atom *aCproline;
   if (aN->isBonds(C,1, H,2)) { // tail N has 2 hydrogens: tail
