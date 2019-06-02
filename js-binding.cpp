@@ -40,11 +40,12 @@
 
 // tag strings of all objects
 static const char *TAG_Obj         = "Obj";
-static const char *TAG_Binary      = "Binary";
 static const char *TAG_Molecule    = "Molecule";
 static const char *TAG_Atom        = "Atom";
 static const char *TAG_TempFile    = "TempFile";
 static const char *TAG_StructureDb = "StructureDb";
+
+extern const char *TAG_Binary;
 
 // helper macros
 #define DbgPrintStackLevel(loc)  std::cout << "DBG JS Stack: @" << loc << " level=" << js_gettop(J) << std::endl
@@ -71,6 +72,10 @@ static const char *TAG_StructureDb = "StructureDb";
 namespace JsBinding {
 
 // externally defined types
+namespace JsBinary {
+  extern void init(js_State *J);
+  extern void xnewo(js_State *J, Binary *b);
+}
 namespace JsImage {
   extern void init(js_State *J);
 }
@@ -247,14 +252,6 @@ static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   return m;
 }
 
-template<typename T>
-inline void BinaryAppend(Binary &b, T arg) {
-  auto sz = b.size();
-  b.reserve(sz + sizeof(arg));
-  *(decltype(arg)*)&b[sz] = arg;
-  b.resize(sz + sizeof(arg));
-}
-
 //
 // Define object types
 //
@@ -282,94 +279,6 @@ static void init(js_State *J) {
 }
 
 } // JsObj
-
-namespace JsBinary {
-
-/*static: used from the js-image module*/ void xnewo(js_State *J, Binary *b) {
-  js_getglobal(J, TAG_Binary);
-  js_getproperty(J, -1, "prototype");
-  js_newuserdata(J, TAG_Binary, b, [](js_State *J, void *p) {
-    delete (Binary*)p;
-  });
-}
-
-static void init(js_State *J) {
-  JsSupport::beginDefineClass(J, TAG_Binary, [](js_State *J) {
-    AssertNargs(1)
-    auto b = new Binary;
-    auto str = GetArgStringCptr(1);
-    auto strLen = ::strlen(str);
-    b->resize(strLen);
-    ::memcpy(&(*b)[0], str, strLen); // FIXME inefficient copying char* -> Binary, should do this in one step
-    ReturnObj(b);
-  });
-  { // methods
-    ADD_METHOD_CPP(Binary, dupl, {
-      AssertNargs(0)
-      ReturnObj(new Binary(*GetArg(Binary, 0)));
-    }, 0)
-    ADD_METHOD_CPP(Binary, size, {
-      AssertNargs(0)
-      Return(J, (unsigned)GetArg(Binary, 0)->size());
-    }, 0)
-    ADD_METHOD_CPP(Binary, resize, {
-      AssertNargs(1)
-      GetArg(Binary, 0)->resize(GetArgUInt32(1));
-      ReturnVoid(J);
-    }, 1)
-    // appendXx methods
-    ADD_METHOD_CPP(Binary, append, {
-      AssertNargs(1)
-      auto b = GetArg(Binary, 0);
-      auto b1 = GetArg(Binary, 1);
-      b->insert(b->end(), b1->begin(), b1->end());
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Binary, appendInt, { // appends the 'int' value as bytes
-      AssertNargs(1)
-      BinaryAppend(*GetArg(Binary, 0), GetArgInt32(1));
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Binary, appendUInt, { // appends the 'unsigned' value as bytes
-      AssertNargs(1)
-      BinaryAppend(*GetArg(Binary, 0), GetArgUInt32(1));
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Binary, appendFloat4, { // appends the 'float' value as bytes
-      AssertNargs(1)
-      BinaryAppend(*GetArg(Binary, 0), (float)GetArgFloat(1));
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Binary, appendFloat8, { // appends the 'double' value as bytes
-      AssertNargs(1)
-      BinaryAppend(*GetArg(Binary, 0), (double)GetArgFloat(1));
-      ReturnVoid(J);
-    }, 1)
-    //
-    ADD_METHOD_CPP(Binary, concatenate, {
-      AssertNargs(1)
-      auto b = new Binary(*GetArg(Binary, 0));
-      auto b1 = GetArg(Binary, 1);
-      b->insert(b->end(), b1->begin(), b1->end());
-      ReturnObj(b);
-    }, 1)
-    ADD_METHOD_CPP(Binary, toString, {
-      AssertNargs(0)
-      auto b = GetArg(Binary, 0);
-      Return(J, std::string(b->begin(), b->end()));
-    }, 0)
-    ADD_METHOD_CPP(Binary, toFile, {
-      AssertNargs(1)
-      std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
-      auto b = GetArg(Binary, 0);
-      file.write((char*)&(*b)[0], b->size());
-      ReturnVoid(J);
-    }, 1)
-  }
-  JsSupport::endDefineClass(J);
-}
-
-} // JsBinary
 
 namespace JsAtom {
 
@@ -1542,12 +1451,12 @@ void registerFunctions(js_State *J) {
   //
 
   JsObj::init(J);
-  JsBinary::init(J);
   JsAtom::init(J);
   JsMolecule::init(J);
   JsTempFile::init(J);
   JsStructureDb::init(J);
   // externally defined
+  JsBinary::init(J);
   JsImage::init(J);
   JsImageDrawer::init(J);
   JsFloatArray::initFloat4(J);
