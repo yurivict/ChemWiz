@@ -16,7 +16,7 @@ APP=		chemwiz
 CXX?=		clang++80
 CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
-DEP_FILES=	$(SRCS_CPP:.cpp=.d)
+DEP_FILES=	$(SRCS_CPP:.cpp=.cpp.d)
 
 # for MuJS
 LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs libcryptopp)
@@ -67,7 +67,8 @@ $(APP): $(OBJS)
 #
 # auto-dependencies
 #
-%.d: %.cpp
+%.cpp.d: %.cpp
+	@echo "scanning dependencies for $<"
 	@$(CXX) -M $< $(CXXFLAGS) > $@
 
 -include $(DEP_FILES)
