@@ -14,7 +14,7 @@ HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h util.h process.h Vec3.h
 		structure-db.h stl-ext.h js-support.h mytypes.h
 APP=		chemwiz
 CXX?=		clang++80
-CFLAGS=		-O3 -Wall $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
+CFLAGS=		-O3 -Wall -Wconditional-uninitialized $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
 DEP_FILES=	$(SRCS_CPP:.cpp=.cpp.d)
 
