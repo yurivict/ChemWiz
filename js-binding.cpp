@@ -237,7 +237,7 @@ static std::valarray<double>* objToMatNxX(js_State *J, int idx) {
   auto m = new std::valarray<double>;
   m->resize(len*N);
 
-  for (unsigned i = 0, vaIdx = 0; i < len; i++, vaIdx += N) {
+  for (int i = 0, vaIdx = 0; i < len; i++, vaIdx += N) {
     js_getindex(J, idx, i);
     objToVecVa<N>(J, -1, m, vaIdx);
     js_pop(J, 1);
@@ -541,7 +541,7 @@ static std::vector<Molecule::AaBackbone>* readAaBackboneArray(js_State *J, int a
   {
     auto len = js_getlength(J, argno);
     aaBackboneArray->resize(len);
-    for (unsigned i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
       js_getindex(J, 1/*argno*/, i);
       (*aaBackboneArray)[i] = popAaBackboneAsJsObject(J);
     }
