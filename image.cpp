@@ -81,7 +81,10 @@ void init(js_State *J) {
       break;
     }
   });
-  { // methods
+  {
+    //
+    // basic methods
+    //
     ADD_METHOD_CPP(Image, width, {
       AssertNargs(0)
       Return(J, GetArg(Image, 0)->width());
@@ -99,34 +102,53 @@ void init(js_State *J) {
       GetArg(Image, 0)->set_pixel(GetArgUInt32(1), GetArgUInt32(2), Rgb::unsignedToRgb(GetArgUInt32(3)));
       ReturnVoid(J);
     }, 3)
-    ADD_METHOD_CPP(Image, setPixelsFromArray4, {
-      AssertNargs(5)
-      auto img = GetArg(Image, 0);
-      auto arr = GetArg(FloatArray4, 1);
-      auto period = GetArgUInt32(2);
-      auto idxx = GetArgUInt32(3);
-      auto idxy = GetArgUInt32(4);
-      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
-      if (arr->size() % period != 0)
-        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
-      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
-        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+    ADD_METHOD_CPP(Image, equal, {
+      AssertNargs(1)
+      *GetArg(Image, 0) = *GetArg(Image, 1);
       ReturnVoid(J);
-    }, 5)
-    ADD_METHOD_CPP(Image, setPixelsFromArray8, {
-      AssertNargs(5)
-      auto img = GetArg(Image, 0);
-      auto arr = GetArg(FloatArray8, 1);
-      auto period = GetArgUInt32(2);
-      auto idxx = GetArgUInt32(3);
-      auto idxy = GetArgUInt32(4);
-      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
-      if (arr->size() % period != 0)
-        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
-      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
-        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+    }, 1)
+    ADD_METHOD_CPP(Image, clear, {
+      AssertNargs(0)
+      GetArg(Image, 0)->clear();
       ReturnVoid(J);
-    }, 5)
+    }, 0)
+    ADD_METHOD_CPP(Image, cryptoHash, {
+      AssertNargs(0)
+      // get image data buffer
+      auto *img  = GetArg(Image, 0);
+      auto imgData = (uint8_t*)img->data();
+      size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
+      // compute hash
+      auto hash_hex_str = picosha2::hash256_hex_string(imgData, imgData+imgDataSize);
+      //
+      Return(J, hash_hex_str);
+    }, 0)
+    //
+    // saving
+    //
+    ADD_METHOD_CPP(Image, saveImage, {
+      AssertNargs(1)
+      GetArg(Image, 0)->save_image(GetArgString(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Image, toBinary, {
+      AssertNargs(0)
+      // get image data buffer
+      std::ostringstream ss; // FIXME this is inefficient to copy it to the string first TODO need to use std::basic_ostream with a custom std::basic_streambuf
+      ss << std::noskipws;
+      GetArg(Image, 0)->write_image(ss);
+      ss.flush();
+      // create binary
+      const std::string &strBuf = ss.str();
+      auto p = (uint8_t*)strBuf.c_str();
+      assert(ss.str()[0] == 'B');
+      std::unique_ptr<Binary> binary(new Binary(p, p + strBuf.size()));
+      //
+      ReturnObjExt(Binary, binary.release());
+    }, 0)
+    //
+    // effects
+    //
     ADD_METHOD_CPP(Image, plasma, {
       AssertNargs(10)
       auto strToColormap = [](const std::string &name) {
@@ -155,48 +177,9 @@ void init(js_State *J) {
       checkered_pattern(GetArgUInt32(1), GetArgUInt32(2), GetArgUInt32(3), (bitmap_image::color_plane)GetArgUInt32(4), *GetArg(Image, 0));
       ReturnVoid(J);
     }, 4)
-    ADD_METHOD_CPP(Image, equal, {
-      AssertNargs(1)
-      *GetArg(Image, 0) = *GetArg(Image, 1);
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Image, clear, {
-      AssertNargs(0)
-      GetArg(Image, 0)->clear();
-      ReturnVoid(J);
-    }, 0)
-    ADD_METHOD_CPP(Image, cryptoHash, {
-      AssertNargs(0)
-      // get image data buffer
-      auto *img  = GetArg(Image, 0);
-      auto imgData = (uint8_t*)img->data();
-      size_t imgDataSize = img->bytes_per_pixel()*img->width()*img->height();
-      // compute hash
-      auto hash_hex_str = picosha2::hash256_hex_string(imgData, imgData+imgDataSize);
-      //
-      Return(J, hash_hex_str);
-    }, 0)
-    ADD_METHOD_CPP(Image, saveImage, {
-      AssertNargs(1)
-      GetArg(Image, 0)->save_image(GetArgString(1));
-      ReturnVoid(J);
-    }, 1)
-    ADD_METHOD_CPP(Image, toBinary, {
-      AssertNargs(0)
-      // get image data buffer
-      std::ostringstream ss; // FIXME this is inefficient to copy it to the string first TODO need to use std::basic_ostream with a custom std::basic_streambuf
-      ss << std::noskipws;
-      GetArg(Image, 0)->write_image(ss);
-      ss.flush();
-      // create binary
-      const std::string &strBuf = ss.str();
-      auto p = (uint8_t*)strBuf.c_str();
-      assert(ss.str()[0] == 'B');
-      std::unique_ptr<Binary> binary(new Binary(p, p + strBuf.size()));
-      //
-      ReturnObjExt(Binary, binary.release());
-    }, 0)
+    //
     // drawing functions
+    //
     ADD_METHOD_CPP(Image, setRegion, {
       AssertNargs(7)
       GetArg(Image, 0)->set_region(
@@ -205,16 +188,22 @@ void init(js_State *J) {
         GetArgUInt32(5), GetArgUInt32(6), GetArgUInt32(7)); // red green blue
       ReturnVoid(J);
     }, 7)
-    ADD_METHOD_CPP(Image, reflectiveImage, {
-      AssertNargs(2)
-      GetArg(Image, 0)->reflective_image(*GetArg(Image, 1), GetArgBoolean(2));
-      ReturnVoid(J);
-    }, 2)
+    //
+    // convert
+    //
     ADD_METHOD_CPP(Image, convertToGrayscale, {
       AssertNargs(0)
       GetArg(Image, 0)->convert_to_grayscale();
       ReturnVoid(J);
     }, 0)
+    //
+    // bulk operations
+    //
+    ADD_METHOD_CPP(Image, reflectiveImage, {
+      AssertNargs(2)
+      GetArg(Image, 0)->reflective_image(*GetArg(Image, 1), GetArgBoolean(2));
+      ReturnVoid(J);
+    }, 2)
     ADD_METHOD_CPP(Image, horizontalFlip, {
       AssertNargs(0)
       GetArg(Image, 0)->horizontal_flip();
@@ -225,6 +214,37 @@ void init(js_State *J) {
       GetArg(Image, 0)->vertical_flip();
       ReturnVoid(J);
     }, 0)
+    //
+    // vectorized methods: setPixelsXx
+    //
+    ADD_METHOD_CPP(Image, setPixelsFromArray4, {
+      AssertNargs(5)
+      auto img = GetArg(Image, 0);
+      auto arr = GetArg(FloatArray4, 1);
+      auto period = GetArgUInt32(2);
+      auto idxx = GetArgUInt32(3);
+      auto idxy = GetArgUInt32(4);
+      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
+      if (arr->size() % period != 0)
+        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
+        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      ReturnVoid(J);
+    }, 5)
+    ADD_METHOD_CPP(Image, setPixelsFromArray8, {
+      AssertNargs(5)
+      auto img = GetArg(Image, 0);
+      auto arr = GetArg(FloatArray8, 1);
+      auto period = GetArgUInt32(2);
+      auto idxx = GetArgUInt32(3);
+      auto idxy = GetArgUInt32(4);
+      auto clr = Rgb::unsignedToRgb(GetArgUInt32(5)); // color as UINT
+      if (arr->size() % period != 0)
+        ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+      for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
+        img->set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
+      ReturnVoid(J);
+    }, 5)
   }
   JsSupport::endDefineClass(J);
 }
