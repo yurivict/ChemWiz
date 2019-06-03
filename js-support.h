@@ -28,7 +28,7 @@ public:
   static void beginNamespace(js_State *J, const char *nsNameStr);
   static void endNamespace(js_State *J, const char *nsNameStr);
   static void addJsConstructor(js_State *J, const char *clsTag, js_CFunction newFun);
-  static void addMethodCpp(js_State *J, const char *cls, const char *methodStr, js_CFunction methodFun, unsigned nargs);
+  static void addMethodCpp(js_State *J, const char *cls, const char *methodStr, const char *prototypeName, js_CFunction methodFun, unsigned nargs);
   static void addMethodJs(js_State *J, const char *cls, const char *methodStr, const char *codeStr);
   static void addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
@@ -51,9 +51,9 @@ private:
 
 // add method defined by the C++ code
 #define ADD_METHOD_CPP(cls, methodName, methodBody, nargs) \
-  JsSupport::addMethodCpp(J, #cls, #methodName, [](js_State *J) methodBody,  nargs);
+  JsSupport::addMethodCpp(J, #cls, #methodName, #cls ".prototype." #methodName, [](js_State *J) methodBody,  nargs);
 #define ADD_METHOD_CPPc(cls, methodName, methodBody, nargs) \
-  JsSupport::addMethodCpp(J, cls, #methodName, [](js_State *J) methodBody,  nargs);
+  JsSupport::addMethodCpp(J, cls, #methodName, #cls ".prototype." #methodName, [](js_State *J) methodBody,  nargs);
 
 // add method defined in JavaScript
 #define ADD_METHOD_JS(cls, method, code...) \

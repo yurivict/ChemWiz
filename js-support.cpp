@@ -65,10 +65,9 @@ void JsSupport::addJsConstructor(js_State *J, const char *clsTag, js_CFunction n
   js_defproperty(J, -2, clsTag, JS_DONTENUM);                /*@lev=1*/
 }
 
-void JsSupport::addMethodCpp(js_State *J, const char *cls, const char *methodStr, js_CFunction methodFun, unsigned nargs) {
-  auto s = str(boost::format("%1%.prototype.%2%") % cls % methodStr);
+void JsSupport::addMethodCpp(js_State *J, const char *cls, const char *methodStr, const char *prototypeName, js_CFunction methodFun, unsigned nargs) {
   AssertStack(2);
-  js_newcfunction(J, methodFun, s.c_str(), nargs); /*PUSH a function object wrapping a C function pointer*/
+  js_newcfunction(J, methodFun, prototypeName, nargs); /*PUSH a function object wrapping a C function pointer*/
   js_defproperty(J, -2, methodStr, JS_DONTENUM); /*POP a value from the top of the stack and set the value of the named property of the object (in prototype).*/ \
   AssertStack(2);
 }
@@ -77,7 +76,7 @@ void JsSupport::addMethodJs(js_State *J, const char *cls, const char *methodStr,
   js_dostring(J, str(boost::format("%1%.prototype['%2%'] = %3%") % cls % methodStr % codeStr).c_str());
 }
 
-void JsSupport::addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs) {
+void JsSupport::addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs) { // top-level standalone function
   js_newcfunction(J, funcFun, funcNameStr, nargs);
   js_setglobal(J, funcNameStr);
 }
