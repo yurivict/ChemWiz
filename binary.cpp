@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <iterator>
 #include <limits>
 
 #include <mujs.h>
@@ -22,22 +23,21 @@ const char *TAG_Binary      = "Binary";
 //
 template<typename T>
 inline void Append(Binary &b, T val) {
-  auto sz = b.size();
-  b.resize(sz + sizeof(T));
-  *(T*)&b[sz] = val;
+  std::copy((Binary::value_type*)&val, (Binary::value_type*)((&val)+1), std::back_inserter(b));
 }
 
 template<typename T>
-inline void Put(Binary &b, unsigned off, T val) {
+inline void Put(js_State *J, Binary &b, unsigned off, T val) {
   if (off+sizeof(T) > b.size())
-    ERROR("Binary.put offset=" << off << " is out-of-bounds: arraySize=" << b.size() << ", valueSize=" << sizeof(T))
+    JS_ERROR("Binary.put: offset=" << off << " is out-of-bounds: arraySize=" << b.size() << ", valueSize=" << sizeof(T))
+
   *(T*)&b[off] = val;
 }
 
 template<typename T>
-inline T Get(Binary &b, unsigned off) {
+inline T Get(js_State *J, Binary &b, unsigned off) {
   if (off+sizeof(T) > b.size())
-    ERROR("Binary.get offset=" << off << " is out-of-bounds: arraySize=" << b.size() << ", valueSize=" << sizeof(T))
+    JS_ERROR("Binary.get: offset=" << off << " is out-of-bounds: arraySize=" << b.size() << ", valueSize=" << sizeof(T))
   return *(T*)&b[off];
 }
 
@@ -69,9 +69,13 @@ struct Area {
 }; // Area
 
 template<typename T>
-inline void Sort(Binary &b, unsigned areaSize, unsigned fldOffset, bool orderInc) {
+inline void Sort(js_State *J, Binary &b, unsigned areaSize, unsigned fldOffset, bool orderInc) {
   auto sz = b.size();
-  assert(sz % areaSize == 0 && fldOffset + sizeof(T) <= areaSize);
+
+  if (sz % areaSize != 0)
+    JS_ERROR("Binary.sortAteasXxx: size=" << sz << " is not a multiple of areaSize=" << areaSize)
+  if (fldOffset + sizeof(T) > areaSize)
+    JS_ERROR("Binary.sortAteasXxx: fldOffset=" << fldOffset << " + sizeof(T)=" << sizeof(T) << " doesn't fit in the area, areaSize=" << areaSize)
 
   switch (areaSize) {
   case sizeof(T):      SortOne<Area<0,T,0>>(b, sz, orderInc);   return;
@@ -124,10 +128,11 @@ inline void Sort(Binary &b, unsigned areaSize, unsigned fldOffset, bool orderInc
 }
 
 template<typename T>
-std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCoords, unsigned trailing) {
+std::vector<std::pair<T,T>> BBox(js_State *J, const Binary &b, unsigned ndims, unsigned leading, unsigned trailing) {
   auto sz = b.size();
-  if (sz % (offCoords+sizeof(T)*ndims+trailing) != 0)
-    ERROR("Binary.bbox{Type}: array size isn't a multiple of the area size")
+
+  if (sz % (leading + ndims*sizeof(T) + trailing) != 0)
+    JS_ERROR("Binary.bboxXx: size=" << sz << " is not a multiple of areaSize=" << (leading + ndims*sizeof(T) + trailing))
 
   // initialize bb
   std::vector<std::pair<T,T>> bb;
@@ -135,7 +140,7 @@ std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCo
   while (bb.size() < ndims)
     bb.push_back(std::pair<T,T>(std::numeric_limits<T>::max(), std::numeric_limits<T>::min()));
 
-  for (auto it = b.begin()+offCoords, ite = b.end(); it < ite;) {
+  for (auto it = b.begin()+leading, ite = b.end(); it < ite;) {
     for (int d = 0; d < ndims; d++) {
       T c = *(T*)&(*it);
       if (c < bb[d].first)
@@ -151,10 +156,15 @@ std::vector<std::pair<T,T>> BBox(const Binary &b, unsigned ndims, unsigned offCo
 }
 
 template<typename Float>
-Binary* CreateMulMat3PlusVec3(const Binary &b, unsigned leading, unsigned trailing, const TMat3<Float> &m, const TVec3<Float> &v) {
+Binary* CreateMulMat3PlusVec3(js_State *J, const Binary &b, unsigned leading, unsigned trailing, const TMat3<Float> &m, const TVec3<Float> &v) {
   typedef TVec3<Float> V;
+  auto sz = b.size();
+
+  if (sz % (leading + sizeof(V) + trailing) != 0)
+    JS_ERROR("Binary.createMulMat3PlusVec3Xx: size=" << sz << " is not a multiple of areaSize=" << (leading + sizeof(V) + trailing))
+
   std::unique_ptr<Binary> output(new Binary);
-  output->reserve(b.size());
+  output->reserve(sz);
   for (auto it = b.begin(), ite = b.end(); it < ite;) {
     // leading area before coords (FIXME often zero-length, so this is a waste, have a template param for that?)
     for (unsigned i = 0; i < leading; i++)
@@ -175,12 +185,17 @@ Binary* CreateMulMat3PlusVec3(const Binary &b, unsigned leading, unsigned traili
 }
 
 template<typename Float>
-void MulScalarPlusVec3(Binary &b, unsigned leading, unsigned trailing, const TVec3<Float> &scalar, const TVec3<Float> &v) {
+void MulScalarPlusVec3(js_State *J, Binary &b, unsigned leading, unsigned trailing, const TVec3<Float> &scalar, const TVec3<Float> &v) {
   typedef TVec3<Float> V;
-  for (auto it = b.begin() + leading, ite = b.end(); it < ite;) {
+  auto sz = b.size();
+  auto areaSize = leading + sizeof(V) + trailing;
+
+  if (sz % areaSize != 0)
+    JS_ERROR("Binary.bboxXx: size=" << sz << " is not a multiple of areaSize=" << areaSize)
+
+  for (auto it = b.begin() + leading, ite = b.end(); it < ite; it += areaSize) {
     V *vec = (V*)&*it;
     *vec = (*vec).scale(scalar) + v;
-    it += sizeof(V) + trailing;
   }
 }
 
@@ -263,54 +278,54 @@ void init(js_State *J) {
     // putXx methods
     ADD_METHOD_CPP(Binary, putByte, {
       AssertNargs(2)
-      Put(*GetArg(Binary, 0), GetArgUInt32(1), (uint8_t)GetArgUInt32(2));
+      Put(J, *GetArg(Binary, 0), GetArgUInt32(1), (uint8_t)GetArgUInt32(2));
       ReturnVoid(J);
     }, 2)
     ADD_METHOD_CPP(Binary, putInt, {
       AssertNargs(2)
-      Put(*GetArg(Binary, 0), GetArgUInt32(1), GetArgInt32(2));
+      Put(J, *GetArg(Binary, 0), GetArgUInt32(1), GetArgInt32(2));
       ReturnVoid(J);
     }, 2)
     ADD_METHOD_CPP(Binary, putUInt, {
       AssertNargs(2)
-      Put(*GetArg(Binary, 0), GetArgUInt32(1), GetArgUInt32(2));
+      Put(J, *GetArg(Binary, 0), GetArgUInt32(1), GetArgUInt32(2));
       ReturnVoid(J);
     }, 2)
     ADD_METHOD_CPP(Binary, putFloat4, {
       AssertNargs(2)
-      Put(*GetArg(Binary, 0), GetArgUInt32(1), (float)GetArgFloat(2));
+      Put(J, *GetArg(Binary, 0), GetArgUInt32(1), (float)GetArgFloat(2));
       ReturnVoid(J);
     }, 2)
     ADD_METHOD_CPP(Binary, putFloat8, {
       AssertNargs(2)
-      Put(*GetArg(Binary, 0), GetArgUInt32(1), (double)GetArgFloat(2));
+      Put(J, *GetArg(Binary, 0), GetArgUInt32(1), (double)GetArgFloat(2));
       ReturnVoid(J);
     }, 2)
     // getXx methods
     ADD_METHOD_CPP(Binary, getByte, {
       AssertNargs(1)
-      Return(J, Get<uint8_t>(*GetArg(Binary, 0), GetArgUInt32(1)));
-    }, 2)
+      Return(J, Get<uint8_t>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
+    }, 1)
     ADD_METHOD_CPP(Binary, getInt, {
       AssertNargs(1)
-      Return(J, Get<int>(*GetArg(Binary, 0), GetArgUInt32(1)));
+      Return(J, Get<int>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
     ADD_METHOD_CPP(Binary, getUInt, {
       AssertNargs(1)
-      Return(J, Get<unsigned>(*GetArg(Binary, 0), GetArgUInt32(1)));
+      Return(J, Get<unsigned>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
     ADD_METHOD_CPP(Binary, getFloat4, {
       AssertNargs(1)
-      Return(J, Get<float>(*GetArg(Binary, 0), GetArgUInt32(1)));
+      Return(J, Get<float>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
     ADD_METHOD_CPP(Binary, getFloat8, {
       AssertNargs(1)
-      Return(J, Get<double>(*GetArg(Binary, 0), GetArgUInt32(1)));
+      Return(J, Get<double>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
     // sort
     ADD_METHOD_CPP(Binary, sortAreasByFloat4Field, {
       AssertNargs(3)
-      Sort<float>(
+      Sort<float>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // areaSize
         GetArgUInt32(2), // fldOffset
@@ -320,7 +335,7 @@ void init(js_State *J) {
     }, 3)
     ADD_METHOD_CPP(Binary, sortAreasByFloat8Field, {
       AssertNargs(3)
-      Sort<double>(
+      Sort<double>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // areaSize
         GetArgUInt32(2), // fldOffset
@@ -350,25 +365,25 @@ void init(js_State *J) {
     }, 1)
     ADD_METHOD_CPP(Binary, bboxFloat4, {
       AssertNargs(3)
-      Return(J, BBox<float>(
+      Return(J, BBox<float>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // ndims
-        GetArgUInt32(2), // offCoords
+        GetArgUInt32(2), // leading
         GetArgUInt32(3)  // trailing
       ));
     }, 3)
     ADD_METHOD_CPP(Binary, bboxFloat8, {
       AssertNargs(3)
-      Return(J, BBox<double>(
+      Return(J, BBox<double>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // ndims
-        GetArgUInt32(2), // offCoords
+        GetArgUInt32(2), // leading
         GetArgUInt32(3)  // trailing
       ));
     }, 3)
     ADD_METHOD_CPP(Binary, createMulMat3PlusVec3Float4, {
       AssertNargs(4)
-      ReturnObj(CreateMulMat3PlusVec3<float>(
+      ReturnObj(CreateMulMat3PlusVec3<float>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1),      // leading
         GetArgUInt32(2),      // trailing
@@ -378,7 +393,7 @@ void init(js_State *J) {
     }, 4)
     ADD_METHOD_CPP(Binary, createMulMat3PlusVec3Float8, {
       AssertNargs(4)
-      ReturnObj(CreateMulMat3PlusVec3<double>(
+      ReturnObj(CreateMulMat3PlusVec3<double>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // leading
         GetArgUInt32(2), // trailing
@@ -388,7 +403,7 @@ void init(js_State *J) {
     }, 4)
     ADD_METHOD_CPP(Binary, mulScalarPlusVec3Float4, {
       AssertNargs(4)
-      MulScalarPlusVec3<float>(
+      MulScalarPlusVec3<float>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1),                                  // leading
         GetArgUInt32(2),                                  // trailing
@@ -399,7 +414,7 @@ void init(js_State *J) {
     }, 4)
     ADD_METHOD_CPP(Binary, mulScalarPlusVec3Float8, {
       AssertNargs(4)
-      MulScalarPlusVec3<double>(
+      MulScalarPlusVec3<double>(J,
         *GetArg(Binary, 0),
         GetArgUInt32(1), // leading
         GetArgUInt32(2), // trailing
