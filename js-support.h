@@ -35,7 +35,7 @@ public:
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
   static void registerFuncRequire(js_State *J);
   static void registerErrorToString(js_State *J);
-  static void error(js_State *J, const std::string &msg);
+  [[noreturn]] static void error(js_State *J, const std::string &msg);
 private:
   static void initObjectRegistry(js_State *J, const char *objTag);
   static void popPreviousStackElement(js_State *J);
