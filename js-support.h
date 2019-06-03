@@ -9,6 +9,7 @@
 #include <vector>
 #include <array>
 #include <functional>
+#include <sstream>
 
 #include <assert.h>
 
@@ -34,6 +35,7 @@ public:
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
   static void registerFuncRequire(js_State *J);
   static void registerErrorToString(js_State *J);
+  static void error(js_State *J, const std::string &msg);
 private:
   static void initObjectRegistry(js_State *J, const char *objTag);
   static void popPreviousStackElement(js_State *J);
@@ -216,4 +218,14 @@ inline void ReturnVoid(js_State *J) {
 
 #define GetArgVec3(n)            JsBinding::objToVec3(J, n, __func__)
 #define GetArgMat3x3(n)          JsBinding::objToMat3x3(J, n, __func__)
+
+//
+// the error processing macro
+//
+#define JS_ERROR(stmt...) \
+  { \
+    std::ostringstream ss; \
+    ss << stmt; \
+    JsSupport::error(J, ss.str()); \
+  }
 

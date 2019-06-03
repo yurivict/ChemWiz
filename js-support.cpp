@@ -1,4 +1,5 @@
 #include "js-support.h"
+#include "xerror.h"
 
 #include <iostream>
 
@@ -125,6 +126,11 @@ void JsSupport::registerErrorToString(js_State *J) {
     "  return this.name + ': ' + this.message;\n"
     "};\n"
   );
+}
+
+void JsSupport::error(js_State *J, const std::string &msg) {
+  js_newerror(J, msg.c_str());
+  js_throw(J);
 }
 
 /// internals
