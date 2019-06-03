@@ -675,26 +675,38 @@ static void init(js_State *J) {
       AssertNargs(3)
       Return(J, GetArg(Molecule, 0)->getAminoAcidSingleAngle(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUInt32(2), // idx
+        GetArgUInt32(2), // junctionIdx
         (Molecule::AaAngles::Type)GetArgUInt32(3))); // angleId
     }, 3)
     ADD_METHOD_CPP(Molecule, getAminoAcidSingleJunctionAngles, {
       AssertNargs(2)
       Return(J, GetArg(Molecule, 0)->getAminoAcidSingleJunctionAngles(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUInt32(2))); // idx
+        GetArgUInt32(2))); // junctionIdx
+    }, 2)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSingleJunctionAnglesM, {
+      AssertNargs(2)
+      Return(J, GetArg(Molecule, 0)->getAminoAcidSingleJunctionAnglesM(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUInt32(2))); // junctionIdx
     }, 2)
     ADD_METHOD_CPP(Molecule, getAminoAcidSequenceAngles, {
       AssertNargs(2)
       Return(J, GetArg(Molecule, 0)->getAminoAcidSequenceAngles(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUnsignedArray(2))); // idxs
+        GetArgUnsignedArray(2))); // junctionIdxs
+    }, 2)
+    ADD_METHOD_CPP(Molecule, getAminoAcidSequenceAnglesM, {
+      AssertNargs(2)
+      Return(J, GetArg(Molecule, 0)->getAminoAcidSequenceAnglesM(
+        *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
+        GetArgUnsignedArray(2))); // junctionIdxs
     }, 2)
     ADD_METHOD_CPP(Molecule, setAminoAcidSingleAngle, {
       AssertNargs(4)
       Return(J, GetArg(Molecule, 0)->setAminoAcidSingleAngle(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUInt32(2), // idx
+        GetArgUInt32(2), // junctionIdx
         (Molecule::AaAngles::Type)GetArgUInt32(3), // angleId
         GetArgFloat(4))); // newAngle
     }, 4)
@@ -702,14 +714,14 @@ static void init(js_State *J) {
       AssertNargs(3)
       GetArg(Molecule, 0)->setAminoAcidSingleJunctionAngles(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUInt32(2), // idx
+        GetArgUInt32(2), // junctionIdx
         GetArgFloatArray(3)); // newAngles
     }, 3)
     ADD_METHOD_CPP(Molecule, setAminoAcidSequenceAngles, {
       AssertNargs(3)
       GetArg(Molecule, 0)->setAminoAcidSequenceAngles(
         *std::unique_ptr<std::vector<Molecule::AaBackbone>>(helpers::readAaBackboneArray(J, 1/*argno*/)), // aaBackbones
-        GetArgUnsignedArray(2), // idxs
+        GetArgUnsignedArray(2), // junctionIdxs
         GetArgFloatArrayArray(3)); // newAngles
     }, 3)
     //ADD_METHOD_CPP(Molecule, findAaBackbonesBin, {

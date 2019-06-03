@@ -311,6 +311,17 @@ Molecule::AngleArray Molecule::getAminoAcidSingleJunctionAngles(const std::vecto
   return computeAnglesBetweenBackbones(aaBackbones[idx], aaBackbones[idx+1]);
 }
 
+Molecule::AngleMap Molecule::getAminoAcidSingleJunctionAnglesM(const std::vector<AaBackbone> &aaBackbones, unsigned idx) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::getAminoAcidSingleJunctionAnglesM: aaBackbones argument can't be empty")
+  if (idx >= aaBackbones.size()-1)
+    ERROR("Molecule::getAminoAcidSingleJunctionAnglesM: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  // compute and return
+  return computeAnglesBetweenBackbonesM(aaBackbones[idx], aaBackbones[idx+1]);
+}
+
 std::vector<Molecule::AngleArray> Molecule::getAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs) {
   // checks
   if (aaBackbones.empty())
@@ -323,6 +334,22 @@ std::vector<Molecule::AngleArray> Molecule::getAminoAcidSequenceAngles(const std
   std::vector<Molecule::AngleArray> res;
   for (auto idx : idxs)
     res.push_back(computeAnglesBetweenBackbones(aaBackbones[idx], aaBackbones[idx+1]));
+
+  return res;
+}
+
+std::vector<Molecule::AngleMap> Molecule::getAminoAcidSequenceAnglesM(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs) {
+  // checks
+  if (aaBackbones.empty())
+    ERROR("Molecule::getAminoAcidSequenceAnglesM: aaBackbones argument can't be empty")
+  for (auto idx : idxs)
+    if (idx >= aaBackbones.size()-1)
+      ERROR("Molecule::getAminoAcidSequenceAnglesM: bad index=" << idx << " supplied: it should not exceed the element before the last one in aaBackbones")
+
+  // compute
+  std::vector<Molecule::AngleMap> res;
+  for (auto idx : idxs)
+    res.push_back(computeAnglesBetweenBackbonesM(aaBackbones[idx], aaBackbones[idx+1]));
 
   return res;
 }
@@ -708,6 +735,21 @@ Molecule::AngleArray Molecule::computeAnglesBetweenBackbones(const AaBackbone &c
     AaAngles::secondaryO2Tilt(cterm).angle,
     AaAngles::secondaryPlRise(cterm).angle,
     AaAngles::secondaryPlTilt(cterm).angle
+  }};
+}
+
+Molecule::AngleMap Molecule::computeAnglesBetweenBackbonesM(const AaBackbone &cterm, const AaBackbone &nterm) {
+  return {{
+    {"OMEGA",     AaAngles::omega(cterm, nterm).angle},
+    {"PHI",       AaAngles::phi(cterm, nterm).angle},
+    {"PSI",       AaAngles::psi(cterm, nterm).angle},
+    {"ADJ_N",     AaAngles::adjacencyN(cterm, nterm).angle},
+    {"ADJ_CMAIN", AaAngles::adjacencyCmain(cterm, nterm).angle},
+    {"ADJ_COO",   AaAngles::adjacencyCoo(cterm, nterm).angle},
+    {"O2_RISE",   AaAngles::secondaryO2Rise(cterm).angle},
+    {"O2_TILT",   AaAngles::secondaryO2Tilt(cterm).angle},
+    {"PL_RISE",   AaAngles::secondaryPlRise(cterm).angle},
+    {"PL_TILT",   AaAngles::secondaryPlTilt(cterm).angle}
   }};
 }
 

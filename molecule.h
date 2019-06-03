@@ -15,6 +15,7 @@
 #include <array>
 #include <vector>
 #include <set>
+#include <map>
 
 enum Element {
   H  = 1,
@@ -317,7 +318,11 @@ public: // structs and types
     friend std::ostream& operator<<(std::ostream &os, const Type &type);
     friend std::istream& operator>>(std::istream &is, Type &type);
   }; // AaAngles
+  struct CmpStr {
+    bool operator()(char const *a, char const *b) const {return std::strcmp(a, b) < 0;}
+  }; // CmpStr
   typedef std::array<Angle, Molecule::AaAngles::CNT> AngleArray;
+  typedef std::map<const char*, Molecule::Angle, CmpStr> AngleMap; // (DBG) map is used in retrieval functions with suffix "M". It is used for the ease of debugging only.
 public:
   std::string        idx;
   std::string        descr;
@@ -362,7 +367,9 @@ public:
   std::vector<AaBackbone> findAaBackbones();  // finds all AA cores
   Angle getAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId);
   AngleArray getAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx);
+  AngleMap getAminoAcidSingleJunctionAnglesM(const std::vector<AaBackbone> &aaBackbones, unsigned idx);
   std::vector<Molecule::AngleArray> getAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs);
+  std::vector<Molecule::AngleMap> getAminoAcidSequenceAnglesM(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs);
   Angle setAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId, Angle newAngle);
   void setAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx, const std::vector<Angle> &newAngles);
   void setAminoAcidSequenceAngles(const std::vector<AaBackbone> &aaBackbones, const std::vector<unsigned> &idxs, const std::vector<std::vector<Angle>> &newAngles);
@@ -425,6 +432,7 @@ private: // internals
   template<typename Atoms>
   static void rotateAtoms(AaAngles::Type atype, const Vec3 &center, const Vec3 &axis, double angleD, const Atoms &atoms, const Atom *except);
   static AngleArray computeAnglesBetweenBackbones(const AaBackbone &cterm, const AaBackbone &nterm);
+  static AngleMap computeAnglesBetweenBackbonesM(const AaBackbone &cterm, const AaBackbone &nterm);
   friend std::ostream& operator<<(std::ostream &os, const Molecule &m);
   friend std::istream& operator>>(std::istream &is, Molecule &m); // Xyz reader
 }; // Molecule
