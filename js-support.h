@@ -123,6 +123,10 @@ inline void Push(js_State *J, const int &val) {
   js_pushnumber(J, val);
 }
 
+inline void Push(js_State *J, const char *val) {
+  js_pushstring(J, val);
+}
+
 inline void Push(js_State *J, const std::string &val) {
   js_pushstring(J, val.c_str());
 }
@@ -169,8 +173,8 @@ inline void Push(js_State *J, const std::vector<T> &val) {
   }
 }
 
-template<typename K, typename T>
-inline void Push(js_State *J, const std::map<K,T> &val) {
+template<typename K, typename T, class Comp>
+inline void Push(js_State *J, const std::map<K,T,Comp> &val) {
   js_newarray(J);
   unsigned idx = 0;
   for (auto const &v : val) {
