@@ -18,18 +18,27 @@ var all_tests = ["xyz",
 // helper functions
 
 function printStatus(res, tmStartSec, tmEndSec) {
-  if (res == "OK")
-    printna(["clr.fg.green"], res)
-  else if (res == "FAIL")
-    printna(["clr.fg.red"], res)
+  // res can be either a status string, or a pair of [statusString, description]
+  if (Array.isArray(res)) {
+    var resCode = res[0]
+    var resDescr = " ("+res[1]+")"
+  } else {
+    var resCode = res
+    var resDescr = ""
+  }
+  if (resCode == "OK")
+    printna(["clr.fg.green"], resCode)
+  else if (resCode == "FAIL")
+    printna(["clr.fg.red"], resCode)
   else
-    printna(["clr.fg.gray"], res)
+    printna(["clr.fg.gray"], resCode)
   // time if too long
   if (tmEndSec > tmStartSec+1) {
-    printa(["clr.fg.reset"], " (in "+(tmEndSec-tmStartSec)+" sec)")
+    printa(["clr.fg.reset"], resDescr+" (in "+(tmEndSec-tmStartSec)+" sec)")
   } else {
-    printa(["clr.fg.reset"], "")
+    printa(["clr.fg.reset"], resDescr)
   }
+  return resCode == "OK"
 }
 
 // run the QA cases
@@ -44,13 +53,11 @@ function RunAllTests() {
     var tmCaseStartSec = Time.now()
     var res = Test.run()
     var tmCaseEndSec = Time.now()
-    printStatus(res, tmCaseStartSec, tmCaseEndSec)
-    if (res == "OK")
+    var succ = printStatus(res, tmCaseStartSec, tmCaseEndSec)
+    if (succ)
       nSucc++
-    else if (res == "FAIL")
-      nFail++
     else
-      throw "Invalid test output '"+res+"' for the test '"+all_tests[t]+"'"
+      nFail++
   }
   var tmAllEndSec = Time.now()
 
