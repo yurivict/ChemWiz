@@ -8,6 +8,7 @@
 #include <utility> // for pair
 #include <vector>
 #include <array>
+#include <map>
 #include <functional>
 #include <sstream>
 
@@ -168,8 +169,18 @@ inline void Push(js_State *J, const std::vector<T> &val) {
   }
 }
 
-template<typename T>
-inline void Push(js_State *J, const std::pair<T,T> &val) {
+template<typename K, typename T>
+inline void Push(js_State *J, const std::map<K,T> &val) {
+  js_newarray(J);
+  unsigned idx = 0;
+  for (auto const &v : val) {
+    Push(J, v);
+    js_setindex(J, -2, idx++);
+  }
+}
+
+template<typename T1, typename T2>
+inline void Push(js_State *J, const std::pair<T1,T2> &val) {
   js_newarray(J);
   Push(J, val.first);
   js_setindex(J, -2, 0/*idx*/);
