@@ -63,15 +63,25 @@ static rgb_t unsignedToRgb(const unsigned &u) {
 } // Rgb
 
 template<typename FA>
-void SetPixelsFromArray(Image &img, const FA *arr, unsigned period, unsigned idxx, unsigned idxy, rgb_t clr) {
-  if (arr->size() % period != 0)
-    ERROR("Image::setPixelsFromArray: image size="<< arr->size() << " isn't a multiple of a period=" << period)
+void SetPixelsFromArray(js_State *J, Image &img, const FA *arr, unsigned period, unsigned idxx, unsigned idxy, rgb_t clr) {
+  auto sz = arr->size();
+
+  if (sz % period != 0)
+    JS_ERROR("Image::setPixelsFromArray: image size="<< sz << " isn't a multiple of a period=" << period)
+
   for (auto it = arr->begin(), ite = arr->end(); it != ite; it += period)
     img.set_pixel((unsigned)*(it+idxx), (unsigned)*(it+idxy), clr);
 }
 
 template<typename Float>
-void SetPixelsFromBinary(Image &img, const Binary &b, unsigned offCoordX, unsigned offCoordY, unsigned offColor, unsigned period) {
+void SetPixelsFromBinary(js_State *J, Image &img, const Binary &b, unsigned offCoordX, unsigned offCoordY, unsigned offColor, unsigned period) {
+  auto sz = b.size();
+
+  if (sz % period != 0)
+    JS_ERROR("Image::setPixelsFromBinaryXx: image size="<< sz << " isn't a multiple of a period=" << period)
+  if (offCoordX+sizeof(Float) > period || offCoordY+sizeof(Float) > period || offColor+3*sizeof(uint8_t) > period)
+    JS_ERROR("Image::setPixelsFromBinaryXx: out-of-bound offset(s) requested")
+
   auto itToU = [](Binary::const_iterator it) {
     return (unsigned)*(Float*)&*it;
   };
@@ -173,7 +183,7 @@ void init(js_State *J) {
     //
     ADD_METHOD_CPP(Image, plasma, {
       AssertNargs(10)
-      auto strToColormap = [](const std::string &name) {
+      auto strToColormap = [J](const std::string &name) {
         // TODO other colormaps
         if (name == "gray_colormap")
           return gray_colormap;
@@ -183,7 +193,7 @@ void init(js_State *J) {
           return hsv_colormap;
         if (name == "jet_colormap")
           return jet_colormap;
-        ERROR("Unknown image colormap supplied: " << name)
+        JS_ERROR("Unknown image colormap supplied: " << name)
       };
       plasma(*GetArg(Image, 0),
              GetArgFloat(1), GetArgFloat(2),
@@ -241,7 +251,7 @@ void init(js_State *J) {
     //
     ADD_METHOD_CPP(Image, setPixelsFromArray4, {
       AssertNargs(5)
-      SetPixelsFromArray<FloatArray4>(
+      SetPixelsFromArray<FloatArray4>(J,
         *GetArg(Image, 0),                  // img
         GetArg(FloatArray4, 1),             // arr
         GetArgUInt32(2),                    // period
@@ -253,7 +263,7 @@ void init(js_State *J) {
     }, 5)
     ADD_METHOD_CPP(Image, setPixelsFromArray8, {
       AssertNargs(5)
-      SetPixelsFromArray<FloatArray8>(
+      SetPixelsFromArray<FloatArray8>(J,
         *GetArg(Image, 0),                  // img
         GetArg(FloatArray8, 1),             // arr
         GetArgUInt32(2),                    // period
@@ -265,7 +275,7 @@ void init(js_State *J) {
     }, 5)
     ADD_METHOD_CPP(Image, setPixelsFromBinaryFloat4, {
       AssertNargs(5)
-      SetPixelsFromBinary<float>(
+      SetPixelsFromBinary<float>(J,
         *GetArg(Image, 0),                  // img
         *GetArg(Binary, 1),                 // bin
         GetArgUInt32(2),                    // offCoordX
@@ -277,7 +287,7 @@ void init(js_State *J) {
     }, 5)
     ADD_METHOD_CPP(Image, setPixelsFromBinaryFloat8, {
       AssertNargs(5)
-      SetPixelsFromBinary<double>(
+      SetPixelsFromBinary<double>(J,
         *GetArg(Image, 0),                  // img
         *GetArg(Binary, 1),                 // bin
         GetArgUInt32(2),                    // offCoordX
