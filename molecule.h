@@ -254,7 +254,7 @@ public: // structs and types
   struct AaBackbone {
     Atom    *N;
     Atom    *HCn1;      // mandatory (inner element of the AaBackbone), H in most cases, C in case of proline, the only exception
-    Atom    *Hn2;       // optional (connectable element), missing when bonded at N
+    Atom    *Hn2;       // second H atom at N (optional, missing when bonded at N)
     Atom    *Cmain;     // main carbon
     Atom    *Hc;        // H near Cmain
     Atom    *Coo;       // oxygen-connected carbon
