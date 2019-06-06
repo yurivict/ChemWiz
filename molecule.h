@@ -265,6 +265,8 @@ public: // structs and types
     // methods
     std::set<Atom*> listPayload() const;  // list all payload atoms
     Atom* nextN() const;                  // next N if connected, otherwise our O1
+    bool isNterm() const {return Hn2 != nullptr;}
+    bool isCterm() const {return O1 != nullptr;}
   }; // AaBackbone
   typedef double Angle;
   class AaAngles { // Ramachandran and other angles related to amino acid conformations
