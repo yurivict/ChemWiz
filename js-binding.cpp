@@ -1160,16 +1160,22 @@ static void readPdbFile(js_State *J) {
 namespace Mmtf {
   static void readFile(js_State *J) {
     AssertNargs(1)
-    auto mols = Molecule::readMmtfFile(GetArgString(1));
-    for (auto m : mols)
+    js_newarray(J);
+    unsigned idx = 0;
+    for (auto m : Molecule::readMmtfFile(GetArgString(1))) {
       JsMolecule::xnewo(J, m);
+      js_setindex(J, -2, idx++);
+    }
   }
 
   static void readBuffer(js_State *J) {
     AssertNargs(1)
-    auto mols = Molecule::readMmtfBuffer(GetArg(Binary, 1));
-    for (auto m : mols)
+    js_newarray(J);
+    unsigned idx = 0;
+    for (auto m : Molecule::readMmtfBuffer(GetArg(Binary, 1))) {
       JsMolecule::xnewo(J, m);
+      js_setindex(J, -2, idx++);
+    }
   }
 }
 #endif
