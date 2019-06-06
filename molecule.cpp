@@ -65,6 +65,17 @@ bool Atom::isEqual(const Atom &other) const {
          pos == other.pos;
 }
 
+std::string Atom::bondsAsString() const {
+  std::map<Element, unsigned> m;
+  for (auto b : bonds)
+    m[b->elt]++;
+
+  std::ostringstream ss;
+  for (auto i : m)
+    ss << i.first << i.second;
+  return ss.str();
+}
+
 bool Atom::hasBond(const Atom *other) const {
   for (auto a : bonds)
     if (a == other)

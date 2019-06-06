@@ -369,6 +369,10 @@ static void init(js_State *J) {
       AssertNargs(2)
       ReturnObj(GetArg(Atom, 0)->getOtherBondOf3(GetArg(Atom,1), GetArg(Atom,2)));
     }, 2)
+    ADD_METHOD_CPP(Atom, bondsAsString, {
+      AssertNargs(0)
+      Return(J, GetArg(Atom, 0)->bondsAsString());
+    }, 0)
     ADD_METHOD_CPP(Atom, findSingleNeighbor, {
       AssertNargs(1)
       ReturnObjZ(GetArg(Atom, 0)->findSingleNeighbor(GetArgElement(1)));

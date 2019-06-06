@@ -132,6 +132,7 @@ public:
   void addToBonds(Atom *a) {
     bonds.push_back(a);
   }
+  std::string bondsAsString() const;
   void removeFromBonds(Atom *a) {
     for (auto i = bonds.begin(), ie = bonds.end(); i != ie; i++)
       if (*i == a) {
