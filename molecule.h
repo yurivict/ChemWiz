@@ -122,7 +122,7 @@ public:
     const static Float tolerance = 0.2;
     //assert(distActual > distAverage - tolerance); // needs to be larger than this threshold, otherwise this molecule is invalid
     if (distActual <= distAverage - tolerance)
-      warning("distance between atoms " << elt << "/" << a.elt << " is too low: dist=" << distActual << " avg=" << distAverage << " tolerance=" << tolerance)
+      warning("distance between atoms " << elt << "@" << (void*)this << "/" << a.elt << "@" << (void*)&a << " is too low: dist=" << distActual << " avg=" << distAverage << " tolerance=" << tolerance)
     return distActual < distAverage + tolerance;
   }
   void link(Atom *othr) {
