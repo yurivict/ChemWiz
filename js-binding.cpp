@@ -86,6 +86,12 @@ namespace JsFloatArray {
   extern void initFloat4(js_State *J);
   extern void initFloat8(js_State *J);
 }
+namespace JsWebGlInterface {
+  extern void init(js_State *J);
+}
+namespace JsGlfwWindow {
+  extern void init(js_State *J);
+}
 
 
 //
@@ -1483,6 +1489,8 @@ void registerFunctions(js_State *J) {
   JsImageDrawer::init(J);
   JsFloatArray::initFloat4(J);
   JsFloatArray::initFloat8(J);
+  JsWebGlInterface::init(J);
+  JsGlfwWindow::init(J);
 
   //
   // Misc
