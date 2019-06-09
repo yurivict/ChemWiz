@@ -19,8 +19,8 @@ CXXFLAGS=	$(CFLAGS) -std=c++17
 DEP_FILES=	$(SRCS_CPP:.cpp=.cpp.d)
 
 # for MuJS
-LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs libcryptopp)
-LDLIBS=		$(shell pkg-config --static --libs-only-l mujs libcryptopp)
+LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs)
+LDLIBS=		$(shell pkg-config --static --libs-only-l mujs)
 
 ifeq ($(USE_DSRPDB), yes)
 SRCS_CPP+=	molecule-dsrpdb.cpp
