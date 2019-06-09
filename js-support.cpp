@@ -113,6 +113,9 @@ void JsSupport::registerFuncRequire(js_State *J) {
   );
 }
 
+//
+// importCodeString() - imports a module from the string and allows the user to call its exported methods, access its exported data
+//
 void JsSupport::registerFuncImportCodeString(js_State *J) {
   js_dostring(J,
     "function importCodeString(codeString) {\n"
