@@ -113,6 +113,16 @@ void JsSupport::registerFuncRequire(js_State *J) {
   );
 }
 
+void JsSupport::registerFuncImportCodeString(js_State *J) {
+  js_dostring(J,
+    "function importCodeString(codeString) {\n"
+    "  var exports = {}\n"
+    "  Function('exports', codeString)(exports)\n"
+    "  return exports\n"
+    "}\n"
+  );
+}
+
 //
 // Error.prototype.toString - prints error trace on error
 //                            borrowed from MuJS's main.c

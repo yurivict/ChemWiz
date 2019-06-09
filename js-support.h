@@ -35,6 +35,7 @@ public:
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
   static void registerFuncRequire(js_State *J);
+  static void registerFuncImportCodeString(js_State *J);
   static void registerErrorToString(js_State *J);
   [[noreturn]] static void error(js_State *J, const std::string &msg);
 private:
