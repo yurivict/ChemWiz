@@ -7,3 +7,6 @@
 [submodule "contrib/date"]
 	path = contrib/date
 	url = https://github.com/HowardHinnant/date
+[submodule "contrib/OpenGL-Registry"]
+	path = contrib/OpenGL-Registry
+	url = https://github.com/KhronosGroup/OpenGL-Registry

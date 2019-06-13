@@ -77,6 +77,9 @@ $(APP): $(OBJS)
 #
 # other targets
 #
+opengl-to-webgl: opengl-to-webgl.cpp
+	@$(CXX) -O3 `pkg-config --cflags --libs pugixml` -o $@ $<
+
 test:
 	./$(APP) qa/run-all-tests.js
 

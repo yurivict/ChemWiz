@@ -8,7 +8,7 @@ Program for manipulations with molecules and performing computations with them
 * GNU Make
 * C++ compiler
 
-#### Header-only libraries
+#### Header-only libraries (build-time)
 * Boost: for some container types and string formatting
 * C++ Bitmap Library: to support the "Image" type (https://github.com/ArashPartow/bitmap)
 * PicoSHA2: to compute cryptographic hashes (https://github.com/okdshin/PicoSHA2)
@@ -17,6 +17,9 @@ Program for manipulations with molecules and performing computations with them
 * nlohmann-json: for parsing of the periodic table json, etc.
 * rang: to print colored and styled text to the terminal (https://github.com/agauniyal/rang)
 * (optional) mmtf-cpp: for parsing chemical structures in the MMTF format (https://github.com/rcsb/mmtf-cpp)
+
+#### Libraries used only during build
+* pugixml: to parse XML for the executable that is only used during build
 
 #### Reglar library dependencies
 * MuJS: for running JavaScript code that is used for scripting (https://mujs.com/)
