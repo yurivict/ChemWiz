@@ -9,6 +9,9 @@
 #include <mujs.h>
 #include <rang.hpp>
 
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception_ptr.hpp>
+
 #include <iostream>
 
 static void printTime(std::time_t tm, const char *when) {
@@ -65,17 +68,24 @@ static int main_guarded(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-#if defined(USE_EXCEPTIONS)
   try {
     return main_guarded(argc, argv);
+#if defined(USE_EXCEPTIONS)
   } catch (const Exception &e) {
     std::cerr << "error: " << e.what() << std::endl;
     return 1;
+#endif
   } catch (const std::runtime_error &e) {
-    std::cerr << "error (runtime): " << e.what() << std::endl;
+    std::cerr << "error (runtime error): " << e.what() << std::endl;
+    return 1;
+  } catch (const std::exception& e) {
+    std::cerr << "error (exception): " << e.what() << std::endl;
+    return 1;
+  } catch (const boost::exception &e) {
+    std::cerr << "error (boost): " << boost::diagnostic_information(e) << std::endl;
+    return 1;
+  } catch (...) {
+    std::cerr << "error (UNKNOWN): " << std::endl;
     return 1;
   }
-#else
-  return main_guarded(argc, argv);
-#endif
 }
