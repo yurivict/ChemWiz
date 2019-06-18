@@ -1,0 +1,34 @@
+This is an attempt to implement WebGL in-app, in the JS interpreter.
+
+For now, this is deferred for the following reasons:
+* WebGL isn't clearly specified by the Khronos Group
+* It turned out that it is more difficult to implement than originally expected
+* There is a simple solution to run WebGL code using an external browser app, like a Qt/QWebView-based viewer, it works in most situations.
+
+
+** These git modules are required:
+
+[submodule "contrib/OpenGL-Registry"]
+	path = contrib/OpenGL-Registry
+	url = https://github.com/KhronosGroup/OpenGL-Registry
+[submodule "contrib/WebGL-specification"]
+	path = contrib/WebGL-specification
+	url = https://github.com/KhronosGroup/WebGL.git
+
+** These Makefile lines are needed:
+
+opengl-to-webgl: opengl-to-webgl.cpp
+	@$(CXX) -g `pkg-config --cflags --libs pugixml` -o $@ $<
+
+webgl-commands-and-enums.h: opengl-to-webgl generated-webgl-1.xml generated-webgl-2.xml
+	./opengl-to-webgl webgl-1.xml webgl-2.xml contrib/OpenGL-Registry/xml/gl.xml > $@
+
+webgl-auto-generated-macros.h: opengl-to-webgl contrib/OpenGL-Registry/xml/gl.xml
+	@./opengl-to-webgl contrib/OpenGL-Registry/xml/gl.xml > $@
+
+generated-webgl-1.xml: contrib/WebGL-specification/specs/1.0.3/index.html
+	@xmllint --html --xmlout $< > $@ 2>/dev/null # html files are actually invalid, but parse into xml anyway: https://github.com/KhronosGroup/WebGL/issues/2903
+
+generated-webgl-2.xml: contrib/WebGL-specification/specs/2.0.0/index.html
+	@xmllint --html --xmlout $< > $@ 2>/dev/null # html files are actually invalid, but parse into xml anyway: https://github.com/KhronosGroup/WebGL/issues/2903
+
