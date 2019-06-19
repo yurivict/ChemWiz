@@ -8,11 +8,17 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/socket.h> // for SocketApi
+#include <sys/select.h> // for SocketApi
+#include <sys/un.h>     // for SocketApi
+#include <netinet/in.h> // for SocketApi
+#include <errno.h>
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <vector>
 #include <cmath>
 #include <memory>
 
@@ -1496,6 +1502,14 @@ void registerFunctions(js_State *J) {
   BEGIN_NAMESPACE(System)
     ADD_NS_FUNCTION_CPP(System, numCPUs,            JsSystem::numCPUs, 0)
     ADD_NS_FUNCTION_CPP(System, setCtlParam,        JsSystem::setCtlParam, 2)
+    ADD_NS_FUNCTION_CPPnew(System, errno, {
+      AssertNargs(0)
+      Return(J, errno);
+    }, 0)
+    ADD_NS_FUNCTION_CPPnew(System, strerror, {
+      AssertNargs(1)
+      Return(J, strerror(GetArgInt32(1)));
+    }, 1)
   END_NAMESPACE(System)
   BEGIN_NAMESPACE(File)
     ADD_NS_FUNCTION_CPP(File, exists, JsFile::exists, 1)
@@ -1688,6 +1702,133 @@ void registerFunctions(js_State *J) {
       })
     })
   END_NAMESPACE(Arrayx)
+  BEGIN_NAMESPACE(SocketApi)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, socket, {
+      AssertNargs(3)
+      Return(J, ::socket(GetArgInt32(1), GetArgInt32(2), GetArgInt32(3)));
+    }, 3)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, bindUnix, { // (int sock, string unixAddr)
+      AssertNargs(2)
+
+      struct sockaddr_un addr;
+      ::memset(&addr, 0, sizeof(struct sockaddr_un));
+      addr.sun_family = AF_UNIX;
+      ::strncpy(addr.sun_path, GetArgString(2).c_str(), sizeof(addr.sun_path) - 1);
+
+      Return(J, ::bind(GetArgInt32(1), (struct sockaddr*)&addr, sizeof(struct sockaddr_un)));
+    }, 2)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, bindInet, { // (int sock, unsigned port)
+      AssertNargs(2)
+
+      struct sockaddr_in addr;
+      ::memset(&addr, 0, sizeof(struct sockaddr_in));
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(GetArgUInt32(2));
+      addr.sin_addr.s_addr = INADDR_ANY;
+
+      Return(J, ::bind(GetArgInt32(1), (struct sockaddr*)&addr, sizeof(struct sockaddr_in)));
+    }, 2)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, accept, { // (int sock) // XXX this loses the host address
+      AssertNargs(1)
+
+      struct sockaddr addr;
+      socklen_t addrlen = sizeof(addr);
+
+      Return(J, ::accept(GetArgInt32(1), &addr, &addrlen));
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, read, { // (int sock, Binary buff, unsigned off, unsigned nbytes)
+      AssertNargs(4)
+      auto fd = GetArgUInt32(1);
+      auto buf = GetArg(Binary, 2);
+      auto off = GetArgUInt32(3);
+      auto len = GetArgUInt32(4);
+      auto bufSz = buf->size();
+      bool needToResize = bufSz < off+len;
+      if (needToResize)
+        buf->resize(off+len);
+
+      auto res = ::read(fd, (void*)&(*buf)[off], len);
+
+      if (needToResize) {
+        if (res <= 0)
+          buf->resize(bufSz);
+        else if (res < len)
+          buf->resize(off+res);
+      }
+
+      Return(J, res);
+    }, 4)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, write, { // (int sock, Binary buff, unsigned off, unsigned nbytes)
+      AssertNargs(4)
+      Return(J, ::write(GetArgInt32(1), (void*)&(*GetArg(Binary, 2))[GetArgUInt32(3)], GetArgUInt32(4)));
+    }, 4)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, close, {
+      AssertNargs(1)
+      Return(J, ::close(GetArgInt32(1)));
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, listen, {
+      AssertNargs(2)
+      Return(J, ::listen(GetArgInt32(1), GetArgInt32(2)));
+    }, 2)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, select, {
+      AssertNargs(4)
+
+      int nfds = 0;
+      fd_set readfds;
+      fd_set writefds;
+      fd_set exceptfds;
+
+      auto lstRD = GetArgUInt32ArrayZ(1);
+      auto lstWR = GetArgUInt32ArrayZ(2);
+      auto lstEX = GetArgUInt32ArrayZ(3);
+
+      auto socListToFdSet = [&nfds](const std::vector<int> &fdVec, fd_set &fdSet) {
+        FD_ZERO(&fdSet);
+        for (auto fd : fdVec) {
+          FD_SET(fd, &fdSet);
+          if (fd > nfds)
+            nfds = fd;
+        }
+      };
+      auto fdSetToSockList = [](const std::vector<int> &fdVec, fd_set &fdSet, std::vector<int> &fdVecOut) {
+        for (auto fd : fdVec)
+          if (FD_ISSET(fd, &fdSet))
+            fdVecOut.push_back(fd);
+      };
+      socListToFdSet(lstRD, readfds);
+      socListToFdSet(lstWR, writefds);
+      socListToFdSet(lstEX, exceptfds);
+
+      auto tmMs = GetArgInt32(4);
+      struct timeval timeout;
+      timeout.tv_sec = tmMs/1000;
+      timeout.tv_usec = (tmMs%1000)*1000;
+
+      std::cout << ">>> select" << std::endl;
+      auto res = ::select(nfds+1, &readfds, &writefds, &exceptfds, &timeout);
+      std::cout << "<<< select -> " << res << std::endl;
+
+      std::vector<std::vector<int>> resVec; // return 4 lists: {errorCode}, {readfds}, {writefds}, {exceptfds}
+      resVec.resize(4);
+      resVec[0].push_back(res);
+
+      if (res > 0) { // some sockets are ready
+        fdSetToSockList(lstRD, readfds,   resVec[1]);
+        fdSetToSockList(lstWR, writefds,  resVec[2]);
+        fdSetToSockList(lstEX, exceptfds, resVec[3]);
+      }
+
+      Return(J, resVec);
+    }, 4)
+  END_NAMESPACE(SocketApi)
+  // CAVEAT FIXME These can't be placed earlier due to some glitch with how namespaces are defined
+  JsSupport::addNsConstInt(J, "SocketApi", "PF_LOCAL",    PF_LOCAL);
+  JsSupport::addNsConstInt(J, "SocketApi", "PF_UNIX",     PF_UNIX);
+  JsSupport::addNsConstInt(J, "SocketApi", "PF_INET",     PF_INET);
+  JsSupport::addNsConstInt(J, "SocketApi", "PF_INET6",    PF_INET6);
+  JsSupport::addNsConstInt(J, "SocketApi", "SOCK_STREAM", SOCK_STREAM);
+  JsSupport::addNsConstInt(J, "SocketApi", "SOCK_DGRAM",  SOCK_DGRAM);
+  JsSupport::addNsConstInt(J, "SocketApi", "SOCK_RAW",    SOCK_RAW);
 }
 
 } // JsBinding
