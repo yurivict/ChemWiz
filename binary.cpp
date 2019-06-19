@@ -242,6 +242,11 @@ void init(js_State *J) {
       GetArg(Binary, 0)->resize(GetArgUInt32(1));
       ReturnVoid(J);
     }, 1)
+    ADD_METHOD_CPP(Binary, clear, {
+      AssertNargs(0)
+      GetArg(Binary, 0)->clear();
+      ReturnVoid(J);
+    }, 0)
     // appendXx methods
     ADD_METHOD_CPP(Binary, append, {
       AssertNargs(1)
@@ -253,6 +258,13 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Binary, appendByte, { // appends the 'int' value as bytes
       AssertNargs(1)
       GetArg(Binary, 0)->push_back((uint8_t)GetArgUInt32(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Binary, appendString, {
+      AssertNargs(1)
+      auto b = GetArg(Binary, 0);
+      auto str = GetArgString(1);
+      b->insert(b->end(), str.begin(), str.end());
       ReturnVoid(J);
     }, 1)
     ADD_METHOD_CPP(Binary, appendInt, { // appends the 'int' value as bytes
@@ -322,6 +334,14 @@ void init(js_State *J) {
       AssertNargs(1)
       Return(J, Get<double>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
+    // find
+    ADD_METHOD_CPP(Binary, findChar, { // XXX does not check argument correctness
+      AssertNargs(2)
+      auto b = GetArg(Binary, 0);
+      auto off = GetArgUInt32(1);
+      auto p = memchr(&(*b)[off], GetArgChar(2), b->size() - off);
+      Return(J, p ? (int)((uint8_t*)p - &(*b)[0]) : -1);
+    }, 2)
     // sort
     ADD_METHOD_CPP(Binary, sortAreasByFloat4Field, {
       AssertNargs(3)
@@ -356,6 +376,11 @@ void init(js_State *J) {
       auto b = GetArg(Binary, 0);
       Return(J, std::string(b->begin(), b->end()));
     }, 0)
+    ADD_METHOD_CPP(Binary, getSubString, {
+      AssertNargs(2)
+      auto b = GetArg(Binary, 0);
+      Return(J, std::string(b->begin()+GetArgUInt32(1), b->begin()+GetArgUInt32(2)));
+    }, 2)
     ADD_METHOD_CPP(Binary, toFile, {
       AssertNargs(1)
       std::ofstream file(GetArgString(1), std::ios::out | std::ios::binary);
