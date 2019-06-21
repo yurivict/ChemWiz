@@ -255,6 +255,13 @@ void init(js_State *J) {
       b->insert(b->end(), b1->begin(), b1->end());
       ReturnVoid(J);
     }, 1)
+    ADD_METHOD_CPP(Binary, appendRange, { // CAVEAT doesn't check argument #2 (offBegin) and argument #3 (offEnd) for the range to be in the argument 
+      AssertNargs(3)
+      auto b = GetArg(Binary, 0);
+      auto b1 = GetArg(Binary, 1);
+      b->insert(b->end(), b1->begin()+GetArgUInt32(2), b1->begin()+GetArgUInt32(3));
+      ReturnVoid(J);
+    }, 3)
     ADD_METHOD_CPP(Binary, appendByte, { // appends the 'int' value as bytes
       AssertNargs(1)
       GetArg(Binary, 0)->push_back((uint8_t)GetArgUInt32(1));
@@ -317,6 +324,10 @@ void init(js_State *J) {
     ADD_METHOD_CPP(Binary, getByte, {
       AssertNargs(1)
       Return(J, Get<uint8_t>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
+    }, 1)
+    ADD_METHOD_CPP(Binary, getChar, {
+      AssertNargs(1)
+      Return(J, Get<char>(J, *GetArg(Binary, 0), GetArgUInt32(1)));
     }, 1)
     ADD_METHOD_CPP(Binary, getInt, {
       AssertNargs(1)
