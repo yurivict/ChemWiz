@@ -94,6 +94,10 @@ void JsSupport::addNsFunctionJs(js_State *J, const char *nsNameStr, const char *
   js_defproperty(J, -2, fnNameStr, JS_DONTENUM);
 }
 
+void JsSupport::addNsConstInt(js_State *J, const char *nsNameStr, const char *constNameStr, int constValue) {
+  js_dostring(J, str(boost::format("%1%.%2% = %3%") % nsNameStr % constNameStr % constValue).c_str());
+}
+
 //
 // require() - inspired by mujs: it loads the module, and exposes its exports.* symbols as the returned object's keys
 //             borrowed from MuJS's main.c with modifications
@@ -138,6 +142,43 @@ void JsSupport::registerErrorToString(js_State *J) {
     "  return this.name + ': ' + this.message;\n"
     "};\n"
   );
+}
+
+std::vector<int> JsSupport::objToInt32Array(js_State *J, int idx, const char *fname) {
+  if (!js_isarray(J, idx))
+    js_typeerror(J, "JsSupport::objToInt32Array: not an array in arg#%d of the function '%s'", idx, fname);
+
+  auto len = js_getlength(J, idx);
+
+  std::vector<int> v;
+  v.reserve(len);
+
+  for (unsigned i = 0; i < len; i++) {
+    js_getindex(J, idx, i);
+    v.push_back(js_tonumber(J, -1));
+    js_pop(J, 1);
+  }
+
+  return v;
+}
+
+std::vector<int> JsSupport::objToInt32ArrayZ(js_State *J, int idx, const char *fname) {
+  if (!js_isundefined(J, idx))
+    return objToInt32Array(J, idx, fname);
+  else
+    return std::vector<int>();
+}
+
+char JsSupport::toChar(js_State *J, int idx) {
+  const char *str = js_tostring(J, idx);
+  if (str[0] == 0) {
+    error(J, "expect char but got an empty string");
+    return 0;
+  } else if (str[1] != 0) {
+    error(J, "expect char but got a string");
+    return 0;
+  } else
+    return str[0];
 }
 
 void JsSupport::error(js_State *J, const std::string &msg) {

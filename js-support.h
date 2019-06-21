@@ -34,9 +34,13 @@ public:
   static void addJsFunction(js_State *J, const char *funcNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionCpp(js_State *J, const char *nsNameStr, const char *jsfnNameStr, js_CFunction funcFun, unsigned nargs);
   static void addNsFunctionJs(js_State *J, const char *nsNameStr, const char *fnNameStr, const char *codeStr);
+  static void addNsConstInt(js_State *J, const char *nsNameStr, const char *constNameStr, int constValue);
   static void registerFuncRequire(js_State *J);
   static void registerFuncImportCodeString(js_State *J);
   static void registerErrorToString(js_State *J);
+  static std::vector<int> objToInt32Array(js_State *J, int idx, const char *fname);
+  static std::vector<int> objToInt32ArrayZ(js_State *J, int idx, const char *fname);
+  static char toChar(js_State *J, int idx);
   [[noreturn]] static void error(js_State *J, const std::string &msg);
 private:
   static void initObjectRegistry(js_State *J, const char *objTag);
@@ -124,8 +128,17 @@ inline void Push(js_State *J, const int &val) {
   js_pushnumber(J, val);
 }
 
+inline void Push(js_State *J, const long &val) {
+  js_pushnumber(J, val);
+}
+
 inline void Push(js_State *J, const char *val) {
   js_pushstring(J, val);
+}
+
+inline void Push(js_State *J, char val) {
+  const char c[2] = {val, 0};
+  js_pushstring(J, c);
 }
 
 inline void Push(js_State *J, const std::string &val) {
@@ -227,6 +240,7 @@ inline void ReturnVoid(js_State *J) {
 #define GetArgFloat(n)           js_tonumber(J, n)
 #define GetArgString(n)          std::string(js_tostring(J, n))
 #define GetArgStringCptr(n)      js_tostring(J, n)
+#define GetArgChar(n)            JsSupport::toChar(J, n)
 #define GetArgInt32(n)           js_toint32(J, n)
 #define GetArgUInt32(n)          js_touint32(J, n)
 
@@ -234,6 +248,8 @@ inline void ReturnVoid(js_State *J) {
 
 #define GetArgVec3(n)            JsBinding::objToVec3(J, n, __func__)
 #define GetArgMat3x3(n)          JsBinding::objToMat3x3(J, n, __func__)
+#define GetArgUInt32Array(n)     JsSupport::objToInt32Array(J, n, __func__)
+#define GetArgUInt32ArrayZ(n)    JsSupport::objToInt32ArrayZ(J, n, __func__)
 
 //
 // the error processing macro
