@@ -4,8 +4,12 @@
 // helpers
 //
 
+function warn(msg) {
+  print("warning(http-protocol): "+msg);
+}
+
 function Throw(msg) {
-  throw "Http error:"+msg;
+  throw "error(http-protocol):"+msg;
 }
 
 function findLine(buf, off) { // finds \r\n in the string, doesn't tolerate just \n, returns the offset past \r\n
@@ -17,15 +21,31 @@ function findLine(buf, off) { // finds \r\n in the string, doesn't tolerate just
   return eol+1;
 }
 
-///
-/// exports
-///
+function parseHeadline(headers) {
+  // rfc2616-sec5: Method SP Request-URI SP HTTP-Version CRLF
+  var spaceAtUri     = headers.headline.indexOf(' ');
+  var spaceAtVersion = headers.headline.lastIndexOf(' ');
 
-exports.create = function() {
+  headers.headlineMethod      = headers.headline.substring(0, spaceAtUri);
+  headers.headlineUri         = headers.headline.substring(spaceAtUri+1, spaceAtVersion);
+  headers.headlineHttpVersion = headers.headline.substring(spaceAtVersion+1, headers.headline.length);
+}
+
+
+//
+// exported functions
+//
+
+function createProcessor() {
   var processor = {
     init: function() {
       this.state = 'I';
-      this.headers = {headline: "", fields: {}, body: null};
+      this.headers = createHeaders();
+    },
+    pick: function() {
+      var headers = this.headers;
+      this.init();
+      return headers;
     },
     processData: function(buf, bufHead) {
       var off = bufHead;
@@ -37,6 +57,7 @@ exports.create = function() {
           if (off1 == -1)
             return off - bufHead;
           this.headers.headline = buf.getSubString(off, off1-2);
+          parseHeadline(this.headers);
           off = off1;
           this.state = 'H';
           break;
@@ -54,19 +75,25 @@ exports.create = function() {
             off = off1;
           } else { // empty line ends headers
             off += 2;
-            this.state = 'B';
-            // find the length of the content
-            if (this.headers.fields["Content-Length"] != undefined) {
-              this.bodyEndSignal = 'L'; // 'L'ength-based, 'E'of-based
-              this.bodyNeedLength = parseInt(this.headers.fields["Content-Length"], 10);
-              this.bodyTodoLength = this.bodyNeedLength;
-              this.bodyDoneLength = 0;
-              this.headers.body = new Binary();
-              break;
-            } else if (this.headers.fields["Transfer-Encoding"] != undefined) {
-              Throw("Transfer-Encoding not supported yet")
+            if (this.headers.headlineMethod != "POST") {
+              // body only exists for POST requests
+              this.state = 'F';
+              this.headers.body = null;
             } else {
-              Throw("No Content-Length or Transfer-Encoding is specified: EOF isn't supported yet")
+              this.state = 'B';
+              // find the length of the content
+              if (this.headers.fields["Content-Length"] != undefined) {
+                this.headers.body = new Binary();
+                this.bodyEndSignal = 'L'; // 'L'ength-based, 'E'of-based
+                this.bodyNeedLength = parseInt(this.headers.fields["Content-Length"], 10);
+                this.bodyTodoLength = this.bodyNeedLength;
+                this.bodyDoneLength = 0;
+                break;
+              } else if (this.headers.fields["Transfer-Encoding"] != undefined) {
+                Throw("Transfer-Encoding not supported yet")
+              } else {
+                Throw("No Content-Length or Transfer-Encoding is specified: EOF isn't supported yet")
+              }
             }
             continue; // end of headers: go to the next cycle
           }
@@ -109,3 +136,47 @@ exports.create = function() {
   return processor;
 }
 
+function createHeaders() {
+  return {headline: "", fields: {}, body: null};
+}
+
+function fmtResponseHeadline(httpVersion, httpStatusCode, httpReasonPhrase) {
+  // rfc2616-sec6: Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+  return httpVersion+" "+httpStatusCode+" "+httpReasonPhrase;
+}
+
+function formResponse(headers, body) {
+  var buf = new Binary();
+
+  var addLine = function(line) {
+    buf.appendString(line+"\r\n");
+  }
+
+  // correct headers if needed
+  if (body != undefined)
+    headers.fields["Content-Length"] = body.size();
+  else if (headers.fields["Content-Length"] != undefined) {
+    warn("Content-Length is set when there is no body");
+    headers.fields["Content-Length"] = undefined;
+  }
+
+  // format headers/body
+  addLine(headers.headline);
+  Object.keys(headers.fields).forEach(function(key) {
+    addLine(key+": "+headers.fields[key]);
+  });
+  addLine("");
+  if (body != undefined)
+    buf.append(body);
+
+  return buf;
+}
+
+///
+/// exports
+///
+
+exports.createProcessor = createProcessor;
+exports.createHeaders = createHeaders;
+exports.fmtResponseHeadline = fmtResponseHeadline;
+exports.formResponse = formResponse;
