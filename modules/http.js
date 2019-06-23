@@ -75,6 +75,17 @@ function findHttpCodeDescription(httpStatusCode) {
   Throw("Unknown httpCode="+httpStatusCode);
 }
 
+function delOneFromArray(arr, val) {
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i] === val) {
+      arr.splice(i, 1); 
+      i--;
+      break; // only one
+    }
+  }
+}
+
+
 function dbgFormatData(buf, bufHead) {
   var nl = ".....> ";
   var str = buf.getSubString(bufHead, buf.size());
@@ -128,8 +139,10 @@ function createServer(requestProcessor) {
           logClnt("canRead triggered: read nbytes="+nbytes, Client);
           if (nbytes > 0) {
             Server._onNewClientData(clntSock, Client);
+            return false; // no eof
           } else { // EOF: client has disconnected
             Server._onEof(clntSock, Client);
+            return true; // eof
           }
         },
         canWrite: function() {
@@ -140,7 +153,7 @@ function createServer(requestProcessor) {
           Client.bufOutHead += nbytes;
         },
         onExcept: function() {
-          throw "Unhandled except condition on a client socket, sock="+this._clntSock_;
+          throw "Unhandled except condition on a client socket @sock="+this._clntSock_;
         }
       };
     },
@@ -153,11 +166,19 @@ function createServer(requestProcessor) {
       }
     },
     _onEof: function(clntSock, clntData) {
-      if (clntData.bufOutHead < clntData.bufOut.length)
-        warn("client has disconnected and left "+(clntData.bufOut.length-clntData.bufOutHead)+" bytes of outgoing data unsent");
-      if (clntData.bufInHead < clntData.bufIn.length)
-        warn("client has disconnected and left "+(clntData.bufIn.length-clntData.bufInHead)+" bytes of incoming data unprocessed");
+      // warn if some data is left over
+      if (clntData.bufOutHead < clntData.bufOut.size())
+        warn("client @sock="+clntSock+" has disconnected and left "+(clntData.bufOut.size()-clntData.bufOutHead)+" bytes of outgoing data unsent");
+      if (clntData.bufInHead < clntData.bufIn.size())
+        warn("client @sock="+clntSock+" has disconnected and left "+(clntData.bufIn.size()-clntData.bufInHead)+" bytes of incoming data unprocessed");
+
+      // close
       ckErr(SocketApi.close(clntSock), "close");
+
+      // log
+      logClnt("client disconnected", clntData);
+
+      // delete the client record
       delete this._clients_[clntSock];
     },
     _onNewHttpRequest: function(clntSock, clntData, httpHeaders) {
@@ -252,7 +273,10 @@ function createServer(requestProcessor) {
             logServ("client accepted: clntSock="+clntSock, Server);
             Server._acceptConnection_(clntSock);
           } else {
-            Server._clients_[sock].canRead();
+            if (Server._clients_[sock].canRead()) {
+              delOneFromArray(res[2], sock);
+              delOneFromArray(res[3], sock);
+            }
           }
         });
 
