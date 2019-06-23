@@ -1823,9 +1823,7 @@ void registerFunctions(js_State *J) {
       timeout.tv_sec = tmMs/1000;
       timeout.tv_usec = (tmMs%1000)*1000;
 
-      std::cout << ">>> select" << std::endl;
       auto res = ::select(nfds+1, &readfds, &writefds, &exceptfds, &timeout);
-      std::cout << "<<< select -> " << res << std::endl;
 
       std::vector<std::vector<int>> resVec; // return 4 lists: {errorCode}, {readfds}, {writefds}, {exceptfds}
       resVec.resize(4);
