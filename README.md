@@ -3,6 +3,15 @@ Program for manipulations with molecules and performing computations with them
 
 ## This program is pre-alpha and doesn't do anything useful yet
 
+### Build instructions
+
+In order to build ChemWiz, you first need to clone it with submodules:
+```
+git clone --recurse-submodules https://github.com/yurivict/ChemWiz.git
+```
+
+Then you need to install all dependencies listed below.
+
 ### Dependencies
 #### Build tools
 * GNU Make
