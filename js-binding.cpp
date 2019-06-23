@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/socket.h> // for SocketApi
@@ -21,6 +22,7 @@
 #include <vector>
 #include <cmath>
 #include <memory>
+#include <algorithm>
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -1704,6 +1706,51 @@ void registerFunctions(js_State *J) {
       })
     })
   END_NAMESPACE(Arrayx)
+  BEGIN_NAMESPACE(FileApi)
+    ADD_NS_FUNCTION_CPPnew(FileApi, open, {
+      AssertNargs(2)
+      Return(J, ::open(GetArgString(1).c_str(), GetArgUInt32(2)));
+    }, 2)
+    ADD_NS_FUNCTION_CPPnew(FileApi, close, {
+      AssertNargs(1)
+      Return(J, ::close(GetArgUInt32(1)));
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(FileApi, read, { // (fd, buf, off, size)
+      AssertNargs(4)
+      auto fd = GetArgUInt32(1);
+      auto buf = GetArg(Binary, 2);
+      auto off = GetArgUInt32(3);
+      auto size = GetArgUInt32(4);
+      auto bufSz = buf->size();
+      bool resized = off+size > bufSz;
+      if (resized)
+        buf->resize(off+size);
+
+      auto res = ::read(fd, &(*buf)[off], size);
+
+      if (resized) {
+        if (res >= 0) {
+          if (off + res < buf->size())
+            buf->resize(std::max<unsigned>(bufSz, off + res));
+        } else {
+          buf->resize(bufSz); // resize back because of the error
+        }
+      }
+
+      Return(J, res);
+    }, 4)
+    ADD_NS_FUNCTION_CPPnew(FileApi, unlink, {
+      AssertNargs(1)
+      Return(J, ::unlink(GetArgString(1).c_str()));
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(FileApi, rename, {
+      AssertNargs(2)
+      Return(J, ::rename(GetArgString(1).c_str(), GetArgString(2).c_str()));
+    }, 2)
+  END_NAMESPACE(FileApi)
+  JsSupport::addNsConstInt(J, "FileApi", "O_RDONLY",    O_RDONLY);
+  JsSupport::addNsConstInt(J, "FileApi", "O_WRONLY",    O_WRONLY);
+  JsSupport::addNsConstInt(J, "FileApi", "O_RDWR",      O_RDWR);
   BEGIN_NAMESPACE(SocketApi)
     ADD_NS_FUNCTION_CPPnew(SocketApi, socket, {
       AssertNargs(3)
