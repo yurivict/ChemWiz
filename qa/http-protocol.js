@@ -8,16 +8,14 @@ var testContentLength1 = [
   "Abc: yes\r\n",
   "Abx: 123abcde\r\n",
   "Content-Length: 4\r\n",
-  "\r\n",
-  "abcd"
+  "\r\n"
 ];
 var testContentLength2 = [
   "GET /index.html HTTP/1.1\r\n",
   "Content-type: Unknown\r\n",
   "Content-Length: 10\r\n",
   "Miscellaneous: misc\r\n",
-  "\r\n",
-  "abcdexyzwv"
+  "\r\n"
 ];
 
 function substChar(str, c, s) {
@@ -54,6 +52,12 @@ function doTest(testCase, expectedJson) {
   if (buf.size() != bufHead)
     throw "wrong bufHead="+bufHead+" buf.size="+buf.size();
 
+  // remove computed values
+  delete processor.headers.headlineHttpVersion;
+  delete processor.headers.headlineMethod;
+  delete processor.headers.headlineUri;
+
+  // compare
   var headersJson = JSON.stringify(processor.headers);
   if (headersJson != expectedJson)
     throw "mismatch: headersJson={{{"+headersJson+"}}}, expectedJson={{{"+expectedJson+"}}}";
@@ -65,12 +69,12 @@ var processor = null;
 
 exports.run = function() {
   try {
-    processor = require("http-protocol").create();
-    var msg = doTest(testContentLength1, '{"body":"abcd","fields":{"Abc":"yes","Abx":"123abcde","Content-Length":"4"},"headline":"GET /index.html HTTP/1.1"}')
+    processor = require("http-protocol").createProcessor();
+    var msg = doTest(testContentLength1, '{"body":null,"fields":{"Abc":"yes","Abx":"123abcde","Content-Length":"4"},"headline":"GET /index.html HTTP/1.1"}')
     processor.init();
-    var msg = doTest(testContentLength1, '{"body":"abcd","fields":{"Abc":"yes","Abx":"123abcde","Content-Length":"4"},"headline":"GET /index.html HTTP/1.1"}')
+    var msg = doTest(testContentLength1, '{"body":null,"fields":{"Abc":"yes","Abx":"123abcde","Content-Length":"4"},"headline":"GET /index.html HTTP/1.1"}')
     processor.init();
-    var msg = doTest(testContentLength2, '{"body":"abcdexyzwv","fields":{"Content-Length":"10","Content-type":"Unknown","Miscellaneous":"misc"},"headline":"GET /index.html HTTP/1.1"}')
+    var msg = doTest(testContentLength2, '{"body":null,"fields":{"Content-Length":"10","Content-type":"Unknown","Miscellaneous":"misc"},"headline":"GET /index.html HTTP/1.1"}')
     processor.init();
 
     return "OK"
