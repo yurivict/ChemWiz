@@ -44,6 +44,8 @@
 #include "Vec3-ext.h"
 #include "util.h"
 
+// TODO implement some functions from node interface: https://nodejs.org/api/process.html#process_process_stdout
+
 // tag strings of all objects
 static const char *TAG_Obj         = "Obj";
 static const char *TAG_Molecule    = "Molecule";
@@ -1736,6 +1738,23 @@ void registerFunctions(js_State *J) {
 
       Return(J, ::accept(GetArgInt32(1), &addr, &addrlen));
     }, 1)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, getsockopt, { // (int socket, int level, int optname) -> [res, prevVal]
+      AssertNargs(3)
+
+      int optval = 0;
+      socklen_t len = sizeof(optval);
+
+      int res = ::getsockopt(GetArgInt32(1), GetArgInt32(2), GetArgInt32(3), &optval, &len);
+
+      Return(J, std::array<int,2>({res, optval}));
+    }, 3)
+    ADD_NS_FUNCTION_CPPnew(SocketApi, setsockopt, { // (int socket, int level, int optname int newVal) -> res
+      AssertNargs(4)
+
+      int optval = GetArgInt32(4);
+
+      Return(J, ::setsockopt(GetArgInt32(1), GetArgInt32(2), GetArgInt32(3), &optval, sizeof(optval)));
+    }, 4)
     ADD_NS_FUNCTION_CPPnew(SocketApi, read, { // (int sock, Binary buff, unsigned off, unsigned nbytes)
       AssertNargs(4)
       auto fd = GetArgUInt32(1);
@@ -1826,6 +1845,8 @@ void registerFunctions(js_State *J) {
   JsSupport::addNsConstInt(J, "SocketApi", "PF_UNIX",     PF_UNIX);
   JsSupport::addNsConstInt(J, "SocketApi", "PF_INET",     PF_INET);
   JsSupport::addNsConstInt(J, "SocketApi", "PF_INET6",    PF_INET6);
+  JsSupport::addNsConstInt(J, "SocketApi", "SOL_SOCKET",  SOL_SOCKET);
+  JsSupport::addNsConstInt(J, "SocketApi", "SO_REUSEPORT",SO_REUSEPORT);
   JsSupport::addNsConstInt(J, "SocketApi", "SOCK_STREAM", SOCK_STREAM);
   JsSupport::addNsConstInt(J, "SocketApi", "SOCK_DGRAM",  SOCK_DGRAM);
   JsSupport::addNsConstInt(J, "SocketApi", "SOCK_RAW",    SOCK_RAW);
