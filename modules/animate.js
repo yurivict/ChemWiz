@@ -92,7 +92,9 @@ function dim3LinearMotion(fromVal, toVal, numSamples, fn) {
   // not including the last point
 }
 
-/// exports
+//
+// exports
+//
 
 exports.dim1LinearMotion = dim1LinearMotion
 exports.dim1SineWave = dim1SineWave
