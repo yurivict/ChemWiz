@@ -7,3 +7,6 @@
 [submodule "contrib/date"]
 	path = contrib/date
 	url = https://github.com/HowardHinnant/date
+[submodule "contrib/js-libs/pv"]
+	path = contrib/js-libs/pv
+	url = https://github.com/biasmv/pv.git
