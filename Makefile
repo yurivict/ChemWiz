@@ -61,8 +61,13 @@ OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 #
 # build rules
 #
+all: $(APP) qt5-QtWebEngine-browser/browser
+
 $(APP): $(OBJS)
 	$(CXX) -o $(APP) $(OBJS) $(LDFLAGS) $(LDLIBS)
+
+qt5-QtWebEngine-browser/browser: qt5-QtWebEngine-browser/browser.pro qt5-QtWebEngine-browser/main.cpp
+	cd qt5-QtWebEngine-browser && CXX=$(CXX) qmake && $(MAKE)
 
 #
 # auto-dependencies

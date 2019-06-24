@@ -16,6 +16,7 @@ Then you need to install all dependencies listed below.
 #### Build tools
 * GNU Make
 * C++ compiler
+* qmake (part of Qt5)
 
 #### Header-only libraries (build-time)
 * Boost: for some container types and string formatting
@@ -38,6 +39,7 @@ Then you need to install all dependencies listed below.
 * Qhull: to compute convex hulls of molecules (https://github.com/qhull/qhull)
 * (optional) OpenBabel: for parsing molecules in SMILES format (http://openbabel.org/wiki/Main_Page)
 * (optional) libdsrpdb: for parsing proteins in the PDB format (or perhaps any large and complex molecules) (https://graphics.stanford.edu/~drussel/pdb/)
+* Qt5 components: core and webenginewidgets (used only by the browser in qt5-QtWebEngine-browser/)
 
 #### Run-time dependencies
 * (optional) Jmol: for converting molecules to 3-D images, the executable 'jmoldata' is run from the scripts (http://jmol.sourceforge.net/)
