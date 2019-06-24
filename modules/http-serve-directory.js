@@ -1,4 +1,4 @@
-// module HttpServeDirectory: serves the directgory through http
+// module HttpServeDirectory: serves the directory over http
 
 var fs = require('fs');
 var http = require('http');
