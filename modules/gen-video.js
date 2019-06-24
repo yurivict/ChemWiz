@@ -16,7 +16,7 @@ function createInsFile(pngs) {
 //
 function imgsToMp4(pngs) {
   var mp4 = new TempFile("mp4")
-  system("ffmpeg -loglevel quiet -r "+fps+" -f concat -safe 0 -i "+createInsFile(pngs).fname()+" -vcodec libx264 "+mp4.fname())
+  Process.system("ffmpeg -loglevel quiet -r "+fps+" -f concat -safe 0 -i "+createInsFile(pngs).fname()+" -vcodec libx264 "+mp4.fname())
   return mp4
 }
 

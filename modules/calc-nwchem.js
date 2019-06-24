@@ -18,9 +18,9 @@ var numCPUs = System.numCPUs()
 
 function runProcess(runDir) {
   if (numCPUs == 1)
-    return system("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp")
+    return Process.runCaptureOutput("cd "+runDir+" && "+executable+" inp 2>&1 | tee outp");
   else
-    return system("cd "+runDir+" && mpirun -np "+numCPUs+" "+executable+" inp 2>&1 | tee outp")
+    return Process.runCaptureOutput("cd "+runDir+" && mpirun -np "+numCPUs+" "+executable+" inp 2>&1 | tee outp");
 }
 
 function xthrow(msg) {

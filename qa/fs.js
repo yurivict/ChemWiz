@@ -35,7 +35,7 @@ exports.run = function() {
     },
     unlink_existing: function() {
       var fname = genTmpFile("unlink_existing");
-      system("touch "+fname);
+      Process.system("touch "+fname);
       fs.unlink(fname, function(err) {
         if (err != undefined)
           throw "unlink(existing): expected no error, got error '"+err+"'";
@@ -51,7 +51,7 @@ exports.run = function() {
     },
     rename_existing_small: function() {
       var fname = genTmpFile("rename_existing_small");
-      system("echo abc > "+fname);
+      Process.system("echo abc > "+fname);
       fs.rename(fname, fname+"x", function(err) {
         if (err != undefined)
           throw "rename(existing): expected no error, got error '"+err+"'";

@@ -58,7 +58,7 @@ function runCalcEngine(rname, m, params, executable, fnReturn) {
     // write the runfile
     File.write(formRunfile(erkParams), runDir+"/runfile")
     // run the process
-    var out = system("cd "+runDir+" && "+executable+" runfile 2>&1 | tee outp")
+    var out = Process.runCaptureOutput("cd "+runDir+" && "+executable+" runfile 2>&1 | tee outp");
   } else {
     var out = File.read(runDir+"/outp")
   }

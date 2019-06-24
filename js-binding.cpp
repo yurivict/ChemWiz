@@ -1083,11 +1083,6 @@ static void waitForUserInput(js_State *J) {
   ReturnVoid(J);
 }
 
-static void system(js_State *J) {
-  AssertNargs(1)
-  Return(J, Process::exec(GetArgString(1)));
-}
-
 static void formatFp(js_State *J) {
   AssertNargs(2)
   char buf[32];
@@ -1580,7 +1575,16 @@ void registerFunctions(js_State *J) {
       Return(J, ::rand());
     }, 0)
   END_NAMESPACE(LegacyRng)
-  ADD_JS_FUNCTION(system, 1)
+  BEGIN_NAMESPACE(Process)
+    ADD_NS_FUNCTION_CPPnew(Process, system, {
+      AssertNargs(1)
+      Return(J, ::system(GetArgString(1).c_str()));
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(Process, runCaptureOutput, {
+      AssertNargs(1)
+      Return(J, Process::exec(GetArgString(1)));
+    }, 1)
+  END_NAMESPACE(Process)
   ADD_JS_FUNCTION(formatFp, 2)
   ADD_JS_FUNCTION(download, 3)
   ADD_JS_FUNCTION(downloadUrl, 1)

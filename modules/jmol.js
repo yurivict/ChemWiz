@@ -10,7 +10,7 @@ function scriptXyzToPngInstruction(xyzFile, pngFile, mid, sz) {
 }
 
 function runJmoldata(scriptFile) {
-  system("jmoldata -s "+scriptFile.fname())
+  Process.system("jmoldata -s "+scriptFile.fname());
 }
 
 function paramsToSz(params) {
