@@ -63,7 +63,7 @@ exports.serve = function(dir, port) {
       } else {
         log("<<< REQ url="+request.url+" -> 404");
         response.writeHead(404, {'Content-Type': 'text/html'});
-        response.end(page404(request.url));
+        response.end(page404(request.url), 'utf-8');
       }
     });
   }).listen(port);
