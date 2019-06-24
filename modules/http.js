@@ -31,6 +31,7 @@ var paramHttpCodeDescriptions = {
   // TODO the rest of 3xx
   400: "Bad Request",
   401: "Unauthorized",
+  404: "Not Found",
   // TODO the rest of 4xx
   500: "Internal Server Error"
   // TODO the rest of 5xx
@@ -147,8 +148,8 @@ function createServer(requestProcessor) {
         },
         canWrite: function() {
           var Client = this;
-          var nbytes = SocketApi.write(Client._clntSock_, Client.bufOut, Client.bufOutHead, Client.bufIn.size()-Client.bufOutHead);
-          logClnt("canWrite triggered: wrote "+nbytes+" bytes", Client);
+          var nbytes = SocketApi.write(Client._clntSock_, Client.bufOut, Client.bufOutHead, Client.bufOut.size()-Client.bufOutHead);
+          logClnt("canWrite triggered: wrote "+nbytes+" bytes, asked to write "+(Client.bufOut.size()-Client.bufOutHead)+" bytes", Client);
           ckErr(nbytes, "write");
           Client.bufOutHead += nbytes;
         },
@@ -254,6 +255,7 @@ function createServer(requestProcessor) {
           var clntData = Server._clients_[clntSock];
           lstRD.push(clntSock);
           if (clntData.bufOutHead < clntData.bufOut.size()) {
+            logClnt("have "+(clntData.bufOut.size() - clntData.bufOutHead)+" bytes to write (bufOut.size="+clntData.bufOut.size()+", bufOutHead="+clntData.bufOutHead+")", clntData);
             lstWR.push(clntSock);
           }
         });
