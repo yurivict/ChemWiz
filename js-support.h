@@ -132,6 +132,10 @@ inline void Push(js_State *J, const long &val) {
   js_pushnumber(J, val);
 }
 
+inline void Push(js_State *J, const uint64_t &val) {
+  js_pushnumber(J, val);
+}
+
 inline void Push(js_State *J, const char *val) {
   js_pushstring(J, val);
 }
@@ -187,13 +191,22 @@ inline void Push(js_State *J, const std::vector<T> &val) {
   }
 }
 
+// this probably belongs in util.h or similar
+template<typename T>
+inline const std::string ToString(const T &t) {
+  std::ostringstream ss;
+  ss << t;
+  return ss.str();
+}
+template<>
+inline const std::string ToString<std::string>(const std::string &t) {return t;}
+
 template<typename K, typename T, class Comp>
 inline void Push(js_State *J, const std::map<K,T,Comp> &val) {
-  js_newarray(J);
-  unsigned idx = 0;
+  js_newobject(J);
   for (auto const &v : val) {
-    Push(J, v);
-    js_setindex(J, -2, idx++);
+    Push(J, v.second);
+    js_setproperty(J, -2, ToString<K>(v.first).c_str());
   }
 }
 
