@@ -13,7 +13,7 @@ SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp molecule-pdb.cpp util.c
 HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h op-rmsd.h periodic-table-data.h \
 		structure-db.h stl-ext.h js-support.h mytypes.h
 APP=		chemwiz
-CXX?=		clang++80
+CXX?=		c++
 CFLAGS=		-O3 -Wall -Wconditional-uninitialized $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
 DEP_FILES=	$(SRCS_CPP:.cpp=.cpp.d)
