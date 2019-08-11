@@ -79,6 +79,15 @@ extern const char *TAG_Binary;
 #define GetArgElement(n)         Element(PeriodicTableData::get().elementFromSymbol(GetArgString(n)))
 #define GetArgPtr(n)             StrPtr::s2p(GetArgString(n))
 
+//
+// local template specializations
+//
+inline void Push(js_State *J, const struct stat &s) {
+  Push(J, std::map<std::string, uint64_t>{
+    {"dev",s.st_dev}, {"ino", s.st_ino}, {"mode", s.st_mode}, {"nlink", s.st_nlink}, {"uid", s.st_uid}, {"gid", s.st_gid} // TODO the rest
+  });
+}
+
 namespace JsBinding {
 
 // externally defined types
@@ -1751,10 +1760,29 @@ void registerFunctions(js_State *J) {
       AssertNargs(2)
       Return(J, ::rename(GetArgString(1).c_str(), GetArgString(2).c_str()));
     }, 2)
+    ADD_NS_FUNCTION_CPPnew(FileApi, stat, {
+      AssertNargs(1)
+
+      struct stat s;
+      if (::stat(GetArgString(1).c_str(), &s) != -1)
+        Return(J, s);
+      else
+        Return(J, -1);
+    }, 1)
+    ADD_NS_FUNCTION_CPPnew(FileApi, lstat, {
+      AssertNargs(1)
+
+      struct stat s;
+      if (::lstat(GetArgString(1).c_str(), &s) != -1)
+        Return(J, s);
+      else
+        Return(J, -1);
+    }, 1)
   END_NAMESPACE(FileApi)
   JsSupport::addNsConstInt(J, "FileApi", "O_RDONLY",    O_RDONLY);
   JsSupport::addNsConstInt(J, "FileApi", "O_WRONLY",    O_WRONLY);
   JsSupport::addNsConstInt(J, "FileApi", "O_RDWR",      O_RDWR);
+  JsSupport::addNsConstInt(J, "FileApi", "S_IFDIR",     O_RDWR);
   BEGIN_NAMESPACE(SocketApi)
     ADD_NS_FUNCTION_CPPnew(SocketApi, socket, {
       AssertNargs(3)
