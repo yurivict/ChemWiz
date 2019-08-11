@@ -271,6 +271,57 @@ std::vector<Molecule::AaBackbone> Molecule::findAaBackbones() {  // finds all AA
   return aaBackbones;
 }
 
+std::vector<Molecule::AaBackbone> Molecule::findAaBackbonesSorted() {  // finds all AA cores
+  std::vector<AaBackbone> aaBackbones;
+  AaBackbone aaBackbone;
+  // begin from O2, use it as an anchor because it is always present
+  unsigned numO = 0;
+  for (auto aO2 : atoms)
+    if (aO2->elt == O)
+      numO++;
+  for (auto aO2 : atoms)
+    if (aO2->elt == O && aO2->isBonds(C, 1)) {
+      const char *failReason = nullptr;
+      if (findAaBackbone(aO2, aaBackbone, [&failReason](const char *msg) {failReason = msg;}))
+        aaBackbones.push_back(aaBackbone);
+    //} else {
+      //if (aO2->elt == O)
+      //  std::cout << "Molecule::findAaBackbones: ignore the O atom " << aO2 << " (not O2, bonds=" << aO2->bondsAsString() << ")" << std::endl;
+    }
+  //std::cout << "Molecule::findAaBackbones: found " << aaBackbones.size() << " backbone segments" << std::endl;
+
+
+  // sort aaBackbones
+  std::vector<AaBackbone> aaBackbonesSorted;
+  {
+    int idxNterm = -1;
+    std::map<const Atom*, unsigned> n2idx; // map N-atom to index
+    unsigned idx = 0;
+    for (auto &b : aaBackbones) {
+      //std::cout << "Molecule::findAaBackbones: bb #" << (idx+1) << " of " << aaBackbones.size() << ": isNterm=" << b.isNterm() << " isCterm=" << b.isCterm()  << std::endl;
+      if (b.isNterm()) {
+        assert(idxNterm == -1);
+        idxNterm = aaBackbones.size();
+      }
+      n2idx[b.N] = idx++;
+    }
+    assert(idxNterm != -1);
+
+    aaBackbonesSorted.reserve(aaBackbones.size());
+    aaBackbonesSorted.push_back(aaBackbones[idxNterm]); // seed
+    while (aaBackbonesSorted.size() < aaBackbones.size()) {
+      auto &lst = *aaBackbones.rbegin();
+      if (lst.isCterm())
+        break;
+      assert(n2idx.find(lst.N) != n2idx.end());
+      aaBackbonesSorted.push_back(aaBackbones[n2idx[lst.N]]);
+    }
+    assert(aaBackbonesSorted.size() == aaBackbones.size());
+  }
+
+  return aaBackbonesSorted;
+}
+
 Molecule::Angle Molecule::getAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId) {
   // checks
   if (aaBackbones.empty())
@@ -411,10 +462,11 @@ void Molecule::detectBonds() {
       auto a2 = atoms[i2];
       if (a1->isBond(*a2)) {
         a1->link(a2);
-        //if (a1->elt == "N" || a2->elt == "N")
-        //std::cout << "BOND--> dist=" << (a1->pos-a2->pos).len() << ' ' << *a1 << " -> " << *a2 << std::endl;
+        if ((a1->elt == N && a2->elt == C) || (a1->elt == C && a2->elt == N))
+          std::cout << "BOND--> dist=" << (a1->pos-a2->pos).len() << " [" << a1 << "] " << *a1 << " -> [" << a2 << "] " << *a2 << std::endl;
       } else {
-        //std::cout << ".. NO BOND--> dist=" << (a1->pos-a2->pos).len() << ' ' << *a1 << " -> " << *a2 << std::endl;
+        if ((a1->elt == N && a2->elt == C) || (a1->elt == C && a2->elt == N))
+          std::cout << ".. NO BOND--> dist=" << (a1->pos-a2->pos).len() << " [" << a1 << "] " << *a1 << " -> [" << a2 << "] " << *a2 << std::endl;
       }
     }
   }
@@ -603,25 +655,32 @@ void Molecule::snapToGrid(const Vec3 &grid) {
     a->snapToGrid(grid);
 }
 
-bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
+template<typename Fn>
+bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone, Fn &&errFn) {
+  auto fail = [errFn](const char *msg) {
+    errFn(msg);
+    return false;
+  };
   // TODO Proline is different - the group includes a 5-cycle
   // begin from O2, use it as an anchor because it is always present
   auto aCoo = O2anchor->bonds[0];
   Atom *aO1 = nullptr;
   Atom *aHo = nullptr;
-  if (aCoo->isBonds(O,2, C,1)) { // carbon end it free: O2 + OH (free tail) + C
+  if (aCoo->isBonds(O,2, C,1)) { // Cterm?: O2 + OH (free tail) + C
     aO1 = aCoo->filterBonds1excl(O, O2anchor);
     if (aO1->isBonds(C,1, H,1))
       aHo = aO1->filterBonds1(H);
     else
-      return false; // wrong aO1 connections
-  } else if (!aCoo->isBonds(O,1, C,1, N,1)) // carbon end is connected: O2 + N (connected) + C
-    return false; // not an AA oxygen
+      return fail("wrong aO1 connections");
+  } else if (!aCoo->isBonds(O,1, C,1, N,1)) { // carbon end is connected: O2 + N (connected) + C
+    std::cout << "[" << aCoo << "] failing as not a connecting Coo: expect O1C1N1, got " << aCoo->bondsAsString() << std::endl;
+    return fail("not an connecting Coo");
+  }
 
   // Cmain
   Atom *aCmain = aCoo->filterBonds1(C);
   if (!(aCmain->isBonds(C,2, N,1, H,1) || aCmain->isBonds(C,1, N,1, H,2))) // the first payload atom is either C, or H (only in Glycine)
-    return false; // wrong aCmain bonds
+    return fail("wrong aCmain bonds");
   Atom *aHc = aCmain->filterBonds(H)[0]; // could be 1 or two hydrogens
   Atom *aN = aCmain->filterBonds1(N);
 
@@ -657,7 +716,7 @@ bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
         break;
       }
   } else
-    return false; // wrong aN bonds
+    return fail("wrong aN bonds");
 
   assert(aN->elt == N);
   assert(aHCn1->elt == C || aHCn1->elt == H);
@@ -672,6 +731,10 @@ bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
   // found
   aaBackbone = {aN, aHCn1, aHn2, aCmain, aHc, aCoo, O2anchor, aO1, aHo, aPayload};
   return true;
+}
+
+bool Molecule::findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone) {
+  return findAaBackbone(O2anchor, aaBackbone, [](const char *){});
 }
 
 /// internals

@@ -368,6 +368,7 @@ public:
   AaBackbone findAaBackboneFirst();
   AaBackbone findAaBackboneLast();
   std::vector<AaBackbone> findAaBackbones();  // finds all AA cores
+  std::vector<AaBackbone> findAaBackbonesSorted();  // finds all AA cores (sorted, not sure if only one of the functions should exist)
   Angle getAminoAcidSingleAngle(const std::vector<AaBackbone> &aaBackbones, unsigned idx, AaAngles::Type angleId);
   AngleArray getAminoAcidSingleJunctionAngles(const std::vector<AaBackbone> &aaBackbones, unsigned idx);
   AngleMap getAminoAcidSingleJunctionAnglesM(const std::vector<AaBackbone> &aaBackbones, unsigned idx);
@@ -428,6 +429,8 @@ public:
   void prnCoords(std::ostream &os) const;
   Vec3 centerOfMass() const;
   void snapToGrid(const Vec3 &grid);
+  template<typename Fn>
+  bool findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone, Fn &&errFn);
   bool findAaBackbone(Atom *O2anchor, AaBackbone &aaBackbone);
 private: // internals
   static Vec3 getAtomAxis(const Atom *atom1, const Atom *atom2);
