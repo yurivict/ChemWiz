@@ -7,16 +7,19 @@ USE_OPENBABEL=  yes
 # general options
 USE_EXCEPTIONS= no # exceptions aren't really functional as of yet, and aren't currently needed because all errors are fatal
 
+BROWSER_SUBDIR=	qt5-QtWebEngine-browser
 SRCS_CPP=	main.cpp obj.cpp molecule.cpp molecule-xyz.cpp molecule-pdb.cpp util.cpp process.cpp common.cpp Vec3-ext.cpp tm.cpp temp-file.cpp web-io.cpp \
 		js-binding.cpp js-support.cpp image.cpp \
 		op-rmsd.cpp molecule-qhull.cpp periodic-table-data.cpp binary.cpp structure-db.cpp float-array.cpp
 HEADERS=	common.h xerror.h obj.h molecule.h js-binding.h util.h process.h Vec3.h Mat3.h Vec3-ext.h tm.h temp-file.h web-io.h op-rmsd.h periodic-table-data.h \
 		structure-db.h stl-ext.h js-support.h mytypes.h
 APP=		chemwiz
+APPS=		$(APP) $(BROWSER_SUBDIR)/browser
 CXX?=		c++
 CFLAGS=		-O3 -Wall -Wconditional-uninitialized $(shell pkg-config --static --cflags mujs) -DPROGRAM_NAME=\"ChemWiz\" -Icontrib/date/include/date
 CXXFLAGS=	$(CFLAGS) -std=c++17
-DEP_FILES=	$(SRCS_CPP:.cpp=.cpp.d)
+DEP_FILES=	$(SRCS_CPP:%.cpp=%.d)
+DEP_FILES_MASK=	*.d
 
 # for MuJS
 LDFLAGS+=	$(shell pkg-config --static --libs-only-L mujs gl glfw3)
@@ -58,25 +61,27 @@ LDFLAGS+=	-Wl,-rpath=/usr/local/lib/gcc8 /usr/local/lib/gcc8/libgcc_s.so # FreeB
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 
+.PHONY: all clean clean-deps
+
 #
 # build rules
 #
-all: $(APP) qt5-QtWebEngine-browser/browser
+all: $(APPS)
 
 $(APP): $(OBJS)
 	$(CXX) -o $(APP) $(OBJS) $(LDFLAGS) $(LDLIBS)
 
-qt5-QtWebEngine-browser/browser: qt5-QtWebEngine-browser/browser.pro qt5-QtWebEngine-browser/main.cpp
-	cd qt5-QtWebEngine-browser && CXX=$(CXX) qmake && $(MAKE)
+$(BROWSER_SUBDIR)/browser: $(BROWSER_SUBDIR)/browser.pro $(BROWSER_SUBDIR)/main.cpp
+	cd $(BROWSER_SUBDIR) && CXX=$(CXX) qmake && $(MAKE)
 
 #
 # auto-dependencies
 #
-%.cpp.d: %.cpp
+%.d: %.cpp
 	@echo "scanning dependencies for $<"
 	@$(CXX) -M $< $(CXXFLAGS) > $@
 
--include $(DEP_FILES)
+%.o: %.cpp %.d
 
 #
 # other targets
@@ -85,8 +90,9 @@ test:
 	./$(APP) qa/run-all-tests.js
 
 clean:
-	rm -f $(OBJS) $(APP) $(DEP_FILES)
+	rm -f $(OBJS) $(BROWSER_SUBDIR)/main.o $(APPS) $(DEP_FILES_MASK)
 
 clean-deps:
 	rm -f $(DEP_FILES)
 
+-include $(DEP_FILES)
