@@ -105,6 +105,10 @@ namespace JsFloatArray {
   extern void initFloat4(js_State *J);
   extern void initFloat8(js_State *J);
 }
+namespace JsNeuralNetwork {
+  extern void init(js_State *J);
+  extern void xnewo(js_State *J, NeuralNetwork *n);
+}
 
 
 //
@@ -665,6 +669,11 @@ static void init(js_State *J) {
     ADD_METHOD_CPP(Molecule, centerAt, {
       AssertNargs(1)
       GetArg(Molecule, 0)->centerAt(GetArgVec3(1));
+      ReturnVoid(J);
+    }, 1)
+    ADD_METHOD_CPP(Molecule, scale, {
+      AssertNargs(1)
+      GetArg(Molecule, 0)->scale(GetArgFloat(1));
       ReturnVoid(J);
     }, 1)
     ADD_METHOD_CPP(Molecule, snapToGrid, {
@@ -1497,6 +1506,7 @@ void registerFunctions(js_State *J) {
   JsImageDrawer::init(J);
   JsFloatArray::initFloat4(J);
   JsFloatArray::initFloat8(J);
+  JsNeuralNetwork::init(J);
 
   //
   // Misc

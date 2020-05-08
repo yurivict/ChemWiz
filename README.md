@@ -27,6 +27,8 @@ Then you need to install all dependencies listed below.
 * nlohmann-json: for parsing of the periodic table json, etc.
 * rang: to print colored and styled text to the terminal (https://github.com/agauniyal/rang)
 * (optional) mmtf-cpp: for parsing chemical structures in the MMTF format (https://github.com/rcsb/mmtf-cpp)
+* MiniDNN: the neural network library
+* Eigen3: the linear algebra library
 
 #### Libraries used only during build
 * pugixml: to parse XML for the executable that is only used during build
