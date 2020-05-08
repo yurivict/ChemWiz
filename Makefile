@@ -61,7 +61,7 @@ LDFLAGS+=	-pthread
 
 # for OpenBLAS that is needed for the rmsd library
 LDFLAGS+=	-lopenblas
-LDFLAGS+=	-Wl,-rpath=/usr/local/lib/gcc8 /usr/local/lib/gcc8/libgcc_s.so # FreeBSD-specific
+LDFLAGS+=	-Wl,-rpath=/usr/local/lib/gcc9 /usr/local/lib/gcc9/libgcc_s.so # FreeBSD-specific
 
 OBJS:=		$(SRCS_CPP:.cpp=.o) $(SRCS_C:.c=.o)
 
