@@ -244,6 +244,9 @@ public:
   void centerAt(const Vec3 &pt) {
     pos -= pt;
   }
+  void scale(double coef) {
+    pos *= coef;
+  }
   void snapToGrid(const Vec3 &grid);
   // printing
   friend std::ostream& operator<<(std::ostream &os, const Atom &a);
@@ -411,6 +414,10 @@ public:
   void centerAt(const Vec3 pt) { // no reference (!)
     for (auto a : atoms)
       a->centerAt(pt);
+  }
+  void scale(double coef) { // no reference (!)
+    for (auto a : atoms)
+      a->scale(coef);
   }
   std::string toString() const;
   // read external formats

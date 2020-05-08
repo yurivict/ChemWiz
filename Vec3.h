@@ -114,6 +114,13 @@ public:
     i(Z) -= v(Z);
     return *this;
   }
+  TVec3& operator*=(Float c) {
+    TVec3 &i = *this;
+    i(X) *= c;
+    i(Y) *= c;
+    i(Z) *= c;
+    return *this;
+  }
   TVec3 project(const TVec3 &dir) const { // dir is assumed to be a normal vector or zero vector
     return dir*((*this)*dir);
   }
