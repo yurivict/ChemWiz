@@ -4,7 +4,14 @@
 
 #include <MiniDNN.h> // full MiniDNN
 
+#include <memory>
+
 const char *TAG_NeuralNetwork = "NeuralNetwork";
+extern const char *TAG_LAMatrixD;
+
+namespace JsBinding::JsLinearAlgebra {
+  extern void xnewo(js_State *J, LAMatrixD *m);
+}
 
 namespace JsBinding {
 
@@ -82,7 +89,7 @@ void init(js_State *J) {
     ADD_METHOD_CPP_OUTPUT(RegressionMSE)
     #undef ADD_METHOD_CPP_OUTPUT
 
-    ADD_METHOD_CPP(NeuralNetwork, initializeLayersWithRandonNumbers, {
+    ADD_METHOD_CPP(NeuralNetwork, init, {
       AssertNargs(3)
       GetArg(NeuralNetwork, 0)->init(
         GetArgUInt32(1)/*mu: Mean of the normal distribution*/,
@@ -90,6 +97,28 @@ void init(js_State *J) {
         GetArgUInt32(3)/*seed: Set the random seed of the RNG when >0, otherwise use the current random state*/
       );
       ReturnVoid(J);
+    }, 0)
+    ADD_METHOD_CPP(NeuralNetwork, fit, {
+      AssertNargs(6)
+      RMSProp opt;
+      opt.m_lrate = GetArgFloat(1);
+      GetArg(NeuralNetwork, 0)->fit(
+        opt,
+        *GetArg(LAMatrixD, 2), /*predictors: each column is an observation*/
+        *GetArg(LAMatrixD, 3), /*response: each column is an observation*/
+        GetArgUInt32(4),       /*batch_size*/
+        GetArgUInt32(5),       /*epoch*/
+        GetArgInt32(6)        /*seed*/
+      );
+      ReturnVoid(J);
+    }, 0)
+    ADD_METHOD_CPP(NeuralNetwork, predict, {
+      AssertNargs(1)
+      std::unique_ptr<LAMatrixD> res(new LAMatrixD);
+      *res = GetArg(NeuralNetwork, 0)->predict(
+        *GetArg(LAMatrixD, 1) /*predictors: each column is an observation*/
+      );
+      ReturnObjExt(LinearAlgebra, res.release());
     }, 0)
     ADD_METHOD_CPP(NeuralNetwork, write, {
       AssertNargs(2)
