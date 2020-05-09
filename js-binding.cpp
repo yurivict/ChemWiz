@@ -105,9 +105,11 @@ namespace JsFloatArray {
   extern void initFloat4(js_State *J);
   extern void initFloat8(js_State *J);
 }
+namespace JsLinearAlgebra {
+  extern void init(js_State *J);
+}
 namespace JsNeuralNetwork {
   extern void init(js_State *J);
-  extern void xnewo(js_State *J, NeuralNetwork *n);
 }
 
 
@@ -1506,6 +1508,7 @@ void registerFunctions(js_State *J) {
   JsImageDrawer::init(J);
   JsFloatArray::initFloat4(J);
   JsFloatArray::initFloat8(J);
+  JsLinearAlgebra::init(J);
   JsNeuralNetwork::init(J);
 
   //
