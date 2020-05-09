@@ -110,7 +110,6 @@ void init(js_State *J) {
     AssertNargs(1) \
     std::unique_ptr<cls> res(new cls); \
     *res = (*GetArg(cls, 0)) * (*GetArg(cls, 1)); \
-    GetArg(cls, 0)->resize(GetArgUInt32(1), GetArgUInt32(2)); \
     ReturnObj(res.release()); \
   }, 0)
   // LAVectorF
