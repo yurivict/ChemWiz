@@ -8,8 +8,9 @@ var deftBasis = "3-21G"
 // files
 var inputXyzFile = "m.xyz"
 // executables
-var executableEnergy = "erkale_omp"
-var executableGeomOpt = "erkale_geom_omp"
+var executableSuffix = "_omp"; // "" for non-parallelized
+var executableEnergy = "erkale"+executableSuffix;
+var executableGeomOpt = "erkale_geom"+executableSuffix;
 
 //
 // local functions
