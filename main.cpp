@@ -40,11 +40,20 @@ static int main_guarded(int argc, char* argv[]) {
   // run JavaScript, everything else is done from there
   unsigned errs = 0;
   if (js_State *J = js_newstate(NULL, NULL, JS_STRICT)) {
+    // register args as scriptArgs (following how mujs does it)
+    js_newarray(J);
+    for (unsigned i = 2; i < argc; i++) {
+      js_pushstring(J, argv[i]);
+      js_setindex(J, -2, i-2);
+    }
+    js_setglobal(J, "scriptArgs");
+
     // register our functions
     JsBinding::registerFunctions(J);
     JsSupport::registerFuncRequire(J);
     JsSupport::registerFuncImportCodeString(J);
     JsSupport::registerErrorToString(J);
+
     // execute supplied JavaScript file or string argument
     for (int i = 1; i < argc && !errs; i++) {
       if (argv[i][0] != '-')
@@ -55,6 +64,7 @@ static int main_guarded(int argc, char* argv[]) {
         return usage(argv[0]);
       }
     }
+
     // free the interpreter
     js_freestate(J);
   } else {
