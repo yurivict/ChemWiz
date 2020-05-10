@@ -42,8 +42,8 @@ endif
 
 ifeq ($(USE_OPENBABEL), yes)
 SRCS_CPP+=	molecule-ob.cpp
-CXXFLAGS+=	-DUSE_OPENBABEL $(shell pkg-config --cflags openbabel-2.0)
-LDFLAGS+=	$(shell pkg-config --libs openbabel-2.0)
+CXXFLAGS+=	-DUSE_OPENBABEL $(shell pkg-config --cflags openbabel-3)
+LDFLAGS+=	$(shell pkg-config --libs openbabel-3)
 endif
 
 ifeq ($(USE_EXCEPTIONS), yes)
