@@ -1,4 +1,4 @@
-QT += core webenginewidgets
+QT += core widgets webenginewidgets
 
 TARGET = browser
 TEMPLATE = app
