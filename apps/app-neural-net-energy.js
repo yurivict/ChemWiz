@@ -1,7 +1,7 @@
 #!/usr/bin/env chemwiz
 
 //
-// app-neural-net-based-energy-computation.js is a research application which purpose is to aid in research on
+// app-neural-net-energy.js is a research application which purpose is to aid in research on
 // computation of energy of atomic configurations.
 // It allows to:
 // 1. Generate and keep track of many test configurations
@@ -29,25 +29,6 @@ function calcEnergy(engine, params, molecule) {
 	return {engine: engine.kind(), energy: energy, precision: params.precision, elapsed: time2-time1, timestamp: time2};
 }
 
-var num = 0;
-
-function addSmilesFromFile(fileName) {
-	File.read(fileName).split("\n").forEach(function(smi) {
-		if (smi=="")
-			return;
-
-		num++;
-		print("===> (num="+num+") smi="+smi);
-		try {
-			var m = Moleculex.fromSMILES(smi);
-			writeXyzFile(m, "m-"+smi+".xyz");
-			print("RESULT (num="+num+"): energy="+JSON.stringify(calcEnergy(Engine, cparams, m)));
-		} catch (err) {
-			print("EXCEPTION (num="+num+"): "+err);
-		}
-	});
-}
-
 var actions = {
 	db: {
 		// internals
@@ -57,7 +38,7 @@ var actions = {
 		},
 		// db ... commands
 		create: function() {
-			File.unlink(this._dbFileName_);
+			//File.unlink(this._dbFileName_);
 			var db = this.open();
 			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
@@ -90,8 +71,13 @@ var actions = {
 		// internals
 		_fromSmiles_: function(db, smi) {
 			var molecule = Moleculex.fromSMILES(smi);
-			var rec = calcEnergy(Engine, cparams, molecule);
-			actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+			try {
+				var rec = calcEnergy(Engine, cparams, molecule);
+				actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+			} catch (err) {
+				print("EXCEPTION: smi="+smi+" failed: "+err);
+				writeXyzFile(molecule, "FAILED-smi-"+smi+".xyz");
+			}
 		},
 		// generate ... commands
 		fromSmilesText: function(smiText) {
@@ -147,5 +133,3 @@ function main(args) {
 
 main(scriptArgs);
 print("--END--");
-
-//addSmilesFromFile("smiles-list.txt");
