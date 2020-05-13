@@ -1604,7 +1604,11 @@ void registerFunctions(js_State *J) {
     }, 1)
     ADD_NS_FUNCTION_CPPnew(Process, runCaptureOutput, {
       AssertNargs(1)
-      Return(J, Process::exec(GetArgString(1)));
+      try {
+        Return(J, Process::exec(GetArgString(1)));
+      } catch (std::runtime_error e) {
+        JS_ERROR(e.what());
+      }
     }, 1)
   END_NAMESPACE(Process)
   ADD_JS_FUNCTION(formatFp, 2)
