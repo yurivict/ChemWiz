@@ -1,7 +1,10 @@
 #include "process.h"
 #include "tm.h"
 #include "util.h"
+#include "misc.h"
 #include "xerror.h"
+
+#include <errno.h>
 
 #include <rang.hpp>
 
@@ -19,12 +22,22 @@ std::string Process::exec(const std::string &cmd) {
     std::cout << rang::fg::cyan << "[" << Tm::strYearToMicrosecond() << "] LOG(process.command): " << cmd << rang::style::reset << std::endl;
   std::string result;
   std::array<char, 128> buffer;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
-  if (!pipe)
-    throw std::runtime_error("popen() failed!");
 
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+  // open the process
+  FILE *pipe = ::popen(cmd.c_str(), "r");
+  if (!pipe)
+    throw std::runtime_error("popen() failed, can't allocate memory");
+
+  while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
     result += buffer.data();
+
+  // close the process
+  int res = ::pclose(pipe);
+  if (res == -1)
+    throw std::runtime_error(STR("process failed, wait4 or other failure caused pclose() to fail: " << strerror(errno) << " (errno=" << errno << ")"));
+  if (res != 0)
+    throw std::runtime_error(STR("process failed with the error code " << res));
+
 
   return result;
 }
