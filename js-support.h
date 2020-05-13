@@ -68,6 +68,9 @@ private:
 #define ADD_JS_FUNCTION(name, nargs) \
   JsSupport::addJsFunction(J, #name, JsBinding::name, nargs);
 
+#define ADD_JS_FUNCTIONinline(name, fnBody, nargs) \
+  JsSupport::addJsFunction(J, #name, [](js_State *J) fnBody, nargs);
+
 #define ADD_NS_FUNCTION_CPP(ns, jsfn, cfn, nargs) \
   JsSupport::addNsFunctionCpp(J, #ns, #jsfn, cfn, nargs);
 
@@ -228,9 +231,9 @@ inline void ReturnVoid(js_State *J) {
   js_pushundefined(J);
 }
 
-//inline void ReturnNull(js_State *J) {
-//  js_pushnull(J);
-//}
+inline void ReturnNull(js_State *J) {
+  js_pushnull(J);
+}
 
 //
 // convenience macros to return object

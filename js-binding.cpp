@@ -7,6 +7,7 @@
 #include <time.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/socket.h> // for SocketApi
@@ -1520,6 +1521,13 @@ void registerFunctions(js_State *J) {
   ADD_JS_FUNCTION(printa, 2)
   ADD_JS_FUNCTION(printna, 2)
   ADD_JS_FUNCTION(flush, 0)
+  ADD_JS_FUNCTIONinline(getenv, {
+    AssertNargs(1)
+    if (auto v = ::getenv(GetArgString(1).c_str()))
+      Return(J, v);
+    else
+      ReturnNull(J);
+  }, 0)
   BEGIN_NAMESPACE(System)
     ADD_NS_FUNCTION_CPP(System, numCPUs,            JsSystem::numCPUs, 0)
     ADD_NS_FUNCTION_CPP(System, setCtlParam,        JsSystem::setCtlParam, 2)
