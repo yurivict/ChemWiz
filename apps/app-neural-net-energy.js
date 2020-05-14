@@ -9,17 +9,21 @@
 // 3. Compute enery and dynamics of complex molecular systems
 //
 
+var helpers = {
+	getenvz: function(name, deft) {
+		return getenv(name)==null ? deft : getenv(name);
+	}
+};
+
 /// computation engine that we use
 
-var Engine = require('calc-nwchem').create()
-//var Engine = require('calc-erkale').create()
-//print("Using the "+Engine.kind()+" QC engine");
+var Engine = require(helpers.getenvz("ENGINE", "calc-nwchem")).create();
 var cparams = {dir:"/tmp", precision: "0.01"}
 
 /// functions
 
 function usage() {
-	throw "Usage: app-neural-net-based-energy-computation.js {db|generate|compute} ...\n";
+	throw "Usage: app-neural-net-based-energy-computation.js {db|generate|compute|export} ...\n";
 }
 
 function calcEnergy(engine, params, molecule) {
@@ -32,7 +36,7 @@ function calcEnergy(engine, params, molecule) {
 var actions = {
 	db: {
 		// internals
-		_dbFileName_: "nn-energy-computations.sqlite",
+		_dbFileName_: helpers.getenvz("DB", "nn-energy-computations.sqlite"),
 		open: function() {
 			return require('sqlite3').openDatabase(this._dbFileName_);
 		},
@@ -42,6 +46,7 @@ var actions = {
 			var db = this.open();
 			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
+			db.run("CREATE INDEX index_xyz_energy_id ON xyz(energy_id);");
 			db.run("CREATE VIEW energy_view AS SELECT e.*"+
 				", (SELECT COUNT(*) FROM xyz WHERE xyz.energy_id = e.id) AS num_atoms"+
 				", (SELECT GROUP_CONCAT(xyz.elt) FROM xyz WHERE xyz.energy_id = e.id) AS formula"+
@@ -57,7 +62,6 @@ var actions = {
 			db.run("INSERT INTO energy(energy,precision,elapsed,timestamp,engine) VALUES ("+energy+", "+precision+", "+elapsed+", "+timestamp+", '"+engine+"');")
 			db.run("SELECT MAX(id) FROM energy;", function(opaque,nCols,fldValues,fldNamesValues) {
 				var energy_id = fldValues[0];
-				print("energy_id="+energy_id);
 				for (var a = 0; a < molecule.numAtoms(); a++) {
 					var atom = molecule.getAtom(a);
 					var atomPos = atom.getPos();
@@ -69,6 +73,15 @@ var actions = {
 	},
 	generate: {
 		// internals
+		_fromMoleculeObject_: function(db, molecule) {
+			try {
+				var rec = calcEnergy(Engine, cparams, molecule);
+				actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+			} catch (err) {
+				print("EXCEPTION: molecule failed: "+err);
+				writeXyzFile(molecule, "FAILED-molecule.xyz");
+			}
+		},
 		_fromSmiles_: function(db, smi) {
 			var molecule = Moleculex.fromSMILES(smi);
 			try {
@@ -94,6 +107,49 @@ var actions = {
 				fromSmiles(db, smi);
 			});
 			db.close();
+		},
+		randomConfigurationsOfElt: function(elt, numAtoms, numConfs, boxSize, minDist) {
+			print("randomConfigurationsOfElt: elt="+elt);
+			var randCoord = function() {
+        			var max = 1000000;
+        			return LegacyRng.rand()%max/max * boxSize - boxSize/2;
+			}
+			var mm = [];
+			while (mm.length < numConfs) {
+				var molecule = new Molecule;
+				for (var a = 0; a < numAtoms; a++) {
+					var atom = new Atom(elt, [randCoord(), randCoord(), randCoord()]);
+					molecule.addAtom(atom);
+				}
+				if (molecule.minDistBetweenAtoms() >= minDist)
+					mm.push(molecule);
+			}
+			var fromMoleculeObject = this._fromMoleculeObject_;
+			var db = actions.db.open();
+			mm.forEach(function(molecule) {
+				fromMoleculeObject(db, molecule);
+			});
+			db.close();
+		}
+	},
+	export: {
+		energyAsXyz: function(energyId, fileName) {
+			var db = actions.db.open();
+			var xyzData = "";
+			var numAtoms = 0;
+			db.run("SELECT elt,x,y,z FROM xyz WHERE energy_id="+energyId+";", function(opaque,nCols,fldValues,fldNamesValues) {
+				var energy_id = fldValues[0];
+				print("atom: elt="+fldValues[0]+" x="+fldValues[1]+" y="+fldValues[2]+" z="+fldValues[3]);
+				xyzData = xyzData + fldValues[0] + " " + fldValues[1] + " " + fldValues[2] + " " + fldValues[3] + "\n";
+				numAtoms++;
+				return false; // continue
+			});
+			xyzData = "energy#"+energyId+" exported by app-neural-net-energy.js\n" + xyzData;
+			xyzData = numAtoms+"\n" + xyzData;
+			db.close();
+
+			// write the file
+			File.write(xyzData, fileName);
 		}
 	}
 };
@@ -115,17 +171,24 @@ function main(args) {
 		else
 			usage();
 	} else if (args[0] == "generate") {
-		if (args.length < 2) {
-			usage();
-		} else if (args[1] == "from-smiles-text") {
+		if (args.length >= 2 && args[1] == "from-smiles-text") {
 			for (var i = 2; i < args.length; i++)
 				actions.generate.fromSmilesText(args[i]);
-		} else if (args[1] == "from-smiles-file") {
+		} else if (args.length >= 2 && args[1] == "from-smiles-file") {
 			for (var i = 2; i < args.length; i++)
 				actions.generate.fromSmilesFile(args[i]);
+		} else if (args.length==7 && args[1] == "random-configurations-of-elt") {
+			actions.generate.randomConfigurationsOfElt(args[2]/*elt*/, args[3]/*numAtoms*/, args[4]/*numConfs*/, args[5]/*box-size (Å)*/, args[6]/*min-dist (Å)*/);
 		} else
 			usage();
 	} else if (args[0] == "compute") {
+	} else if (args[0] == "export") {
+		if (args.length < 2) {
+			usage();
+		} else if (args.length==4 && args[1] == "energy-as-xyz") {
+				actions.export.energyAsXyz(args[2], args[3]);
+		} else
+			usage();
 	} else {
 		usage();
 	}
