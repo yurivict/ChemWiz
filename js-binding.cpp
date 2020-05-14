@@ -24,6 +24,7 @@
 #include <cmath>
 #include <memory>
 #include <algorithm>
+#include <limits>
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -585,6 +586,34 @@ static void init(js_State *J) {
       AssertNargs(1)
       GetArg(Molecule, 0)->add(*GetArg(Molecule, 1));
     }, 1)
+    ADD_METHOD_CPP(Molecule, minDistBetweenAtoms, {
+      AssertNargs(0)
+      auto &atoms = GetArg(Molecule, 0)->atoms;
+      double dist = std::numeric_limits<double>::max();
+      for (unsigned a1 = 0, ae = atoms.size(); a1<ae; a1++) {
+        auto atom1 = atoms[a1];
+        for (unsigned a2 = a1+1; a2<ae; a2++) {
+	  double d = (atoms[a2]->pos - atom1->pos).len();
+          if (d < dist)
+	    dist = d;
+        }
+      }
+      Return(J, dist);
+    }, 0)
+    ADD_METHOD_CPP(Molecule, maxDistBetweenAtoms, {
+      AssertNargs(0)
+      auto &atoms = GetArg(Molecule, 0)->atoms;
+      double dist = 0;
+      for (unsigned a1 = 0, ae = atoms.size(); a1<ae; a1++) {
+        auto atom1 = atoms[a1];
+        for (unsigned a2 = a1+1; a2<ae; a2++) {
+	  double d = (atoms[a2]->pos - atom1->pos).len();
+          if (d > dist)
+	    dist = d;
+        }
+      }
+      Return(J, dist);
+    }, 0)
     ADD_METHOD_CPP(Molecule, appendAminoAcid, {
       AssertNargs(2)
       Molecule aa(*GetArg(Molecule, 1)); // copy because it will be altered
