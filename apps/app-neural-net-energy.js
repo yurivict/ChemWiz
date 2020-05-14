@@ -10,14 +10,24 @@
 //
 
 var helpers = {
-	getenvz: function(name, deft) {
+	getenvz: function(name, deft) { // returns an environment variable for a supplied name, or the default value when the enironment variable isn't set
 		return getenv(name)==null ? deft : getenv(name);
+	},
+	getenvlz: function(name, deft) { // returns a colon-separated list from the environment variable for a supplied name, or the default value when the enironment variable isn't set
+		return this.getenvz(name, deft).split(':');
+	},
+	requirenAndCreate: function(lst) {
+		var mm = [];
+		lst.forEach(function(name) {
+			mm.push(require(name).create());
+		});
+		return mm;
 	}
 };
 
 /// computation engine that we use
 
-var Engine = require(helpers.getenvz("ENGINE", "calc-nwchem")).create();
+var Engines = helpers.requirenAndCreate(helpers.getenvlz("ENGINES", "calc-nwchem:calc-erkale"));
 var cparams = {dir:"/tmp", precision: "0.01"}
 
 /// functions
@@ -74,23 +84,27 @@ var actions = {
 	generate: {
 		// internals
 		_fromMoleculeObject_: function(db, molecule) {
-			try {
-				var rec = calcEnergy(Engine, cparams, molecule);
-				actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
-			} catch (err) {
-				print("EXCEPTION: molecule failed: "+err);
-				writeXyzFile(molecule, "FAILED-molecule.xyz");
-			}
+			Engines.forEach(function(engine) {
+				try {
+					var rec = calcEnergy(engine, cparams, molecule);
+					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+				} catch (err) {
+					print("EXCEPTION("+engine.kind()+"): molecule failed: "+err);
+					writeXyzFile(molecule, "FAILED-molecule-"+engine.kind()+".xyz");
+				}
+			});
 		},
 		_fromSmiles_: function(db, smi) {
 			var molecule = Moleculex.fromSMILES(smi);
-			try {
-				var rec = calcEnergy(Engine, cparams, molecule);
-				actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
-			} catch (err) {
-				print("EXCEPTION: smi="+smi+" failed: "+err);
-				writeXyzFile(molecule, "FAILED-smi-"+smi+".xyz");
-			}
+			Engines.forEach(function(engine) {
+				try {
+					var rec = calcEnergy(engine, cparams, molecule);
+					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+				} catch (err) {
+					print("EXCEPTION("+engine.kind()+"): smi="+smi+" failed: "+err);
+					writeXyzFile(molecule, "FAILED-"+engine.kind()+"-smi-"+smi+".xyz");
+				}
+			});
 		},
 		// generate ... commands
 		fromSmilesText: function(smiText) {
@@ -108,7 +122,7 @@ var actions = {
 			});
 			db.close();
 		},
-		randomConfigurationsOfElt: function(elt, numAtoms, numConfs, boxSize, minDist) {
+		randomConfigurationsOfElt: function(elt, numAtoms, numConfs, boxSize, minDist, maxDist) {
 			print("randomConfigurationsOfElt: elt="+elt);
 			var randCoord = function() {
         			var max = 1000000;
@@ -121,8 +135,10 @@ var actions = {
 					var atom = new Atom(elt, [randCoord(), randCoord(), randCoord()]);
 					molecule.addAtom(atom);
 				}
-				if (molecule.minDistBetweenAtoms() >= minDist)
+				if (minDist <= molecule.minDistBetweenAtoms() && molecule.maxDistBetweenAtoms() <= maxDist) {
+					print("adding the configuration with dists in "+molecule.minDistBetweenAtoms()+".."+molecule.maxDistBetweenAtoms());
 					mm.push(molecule);
+				}
 			}
 			var fromMoleculeObject = this._fromMoleculeObject_;
 			var db = actions.db.open();
@@ -139,7 +155,6 @@ var actions = {
 			var numAtoms = 0;
 			db.run("SELECT elt,x,y,z FROM xyz WHERE energy_id="+energyId+";", function(opaque,nCols,fldValues,fldNamesValues) {
 				var energy_id = fldValues[0];
-				print("atom: elt="+fldValues[0]+" x="+fldValues[1]+" y="+fldValues[2]+" z="+fldValues[3]);
 				xyzData = xyzData + fldValues[0] + " " + fldValues[1] + " " + fldValues[2] + " " + fldValues[3] + "\n";
 				numAtoms++;
 				return false; // continue
@@ -177,8 +192,15 @@ function main(args) {
 		} else if (args.length >= 2 && args[1] == "from-smiles-file") {
 			for (var i = 2; i < args.length; i++)
 				actions.generate.fromSmilesFile(args[i]);
-		} else if (args.length==7 && args[1] == "random-configurations-of-elt") {
-			actions.generate.randomConfigurationsOfElt(args[2]/*elt*/, args[3]/*numAtoms*/, args[4]/*numConfs*/, args[5]/*box-size (Å)*/, args[6]/*min-dist (Å)*/);
+		} else if (args.length==8 && args[1] == "random-configurations-of-elt") {
+			actions.generate.randomConfigurationsOfElt(
+				args[2]/*elt*/,
+				args[3]/*numAtoms*/,
+				args[4]/*numConfs*/,
+				args[5]/*box-size (Å)*/,
+				args[6]/*min-dist (Å)*/,
+				args[7]/*max-dist (Å)*/
+			);
 		} else
 			usage();
 	} else if (args[0] == "compute") {
