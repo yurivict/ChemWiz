@@ -54,7 +54,7 @@ var actions = {
 		create: function() {
 			//File.unlink(this._dbFileName_);
 			var db = this.open();
-			db.run("CREATE TABLE elt_energy(elt TEXT PRIMARY KEY, energy REAL, engine TEXT);");
+			db.run("CREATE TABLE elt_energy(elt TEXT PRIMARY KEY, energy REAL, precision REAL, engine TEXT);");
 			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
 			db.run("CREATE INDEX index_xyz_energy_id ON xyz(energy_id);");
@@ -167,7 +167,8 @@ var actions = {
 				molecule.addAtom(new Atom(elt, [+C, +C, +C]));
 				var rec = calcEnergy(engine, cparams, molecule);
 				db.run("DELETE FROM elt_energy WHERE elt='"+elt+"';");
-				db.run("INSERT INTO elt_energy(elt,energy,engine) VALUES ('"+elt+"', "+(rec.energy/8)+", '"+rec.engine+"');");
+				db.run("INSERT INTO elt_energy(elt,energy,precision,engine) VALUES ('"+elt+"', "+(rec.energy/8)+", "+rec.precision+", '"+rec.engine+"');");
+				print("energy for "+elt+" is "+(rec.energy/8));
 			});
 			db.close();
 		}
