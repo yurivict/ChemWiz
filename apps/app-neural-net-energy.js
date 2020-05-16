@@ -54,10 +54,12 @@ var actions = {
 		create: function() {
 			//File.unlink(this._dbFileName_);
 			var db = this.open();
+			db.run("CREATE TABLE elt_energy(elt TEXT PRIMARY KEY, energy REAL, engine TEXT);");
 			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
 			db.run("CREATE INDEX index_xyz_energy_id ON xyz(energy_id);");
 			db.run("CREATE VIEW energy_view AS SELECT e.*"+
+				", (e.energy - (SELECT sum(ee.energy) FROM elt_energy ee, xyz WHERE xyz.energy_id=e.id AND ee.elt=xyz.elt)) AS molecule_energy"+
 				", (SELECT COUNT(*) FROM xyz WHERE xyz.energy_id = e.id) AS num_atoms"+
 				", (SELECT GROUP_CONCAT(xyz.elt) FROM xyz WHERE xyz.energy_id = e.id) AS formula"+
 				" FROM energy e;");
@@ -146,6 +148,28 @@ var actions = {
 				fromMoleculeObject(db, molecule);
 			});
 			db.close();
+		},
+		eltEnergies: function() {
+			var C = 20;
+			var engine = require("calc-nwchem").create();
+			var db = actions.db.open();
+			["H", "He",
+			 "Li", "Be", "B", "C", "N", "O", "F", "Ne",
+			 "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar"].forEach(function(elt) {
+				var molecule = new Molecule;
+				molecule.addAtom(new Atom(elt, [-C, -C, -C]));
+				molecule.addAtom(new Atom(elt, [-C, -C, +C]));
+				molecule.addAtom(new Atom(elt, [-C, +C, -C]));
+				molecule.addAtom(new Atom(elt, [-C, +C, +C]));
+				molecule.addAtom(new Atom(elt, [+C, -C, -C]));
+				molecule.addAtom(new Atom(elt, [+C, -C, +C]));
+				molecule.addAtom(new Atom(elt, [+C, +C, -C]));
+				molecule.addAtom(new Atom(elt, [+C, +C, +C]));
+				var rec = calcEnergy(engine, cparams, molecule);
+				db.run("DELETE FROM elt_energy WHERE elt='"+elt+"';");
+				db.run("INSERT INTO elt_energy(elt,energy,engine) VALUES ('"+elt+"', "+(rec.energy/8)+", '"+rec.engine+"');");
+			});
+			db.close();
 		}
 	},
 	export: {
@@ -201,6 +225,8 @@ function main(args) {
 				args[6]/*min-dist (Å)*/,
 				args[7]/*max-dist (Å)*/
 			);
+		} else if (args.length==2 && args[1] == "elt-energies") {
+			actions.generate.eltEnergies();
 		} else
 			usage();
 	} else if (args[0] == "compute") {
