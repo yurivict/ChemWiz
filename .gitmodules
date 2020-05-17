@@ -1,12 +1,15 @@
-[submodule "contrib/rmsd"]
+[submodule "rmsd"]
 	path = contrib/rmsd
 	url = https://github.com/charnley/rmsd.git
-[submodule "contrib/Periodic-Table-JSON"]
+[submodule "Periodic-Table-JSON"]
 	path = contrib/Periodic-Table-JSON
 	url = https://github.com/Bowserinator/Periodic-Table-JSON.git
-[submodule "contrib/date"]
+[submodule "date"]
 	path = contrib/date
 	url = https://github.com/HowardHinnant/date
-[submodule "contrib/js-libs/pv"]
+[submodule "pv"]
 	path = contrib/js-libs/pv
 	url = https://github.com/biasmv/pv.git
+[submodule "sqlstring"]
+	path = contrib/sqlstring
+	url = https://github.com/mysqljs/sqlstring
