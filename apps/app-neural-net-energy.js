@@ -162,6 +162,21 @@ var actions = {
 			this._fromMoleculeObject_(db, molecule, "crystal cubic: len="+len+" cnt="+cnt);
 			db.close();
 		},
+		crystalCcp: function(elt, len, cnt) { // cubic close-packed
+			var engine = require("calc-nwchem").create();
+			var db = actions.db.open();
+			var molecule = new Molecule;
+			for (var a = 0; a < cnt[0]; a++)
+				for (var b = 0; b < cnt[1]; b++)
+					for (var c = 0; c < cnt[2]; c++) {
+						molecule.addAtom(new Atom(elt, [a*len[0], b*len[1], c*len[2]]));
+						molecule.addAtom(new Atom(elt, [a*len[0] + 0,        b*len[1] + len[1]/2, c*len[2] + len[2]/2]));
+						molecule.addAtom(new Atom(elt, [a*len[0] + len[0]/2, b*len[1] + 0,        c*len[2] + len[2]/2]));
+						molecule.addAtom(new Atom(elt, [a*len[0] + len[0]/2, b*len[1] + len[1]/2, c*len[2] + 0]));
+					}
+			this._fromMoleculeObject_(db, molecule, "crystal ccp: len="+len+" cnt="+cnt);
+			db.close();
+		},
 		eltEnergies: function() {
 			var C = 20;
 			var engine = require("calc-nwchem").create();
@@ -242,13 +257,22 @@ function main(args) {
 		} else if (args.length>2 && args[1] == "crystal") {
 			if (args.length==10 && args[2] == "cubic") {
 				var elt = args[3];
-				var a = args[4];
-				var b = args[5];
-				var c = args[6];
-				var an = args[7];
-				var bn = args[8];
-				var cn = args[9];
+				var a   = args[4];
+				var b   = args[5];
+				var c   = args[6];
+				var an  = args[7];
+				var bn  = args[8];
+				var cn  = args[9];
 				actions.generate.crystalCubic(elt, [a, b, c], [an, bn, cn]);
+			} else if (args.length==10 && args[2] == "ccp") {
+				var elt = args[3];
+				var a   = args[4];
+				var b   = args[5];
+				var c   = args[6];
+				var an  = args[7];
+				var bn  = args[8];
+				var cn  = args[9];
+				actions.generate.crystalCcp(elt, [a, b, c], [an, bn, cn]);
 			} else
 				usage();
 		} else if (args.length==2 && args[1] == "elt-energies") {
