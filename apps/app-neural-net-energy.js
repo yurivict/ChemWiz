@@ -9,6 +9,8 @@
 // 3. Compute enery and dynamics of complex molecular systems
 //
 
+var sqlString = require("SqlString");
+
 var helpers = {
 	getenvz: function(name, deft) { // returns an environment variable for a supplied name, or the default value when the enironment variable isn't set
 		return getenv(name)==null ? deft : getenv(name);
@@ -55,7 +57,7 @@ var actions = {
 			//File.unlink(this._dbFileName_);
 			var db = this.open();
 			db.run("CREATE TABLE elt_energy(elt TEXT PRIMARY KEY, energy REAL, precision REAL, engine TEXT);");
-			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT);");
+			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT, comment TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
 			db.run("CREATE INDEX index_xyz_energy_id ON xyz(energy_id);");
 			db.run("CREATE VIEW energy_view AS SELECT e.*"+
@@ -68,10 +70,10 @@ var actions = {
 		stats: function() {
 		},
 		// internally-used commands
-		insertEnergy: function(db, energy, precision, elapsed, timestamp, engine, molecule) {
+		insertEnergy: function(db, energy, precision, elapsed, timestamp, engine, molecule, comment) {
 			var db = this.open();
 			db.run("BEGIN TRANSACTION")
-			db.run("INSERT INTO energy(energy,precision,elapsed,timestamp,engine) VALUES ("+energy+", "+precision+", "+elapsed+", "+timestamp+", '"+engine+"');")
+			db.run("INSERT INTO energy(energy,precision,elapsed,timestamp,engine, comment) VALUES ("+energy+", "+precision+", "+elapsed+", "+timestamp+", '"+engine+"', "+sqlString.escape(comment)+");")
 			db.run("SELECT MAX(id) FROM energy;", function(opaque,nCols,fldValues,fldNamesValues) {
 				var energy_id = fldValues[0];
 				for (var a = 0; a < molecule.numAtoms(); a++) {
@@ -85,11 +87,11 @@ var actions = {
 	},
 	generate: {
 		// internals
-		_fromMoleculeObject_: function(db, molecule) {
+		_fromMoleculeObject_: function(db, molecule, comment) {
 			Engines.forEach(function(engine) {
 				try {
 					var rec = calcEnergy(engine, cparams, molecule);
-					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule, comment);
 				} catch (err) {
 					print("EXCEPTION("+engine.kind()+"): molecule failed: "+err);
 					writeXyzFile(molecule, "FAILED-molecule-"+engine.kind()+".xyz");
@@ -101,7 +103,7 @@ var actions = {
 			Engines.forEach(function(engine) {
 				try {
 					var rec = calcEnergy(engine, cparams, molecule);
-					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule);
+					actions.db.insertEnergy(db, rec.energy, rec.precision, rec.elapsed, rec.timestamp, rec.engine, molecule, "smiles: "+smi);
 				} catch (err) {
 					print("EXCEPTION("+engine.kind()+"): smi="+smi+" failed: "+err);
 					writeXyzFile(molecule, "FAILED-"+engine.kind()+"-smi-"+smi+".xyz");
@@ -145,7 +147,7 @@ var actions = {
 			var fromMoleculeObject = this._fromMoleculeObject_;
 			var db = actions.db.open();
 			mm.forEach(function(molecule) {
-				fromMoleculeObject(db, molecule);
+				fromMoleculeObject(db, molecule, "random: box="+boxSize+" min="+minDist+" max="+maxDist);
 			});
 			db.close();
 		},
@@ -157,7 +159,7 @@ var actions = {
 				for (var b = 0; b < cnt[1]; b++)
 					for (var c = 0; c < cnt[2]; c++)
 						molecule.addAtom(new Atom(elt, [a*len[0], b*len[1], c*len[2]]));
-			this._fromMoleculeObject_(db, molecule);
+			this._fromMoleculeObject_(db, molecule, "crystal cubic: len="+len+" cnt="+cnt);
 			db.close();
 		},
 		eltEnergies: function() {
