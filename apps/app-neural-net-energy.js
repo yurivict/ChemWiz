@@ -149,6 +149,17 @@ var actions = {
 			});
 			db.close();
 		},
+		crystalCubic: function(elt, len, cnt) {
+			var engine = require("calc-nwchem").create();
+			var db = actions.db.open();
+			var molecule = new Molecule;
+			for (var a = 0; a < cnt[0]; a++)
+				for (var b = 0; b < cnt[1]; b++)
+					for (var c = 0; c < cnt[2]; c++)
+						molecule.addAtom(new Atom(elt, [a*len[0], b*len[1], c*len[2]]));
+			this._fromMoleculeObject_(db, molecule);
+			db.close();
+		},
 		eltEnergies: function() {
 			var C = 20;
 			var engine = require("calc-nwchem").create();
@@ -226,6 +237,18 @@ function main(args) {
 				args[6]/*min-dist (Å)*/,
 				args[7]/*max-dist (Å)*/
 			);
+		} else if (args.length>2 && args[1] == "crystal") {
+			if (args.length==10 && args[2] == "cubic") {
+				var elt = args[3];
+				var a = args[4];
+				var b = args[5];
+				var c = args[6];
+				var an = args[7];
+				var bn = args[8];
+				var cn = args[9];
+				actions.generate.crystalCubic(elt, [a, b, c], [an, bn, cn]);
+			} else
+				usage();
 		} else if (args.length==2 && args[1] == "elt-energies") {
 			actions.generate.eltEnergies();
 		} else
