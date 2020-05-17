@@ -27,7 +27,7 @@ var helpers = {
 
 /// computation engine that we use
 
-var Engines = helpers.requirenAndCreate(helpers.getenvlz("ENGINES", "calc-nwchem:calc-erkale"));
+var Engines = helpers.requirenAndCreate(helpers.getenvlz("ENGINES", "calc-nwchem"));
 var cparams = {dir:"/tmp", precision: "0.01"}
 
 /// functions
