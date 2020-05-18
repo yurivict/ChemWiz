@@ -60,11 +60,16 @@ var actions = {
 			db.run("CREATE TABLE energy(id INTEGER PRIMARY KEY AUTOINCREMENT, energy REAL, precision REAL, elapsed INTEGER, timestamp INTEGER, engine TEXT, comment TEXT);");
 			db.run("CREATE TABLE xyz(energy_id INTEGER, elt TEXT, x REAL, y REAL, z REAL, FOREIGN KEY(energy_id) REFERENCES energy(id));");
 			db.run("CREATE INDEX index_xyz_energy_id ON xyz(energy_id);");
-			db.run("CREATE VIEW energy_view AS SELECT e.*"+
-				", (e.energy - (SELECT sum(ee.energy) FROM elt_energy ee, xyz WHERE xyz.energy_id=e.id AND ee.elt=xyz.elt)) AS molecule_energy"+
-				", (SELECT COUNT(*) FROM xyz WHERE xyz.energy_id = e.id) AS num_atoms"+
-				", (SELECT GROUP_CONCAT(xyz.elt) FROM xyz WHERE xyz.energy_id = e.id) AS formula"+
-				" FROM energy e;");
+			db.run("CREATE VIEW\n"+
+			       "    energy_view\n"+
+			       "AS\n"+
+			       "SELECT\n"+
+			       "    e.*,\n"+
+			       "    (e.energy - (SELECT sum(ee.energy) FROM elt_energy ee, xyz WHERE xyz.energy_id=e.id AND ee.elt=xyz.elt)) AS molecule_energy,\n"+
+			       "    (SELECT COUNT(*) FROM xyz WHERE xyz.energy_id = e.id) AS num_atoms,\n"+
+			       "    (SELECT GROUP_CONCAT(xyz.elt) FROM xyz WHERE xyz.energy_id = e.id) AS formula\n"+
+			       "FROM\n"+
+			       "    energy e;");
 			db.close();
 		},
 		stats: function() {
