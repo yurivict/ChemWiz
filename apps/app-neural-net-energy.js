@@ -69,7 +69,38 @@ var actions = {
 			       "    (SELECT COUNT(*) FROM xyz WHERE xyz.energy_id = e.id) AS num_atoms,\n"+
 			       "    (SELECT GROUP_CONCAT(xyz.elt) FROM xyz WHERE xyz.energy_id = e.id) AS formula\n"+
 			       "FROM\n"+
-			       "    energy e;");
+			       "    energy e;"
+			);
+			db.run("CREATE VIEW\n"+
+			       "    xyz_neighbor\n"+
+			       "AS\n"+
+			       "SELECT\n"+
+			       "    ctr.energy_id,\n"+
+			       "    ctr.elt AS ctr_elt,\n"+
+			       "    ctr.x AS ctr_x,\n"+
+			       "    ctr.y AS ctr_y,\n"+
+			       "    ctr.z AS ctr_z,\n"+
+			       "    n.elt AS n_elt,\n"+
+			       "    n.x AS n_x,\n"+
+			       "    n.y AS n_y,\n"+
+			       "    n.z AS n_z,\n"+
+			       "    ((n.x-ctr.x)*(n.x-ctr.x)+(n.y-ctr.y)*(n.y-ctr.y)+(n.z-ctr.z)*(n.z-ctr.z)) AS dist2\n"+
+			       "FROM\n"+
+			       "    xyz ctr,\n"+
+			       "    xyz n\n"+
+			       "WHERE\n"+
+			       "    n.energy_id = ctr.energy_id\n"+
+			       "    AND\n"+
+			       "    (\n"+
+			       "        n.x != ctr.x  \n"+
+			       "        OR\n"+
+			       "        n.y != ctr.y\n"+
+			       "        OR\n"+
+			       "        n.z != ctr.z\n"+
+			       "     )\n"+
+			       "ORDER BY\n"+
+			       "     dist2"
+			);
 			db.close();
 		},
 		stats: function() {
