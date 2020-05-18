@@ -101,6 +101,33 @@ var actions = {
 			       "ORDER BY\n"+
 			       "     dist2"
 			);
+			db.run("CREATE VIEW\n"+
+			       "    atomic_neighborhood\n"+
+			       "AS\n"+
+			       "SELECT\n"+
+			       "    e.id,\n"+
+			       "    ctr.elt,\n"+
+			       "    ctr.x,\n"+
+			       "    ctr.y,\n"+
+			       "    ctr.z,\n"+
+			       "    GROUP_CONCAT(n.n_elt||'@'||n.dist2) AS neighbors\n"+
+			       "FROM\n"+
+			       "    energy e,\n"+
+			       "    xyz ctr,\n"+
+			       "    xyz_neighbor n\n"+
+			       "WHERE\n"+
+			       "    ctr.energy_id = e.id\n"+
+			       "    AND\n"+
+			       "    n.energy_id = e.id\n"+
+			       "    AND\n"+
+			       "    n.ctr_x = ctr.x\n"+
+			       "    AND\n"+
+			       "    n.ctr_y = ctr.y\n"+
+			       "    AND\n"+
+			       "    n.ctr_z = ctr.z\n"+
+			       "GROUP BY\n"+
+			       "    e.id, ctr.elt, ctr.y, ctr.z"
+		       );
 			db.close();
 		},
 		stats: function() {
