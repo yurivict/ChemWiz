@@ -126,7 +126,7 @@ var actions = {
 			       "    AND\n"+
 			       "    n.ctr_z = ctr.z\n"+
 			       "GROUP BY\n"+
-			       "    e.id, ctr.elt, ctr.y, ctr.z"
+			       "    e.id, ctr.elt, ctr.x, ctr.y, ctr.z"
 		       );
 			db.close();
 		},
