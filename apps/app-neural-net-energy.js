@@ -99,11 +99,11 @@ var actions = {
 			       "        n.z != ctr.z\n"+
 			       "     )\n"+
 			       "ORDER BY\n"+
-			       "     ctr.energy_id,"
-			       "     ctr.elt,"
-			       "     ctr.x,"
-			       "     ctr.y,"
-			       "     ctr.z,"
+			       "     ctr.energy_id,"+
+			       "     ctr.elt,"+
+			       "     ctr.x,"+
+			       "     ctr.y,"+
+			       "     ctr.z,"+
 			       "     dist2"
 			);
 			db.run("CREATE VIEW\n"+
