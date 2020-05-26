@@ -266,6 +266,43 @@ var actions = {
 			db.close();
 		}
 	},
+	compute: {
+		neighborhoodArguments: function(energyId, cb) {
+			var db = actions.db.open();
+			var ctrElt = null;
+			var ctrCoords = null;
+			var lstNeighbors = null;
+			var computeArguments = function(ctrCoords, neighbors) {
+				var fc = function(r) { // the cutoff function
+					var Rc = 10; // Å
+					return 0.5*(Math.cos(Math.PI*r/Rc) + 1);
+				};
+			};
+			var compute = function(ctrElt, ctrCoords, neighbors) {
+				cb(ctrElt, ctrCoords, computeArguments(ctrCoords, neighbors));
+			};
+			db.run("SELECT ctr_elt,ctr_x,ctr_y,ctr_z, n_elt,n_x,n_y,n_z,dist2 FROM xyz_neighbor WHERE energy_id="+energyId+";", function(opaque,nCols,fldValues,fldNamesValues) {
+				var ctrEltNew = fldValues[0];
+				var ctrCoordsNew = [fldValues[1],fldValues[2],fldValues[3]];
+				var nElt = fldValues[4];
+				var nCoords = [fldValues[5],fldValues[6],fldValues[7],fldValues[8]];
+
+				if (ctrCoords==null || (ctrCoordsNew[0]!=ctrCoords[0] || ctrCoordsNew[1]!=ctrCoords[1] || ctrCoordsNew[2]!=ctrCoords[2])) {
+					ctrElt = ctrEltNew;
+					ctrCoords = ctrCoordsNew;
+					if (lstNeighbors!=null)
+						compute(ctrElt, ctrCoords, lstNeighbors);
+					lstNeighbors = [[nElt,nCoords]];
+				} else {
+					lstNeighbors.push([nElt,nCoords]);
+				}
+				return false; // continue
+			});
+			if (lstNeighbors!=null)
+				compute(ctrElt, ctrCoords, lstNeighbors);
+			db.close();
+		}
+	},
 	export: {
 		energyAsXyz: function(energyId, fileName) {
 			var db = actions.db.open();
@@ -345,6 +382,16 @@ function main(args) {
 		} else
 			usage();
 	} else if (args[0] == "compute") {
+		if (args.length>2 && args[1] == "neighborhood") {
+			if (args.length==4 && args[2] == "arguments") {
+				// compute neighborhood args energyId
+				actions.compute.neighborhoodArguments(args[3]/*energyId*/, function(ctxElt, ctxX, ctxY, ctxZ, argumentSet) {
+					print("ctx: "+ctxElt+" x="+ctxX+" y="+ctxY+" z="+ctxZ+" ->args="+JSON.stringify(argumentSet));
+				});
+			} else
+				usage();
+		} else
+			usage();
 	} else if (args[0] == "export") {
 		if (args.length < 2) {
 			usage();
