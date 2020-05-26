@@ -390,6 +390,44 @@ function main(args) {
 				});
 			} else
 				usage();
+		} if (args.length==4 && args[1] == "configuration-arguments-as-json") {
+			// requires
+			var argsMapper = require("compute-arguments-symmetry-functions-by-Behler+coworkers");
+			// args
+			var energyId = args[2];
+			var jsonFileName = args[3];
+			// open db
+			var db = actions.db.open();
+			// build the energy_id list
+			var energyIds = [];
+			db.run("SELECT id,molecule_energy FROM energy_view"+(energyId!="all" ? " WHERE id="+energyId : ""), function(opaque,nCols,fldValues,fldNamesValues) {
+				energyIds.push([fldValues[0], fldValues[1]]);
+				return false; // continue
+			});
+			// form json
+			var json = [];
+			var num = 0;
+			energyIds.forEach(function(energyIdAndValue) {
+				var energyId = energyIdAndValue[0];
+				var energyValue = energyIdAndValue[1];
+				var atoms = [];
+				db.run("SELECT elt,x,y,z FROM xyz WHERE energy_id="+energyId, function(opaque,nCols,fldValues,fldNamesValues) {
+					var elt = fldValues[0];
+					var x = fldValues[1];
+					var y = fldValues[2];
+					var z = fldValues[3];
+					atoms.push([elt, [x,y,z]]);
+					return false; // continue
+				});
+				var atomArgs = [];
+				for (var i = 0; i < atoms.length; i++)
+					atomArgs.push(argsMapper.computeArguments(i, atoms));
+				json.push([atomArgs, energyValue]);
+			});
+			// write the file
+			File.write(JSON.stringify(json), jsonFileName);
+			// close db
+			db.close();
 		} else
 			usage();
 	} else if (args[0] == "export") {
